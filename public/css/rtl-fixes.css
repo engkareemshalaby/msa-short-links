@@ -1,0 +1,17 @@
+.login-body {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+}
+
+.login-visual {
+    min-width: 0;
+}
+
+.visual-content {
+    width: 100%;
+    min-width: 0;
+}
+
+html[dir="rtl"] .visual-content h1,
+html[dir="rtl"] .visual-content p {
+    overflow-wrap: anywhere;
+}

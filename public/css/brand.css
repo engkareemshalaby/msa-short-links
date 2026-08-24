@@ -1,0 +1,113 @@
+:root {
+    --bg: #f5f7f6;
+    --surface: #ffffff;
+    --surface-2: #f7f9f7;
+    --text: #072841;
+    --muted: #62717a;
+    --line: #e1e8e3;
+    --primary: #072841;
+    --primary-2: #538F3F;
+    --primary-soft: #eaf0f3;
+    --success: #538F3F;
+    --success-soft: #edf5ea;
+}
+
+.brand-logo {
+    width: 46px;
+    height: 42px;
+    flex: 0 0 auto;
+    object-fit: contain;
+}
+
+.button.primary {
+    background: #538F3F;
+    background-image: none;
+    border-color: #538F3F;
+    color: #ffffff;
+}
+
+.button.primary:hover {
+    background: #447735;
+    border-color: #447735;
+}
+
+.brand-mark {
+    background: #072841;
+    background-image: none;
+    box-shadow: 0 8px 18px rgba(7, 40, 65, .18);
+}
+
+.login-visual {
+    background: #072841;
+    background-image: none;
+}
+
+.login-visual::before,
+.login-visual::after {
+    border-color: rgba(83, 143, 63, .38);
+}
+
+.visual-logo {
+    display: block;
+    width: 132px;
+    height: auto;
+    margin-bottom: 52px;
+}
+
+.login-official-logo {
+    display: block;
+    width: min(100%, 295px);
+    height: auto;
+    margin-bottom: 24px;
+}
+
+.visual-metric {
+    border-color: rgba(83, 143, 63, .7);
+    background: rgba(83, 143, 63, .16);
+    background-image: none;
+}
+
+.nav-item.active {
+    background: #edf5ea;
+    color: #3f7032;
+}
+
+.nav-item.active span,
+.short-url,
+.detail-url code {
+    color: #538F3F;
+}
+
+.stat-icon,
+.avatar,
+.badge.purple {
+    background: #eaf0f3;
+    color: #072841;
+}
+
+.dot {
+    background: #538F3F;
+}
+
+.input:focus,
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    border-color: #538F3F;
+    box-shadow: 0 0 0 3px rgba(83, 143, 63, .14);
+}
+
+.checkbox input,
+.radio-card input,
+.permission-item input {
+    accent-color: #538F3F;
+}
+
+.radio-card:has(input:checked) {
+    border-color: #538F3F;
+    background: #edf5ea;
+}
+
+.pagination .active {
+    background: #072841;
+}

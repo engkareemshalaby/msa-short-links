@@ -1,0 +1,6 @@
+@extends('layouts.app')
+@section('title', $role->exists ? __('Edit role') : __('Add role'))
+@section('subtitle', __('Choose exactly what users with this role can access.'))
+@section('content')
+<div class="card form-card"><div class="card-header"><h2>{{ __('Role configuration') }}</h2></div><div class="card-body"><form method="POST" action="{{ $role->exists ? route('roles.update',$role) : route('roles.store') }}">@csrf @if($role->exists)@method('PUT')@endif<label class="field" style="margin-bottom:20px"><span>{{ __('Role name') }}</span><input name="name" value="{{ old('name',$role->name) }}" required></label><div class="field"><span>{{ __('Permissions') }}</span><div class="permission-grid">@foreach($permissions as $permission)<div class="permission-item"><label><input type="checkbox" name="permissions[]" value="{{ $permission->name }}" @checked(in_array($permission->name,old('permissions',$role->getPermissionNames()->all())))><span>{{ $permission->name }}</span></label></div>@endforeach</div></div><div class="form-footer"><a class="button" href="{{ route('roles.index') }}">{{ __('Cancel') }}</a><button class="button primary">{{ __('Save role') }}</button></div></form></div></div>
+@endsection
