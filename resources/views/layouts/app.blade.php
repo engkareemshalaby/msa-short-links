@@ -27,6 +27,9 @@
             @can('links.view')
                 <a href="{{ route('links.index') }}" class="nav-item {{ request()->routeIs('links.*') ? 'active' : '' }}"><span>↗</span>{{ __('Short Links') }}</a>
             @endcan
+            @can('links.create')
+                <a href="{{ route('campaigns.index') }}" class="nav-item {{ request()->routeIs('campaigns.*') || request()->routeIs('tags.*') ? 'active' : '' }}"><span>◇</span>{{ __('Campaigns & tags') }}</a>
+            @endcan
             @can('analytics.view')
                 <a href="{{ route('analytics.index') }}" class="nav-item {{ request()->routeIs('analytics.*') ? 'active' : '' }}"><span>⌁</span>{{ __('Analytics') }}</a>
             @endcan
@@ -36,6 +39,8 @@
             @endcan
             @role('Super Admin')
                 <a href="{{ route('roles.index') }}" class="nav-item {{ request()->routeIs('roles.*') ? 'active' : '' }}"><span>◇</span>{{ __('Roles & Permissions') }}</a>
+                <a href="{{ route('api-keys.index') }}" class="nav-item {{ request()->routeIs('api-keys.*') ? 'active' : '' }}"><span>⌘</span>{{ __('API keys') }}</a>
+                <a href="{{ route('pixels.index') }}" class="nav-item {{ request()->routeIs('pixels.*') ? 'active' : '' }}"><span>◌</span>{{ __('Retargeting pixels') }}</a>
             @endrole
             @can('audit.view')
                 <a href="{{ route('audit.index') }}" class="nav-item {{ request()->routeIs('audit.*') ? 'active' : '' }}"><span>≡</span>{{ __('Activity Log') }}</a>

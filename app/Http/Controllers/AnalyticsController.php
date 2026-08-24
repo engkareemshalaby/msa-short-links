@@ -36,6 +36,7 @@ class AnalyticsController extends Controller
             'days' => $days, 'visits' => $visits, 'unique' => $unique, 'daily' => $daily,
             'devices' => $breakdown('device_type'), 'browsers' => $breakdown('browser'),
             'platforms' => $breakdown('platform'), 'referrers' => $breakdown('referer_host'),
+            'countries' => $breakdown('country'),
             'links' => ShortLink::orderBy('title')->get(['id', 'title', 'code']),
             'selectedLink' => $request->input('link_id'),
         ]);

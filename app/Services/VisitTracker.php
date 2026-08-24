@@ -28,6 +28,8 @@ class VisitTracker
             'browser' => $this->browser($agent),
             'platform' => $this->platform($agent),
             'language' => mb_substr((string) $request->getPreferredLanguage(), 0, 10),
+            'country' => strtoupper((string) ($request->header('CF-IPCountry') ?: $request->header('X-Country-Code'))) ?: null,
+            'city' => mb_substr((string) ($request->header('CF-IPCity') ?: $request->header('X-City')), 0, 100) ?: null,
             'query_string' => mb_substr((string) $request->getQueryString(), 0, 2000) ?: null,
             'is_bot' => (bool) preg_match('/bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp/i', $agent),
         ]);

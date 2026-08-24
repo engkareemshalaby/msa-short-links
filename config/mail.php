@@ -16,6 +16,8 @@ return [
 
     'default' => env('MAIL_MAILER', 'log'),
 
+    'health_alert_email' => env('LINK_HEALTH_ALERT_EMAIL'),
+
     /*
     |--------------------------------------------------------------------------
     | Mailer Configurations

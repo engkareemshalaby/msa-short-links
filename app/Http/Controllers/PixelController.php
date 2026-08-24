@@ -1,0 +1,4 @@
+<?php
+namespace App\Http\Controllers;
+use App\Models\RetargetingPixel; use Illuminate\Http\RedirectResponse; use Illuminate\Http\Request; use Illuminate\View\View;
+class PixelController extends Controller { public function index():View{return view('pixels.index',['pixels'=>RetargetingPixel::latest()->get()]);} public function store(Request $request):RedirectResponse{$d=$request->validate(['name'=>['required','string','max:100'],'provider'=>['nullable','string','max:100'],'snippet'=>['required','string','max:10000']]);RetargetingPixel::create($d+['is_active'=>true,'created_by'=>$request->user()->id]);return back()->with('success',__('Retargeting pixel saved.'));} public function destroy(RetargetingPixel $pixel):RedirectResponse{$pixel->delete();return back()->with('success',__('Pixel deleted.'));} }

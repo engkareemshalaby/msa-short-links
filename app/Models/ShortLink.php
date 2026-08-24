@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -14,8 +15,8 @@ class ShortLink extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'title', 'code', 'destination_url', 'code_type', 'is_active',
-        'expires_at', 'created_by', 'updated_by',
+        'title', 'code', 'destination_url', 'access_password', 'code_type', 'is_active',
+        'expires_at', 'created_by', 'updated_by', 'campaign_id', 'retargeting_enabled',
     ];
 
     protected function casts(): array
@@ -23,6 +24,8 @@ class ShortLink extends Model
         return [
             'is_active' => 'boolean',
             'expires_at' => 'datetime',
+            'last_checked_at' => 'datetime',
+            'retargeting_enabled' => 'boolean',
         ];
     }
 
@@ -40,6 +43,11 @@ class ShortLink extends Model
     {
         return $this->hasMany(Visit::class);
     }
+
+    public function campaign(): BelongsTo { return $this->belongsTo(Campaign::class); }
+    public function tags(): BelongsToMany { return $this->belongsToMany(Tag::class); }
+    public function smartTargets(): HasMany { return $this->hasMany(SmartTarget::class)->orderBy('priority'); }
+    public function pixels(): BelongsToMany { return $this->belongsToMany(RetargetingPixel::class); }
 
     public function scopeAvailable(Builder $query): Builder
     {

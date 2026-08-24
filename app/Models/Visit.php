@@ -12,7 +12,7 @@ class Visit extends Model
     protected $fillable = [
         'short_link_id', 'visited_at', 'ip_address', 'ip_hash', 'visitor_hash',
         'user_agent', 'referer', 'referer_host', 'device_type', 'browser',
-        'platform', 'language', 'query_string', 'is_bot',
+        'platform', 'language', 'query_string', 'is_bot', 'country', 'city',
     ];
 
     protected function casts(): array

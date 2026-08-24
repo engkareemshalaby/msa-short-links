@@ -1,0 +1,4 @@
+<?php
+namespace App\Http\Controllers;
+use App\Models\ApiKey; use Illuminate\Http\RedirectResponse; use Illuminate\Http\Request; use Illuminate\Support\Str; use Illuminate\View\View;
+class ApiKeyController extends Controller { public function index():View{return view('api-keys.index',['keys'=>ApiKey::with('user')->latest()->get()]);} public function store(Request $request):RedirectResponse{$d=$request->validate(['name'=>['required','string','max:100'],'expires_at'=>['nullable','date','after:now']]);$plain='msago_'.Str::random(42);$key=ApiKey::create(['name'=>$d['name'],'key_hash'=>hash('sha256',$plain),'prefix'=>substr($plain,0,12),'user_id'=>$request->user()->id,'expires_at'=>$d['expires_at']??null]);return back()->with('new_api_key',$plain)->with('success',__('Copy this API key now. It will not be shown again.'));} public function destroy(ApiKey $apiKey):RedirectResponse{$apiKey->delete();return back()->with('success',__('API key revoked.'));} }
