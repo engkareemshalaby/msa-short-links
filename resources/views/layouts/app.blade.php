@@ -4,7 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#072841">
     <title>@yield('title', __('Dashboard')) · MSA Go</title>
+    <link rel="icon" href="{{ asset('images/msa-logo.png') }}" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -39,8 +41,7 @@
             @endcan
             @role('Super Admin')
                 <a href="{{ route('roles.index') }}" class="nav-item {{ request()->routeIs('roles.*') ? 'active' : '' }}"><span>◇</span>{{ __('Roles & Permissions') }}</a>
-                <a href="{{ route('api-keys.index') }}" class="nav-item {{ request()->routeIs('api-keys.*') ? 'active' : '' }}"><span>⌘</span>{{ __('API keys') }}</a>
-                <a href="{{ route('pixels.index') }}" class="nav-item {{ request()->routeIs('pixels.*') ? 'active' : '' }}"><span>◌</span>{{ __('Retargeting pixels') }}</a>
+                {{-- API keys and retargeting pixels are intentionally hidden from the navigation for now. --}}
             @endrole
             @can('audit.view')
                 <a href="{{ route('audit.index') }}" class="nav-item {{ request()->routeIs('audit.*') ? 'active' : '' }}"><span>≡</span>{{ __('Activity Log') }}</a>

@@ -13,9 +13,23 @@ class CampaignController extends Controller
 {
     public function index(): View
     {
+        $campaigns = Campaign::query()
+            ->with([
+                'links' => fn ($query) => $query->withCount([
+                    'visits' => fn ($visits) => $visits->where('is_bot', false),
+                ])->latest(),
+            ])
+            ->withCount('links')
+            ->latest()
+            ->get();
+
+        $campaigns->each(function (Campaign $campaign): void {
+            $campaign->total_visits = $campaign->links->sum('visits_count');
+        });
+
         return view('campaigns.index', [
-            'campaigns' => Campaign::withCount('links')->latest()->get(),
-            'tags' => Tag::withCount('links')->orderBy('name')->get(),
+            'campaigns' => $campaigns,
+            'tags' => $this->tagsWithPerformance(),
         ]);
     }
 
@@ -43,5 +57,24 @@ class CampaignController extends Controller
         Tag::create($data);
 
         return back()->with('success', __('Tag created successfully.'));
+    }
+
+    private function tagsWithPerformance()
+    {
+        $tags = Tag::query()
+            ->with([
+                'links' => fn ($query) => $query->withCount([
+                    'visits' => fn ($visits) => $visits->where('is_bot', false),
+                ])->latest(),
+            ])
+            ->withCount('links')
+            ->orderBy('name')
+            ->get();
+
+        $tags->each(function (Tag $tag): void {
+            $tag->total_visits = $tag->links->sum('visits_count');
+        });
+
+        return $tags;
     }
 }

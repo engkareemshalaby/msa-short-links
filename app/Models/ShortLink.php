@@ -16,7 +16,7 @@ class ShortLink extends Model
 
     protected $fillable = [
         'title', 'code', 'destination_url', 'access_password', 'code_type', 'is_active',
-        'expires_at', 'created_by', 'updated_by', 'campaign_id', 'retargeting_enabled',
+        'expires_at', 'max_visits', 'created_by', 'updated_by', 'campaign_id', 'retargeting_enabled',
     ];
 
     protected function casts(): array

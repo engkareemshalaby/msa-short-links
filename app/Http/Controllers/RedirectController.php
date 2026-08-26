@@ -15,6 +15,9 @@ class RedirectController extends Controller
     public function __invoke(Request $request, string $code, VisitTracker $tracker, SmartTargetResolver $targets): Response
     {
         $link = ShortLink::available()->where('code', strtolower($code))->firstOrFail();
+        if ($link->max_visits && $link->visits()->where('is_bot', false)->count() >= $link->max_visits) {
+            return response()->view('public.unavailable', ['reason' => __('This link has reached its visit limit.')], 410);
+        }
         if ($link->access_password && ! $request->session()->get($this->sessionKey($link))) {
             return response()->view('public.password', compact('link'));
         }
@@ -31,6 +34,9 @@ class RedirectController extends Controller
     public function unlock(Request $request, string $code): RedirectResponse
     {
         $link = ShortLink::available()->where('code', strtolower($code))->firstOrFail();
+        if ($link->max_visits && $link->visits()->where('is_bot', false)->count() >= $link->max_visits) {
+            return redirect()->route('redirect', $link->code);
+        }
         $request->validate(['password' => ['required', 'string']]);
 
         if (! $link->access_password || ! Hash::check((string) $request->input('password'), $link->access_password)) {

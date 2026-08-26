@@ -11,6 +11,12 @@
         <small>{{ __('Optional. Leave empty for no expiration.') }}</small>
     </label>
 
+    <label class="field">
+        <span>{{ __('Visit limit') }}</span>
+        <input type="number" name="max_visits" min="1" value="{{ old('max_visits', $link?->max_visits) }}" placeholder="{{ __('Unlimited') }}">
+        <small>{{ __('Optional. The link stops redirecting after this number of human visits.') }}</small>
+    </label>
+
     <label class="field full">
         <span>{{ __('Destination URL') }}</span>
         <textarea name="destination_url" required placeholder="https://www.msa.edu.eg/...">{{ old('destination_url', $link?->destination_url) }}</textarea>
