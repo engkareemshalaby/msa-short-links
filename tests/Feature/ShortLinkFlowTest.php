@@ -51,6 +51,27 @@ class ShortLinkFlowTest extends TestCase
         $this->assertDatabaseHas('short_links', ['code' => 'open-day', 'code_type' => 'custom']);
     }
 
+    public function test_admin_can_create_campaign_and_tags_inside_link_form(): void
+    {
+        $this->actingAs(User::first())->post('/links', [
+            'title' => 'September intake',
+            'destination_url' => 'https://www.msa.edu.eg/admissions',
+            'code_type' => 'random',
+            'is_active' => '1',
+            'new_campaign_name' => 'Admissions 2026',
+            'new_campaign_utm_source' => 'facebook',
+            'new_campaign_utm_medium' => 'social',
+            'new_campaign_utm_campaign' => 'september-intake',
+            'new_tags' => 'Admissions, Facebook',
+            'new_tag_color' => '#538F3F',
+        ])->assertRedirect();
+
+        $link = ShortLink::with(['campaign', 'tags'])->firstOrFail();
+        $this->assertSame('Admissions 2026', $link->campaign->name);
+        $this->assertStringContainsString('utm_source=facebook', $link->destination_url);
+        $this->assertEqualsCanonicalizing(['Admissions', 'Facebook'], $link->tags->pluck('name')->all());
+    }
+
     public function test_public_redirect_records_visit_analytics(): void
     {
         $link = ShortLink::create([

@@ -15,6 +15,7 @@ use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShortLinkController;
 use App\Http\Controllers\SmartTargetController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,7 +53,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/exports/visits.csv', [ExportController::class, 'visits'])->middleware('permission:analytics.view')->name('exports.visits');
     Route::get('/campaigns', [CampaignController::class, 'index'])->middleware('permission:links.create')->name('campaigns.index');
     Route::post('/campaigns', [CampaignController::class, 'store'])->middleware('permission:links.create')->name('campaigns.store');
-    Route::post('/tags', [CampaignController::class, 'tag'])->middleware('permission:links.create')->name('tags.store');
+    Route::get('/tags', [TagController::class, 'index'])->middleware('permission:links.create')->name('tags.index');
+    Route::post('/tags', [TagController::class, 'store'])->middleware('permission:links.create')->name('tags.store');
     Route::get('/api-keys', [ApiKeyController::class, 'index'])->middleware('role:Super Admin')->name('api-keys.index');
     Route::post('/api-keys', [ApiKeyController::class, 'store'])->middleware('role:Super Admin')->name('api-keys.store');
     Route::delete('/api-keys/{apiKey}', [ApiKeyController::class, 'destroy'])->middleware('role:Super Admin')->name('api-keys.destroy');

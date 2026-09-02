@@ -30,7 +30,8 @@
                 <a href="{{ route('links.index') }}" class="nav-item {{ request()->routeIs('links.*') ? 'active' : '' }}"><span>↗</span>{{ __('Short Links') }}</a>
             @endcan
             @can('links.create')
-                <a href="{{ route('campaigns.index') }}" class="nav-item {{ request()->routeIs('campaigns.*') || request()->routeIs('tags.*') ? 'active' : '' }}"><span>◇</span>{{ __('Campaigns & tags') }}</a>
+                <a href="{{ route('campaigns.index') }}" class="nav-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}"><span>◇</span>{{ __('Campaigns') }}</a>
+                <a href="{{ route('tags.index') }}" class="nav-item {{ request()->routeIs('tags.*') ? 'active' : '' }}"><span>●</span>{{ __('Tags') }}</a>
             @endcan
             @can('analytics.view')
                 <a href="{{ route('analytics.index') }}" class="nav-item {{ request()->routeIs('analytics.*') ? 'active' : '' }}"><span>⌁</span>{{ __('Analytics') }}</a>

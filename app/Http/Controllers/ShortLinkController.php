@@ -9,6 +9,7 @@ use App\Models\Tag;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -41,24 +42,29 @@ class ShortLinkController extends Controller
             $request->merge(['custom_code' => strtolower((string) $request->input('custom_code'))]);
         }
         $data = $this->validated($request);
-        $code = $data['code_type'] === 'custom' ? strtolower($data['custom_code']) : $this->randomCode();
 
-        $link = ShortLink::create([
-            'title' => $data['title'] ?? null,
-            'code' => $code,
-            'destination_url' => $this->destinationWithCampaignUtm($data['destination_url'], $data['campaign_id'] ?? null),
-            'access_password' => filled($data['access_password'] ?? null) ? Hash::make($data['access_password']) : null,
-            'code_type' => $data['code_type'],
-            'is_active' => $request->boolean('is_active', true),
-            'expires_at' => $data['expires_at'] ?? null,
-            'max_visits' => $data['max_visits'] ?? null,
-            'campaign_id' => $data['campaign_id'] ?? null,
-            'retargeting_enabled' => $request->boolean('retargeting_enabled'),
-            'created_by' => $request->user()->id,
-            'updated_by' => $request->user()->id,
-        ]);
-        $link->tags()->sync($data['tag_ids'] ?? []);
-        $link->pixels()->sync($data['pixel_ids'] ?? []);
+        $link = DB::transaction(function () use ($data, $request): ShortLink {
+            $campaignId = $this->resolveCampaignId($data, $request->user()->id);
+            $code = $data['code_type'] === 'custom' ? strtolower($data['custom_code']) : $this->randomCode();
+            $link = ShortLink::create([
+                'title' => $data['title'] ?? null,
+                'code' => $code,
+                'destination_url' => $this->destinationWithCampaignUtm($data['destination_url'], $campaignId),
+                'access_password' => filled($data['access_password'] ?? null) ? Hash::make($data['access_password']) : null,
+                'code_type' => $data['code_type'],
+                'is_active' => $request->boolean('is_active', true),
+                'expires_at' => $data['expires_at'] ?? null,
+                'max_visits' => $data['max_visits'] ?? null,
+                'campaign_id' => $campaignId,
+                'retargeting_enabled' => $request->boolean('retargeting_enabled'),
+                'created_by' => $request->user()->id,
+                'updated_by' => $request->user()->id,
+            ]);
+            $link->tags()->sync($this->resolveTagIds($data));
+            $link->pixels()->sync($data['pixel_ids'] ?? []);
+
+            return $link;
+        });
 
         AuditLogger::log('created', $link, 'Created short link '.$link->code, [], $link->only(['title', 'code', 'destination_url', 'code_type', 'is_active', 'expires_at']));
 
@@ -136,6 +142,7 @@ class ShortLinkController extends Controller
 
     private function validated(Request $request): array
     {
+        if ($request->filled('new_campaign_tracking_url')) { $query = parse_url((string) $request->input('new_campaign_tracking_url'), PHP_URL_QUERY); parse_str((string) $query, $params); foreach (['utm_source'=>'new_campaign_utm_source','utm_medium'=>'new_campaign_utm_medium','utm_campaign'=>'new_campaign_utm_campaign','utm_content'=>'new_campaign_utm_content','ref'=>'new_campaign_ref','bref'=>'new_campaign_bref','sem'=>'new_campaign_sem'] as $source=>$target) if (! filled($request->input($target)) && isset($params[$source])) $request->merge([$target=>$params[$source]]); }
         return $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'destination_url' => ['required', 'url:http,https', 'max:5000'],
@@ -154,7 +161,53 @@ class ShortLinkController extends Controller
             'pixel_ids.*' => ['integer', 'exists:retargeting_pixels,id'],
             'retargeting_enabled' => ['nullable', 'boolean'],
             'access_password' => ['nullable', 'string', 'min:6', 'max:255', 'confirmed'],
+            'new_campaign_name' => ['nullable', 'string', 'max:100'],
+            'new_campaign_description' => ['nullable', 'string', 'max:1000'],
+            'new_campaign_utm_source' => ['nullable', 'string', 'max:100'],
+            'new_campaign_utm_medium' => ['nullable', 'string', 'max:100'],
+            'new_campaign_utm_campaign' => ['nullable', 'string', 'max:100'],
+            'new_campaign_utm_content' => ['nullable','string','max:100'], 'new_campaign_ref' => ['nullable','string','max:150'], 'new_campaign_bref' => ['nullable','string','max:150'], 'new_campaign_sem' => ['nullable','string','max:100'],
+            'new_campaign_tracking_url' => ['nullable','url:http,https','max:5000'],
+            'new_tags' => ['nullable', 'string', 'max:500'],
+            'new_tag_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
+    }
+
+    private function resolveCampaignId(array $data, int $userId): ?int
+    {
+        if (! filled($data['new_campaign_name'] ?? null)) {
+            return isset($data['campaign_id']) ? (int) $data['campaign_id'] : null;
+        }
+
+        return Campaign::create([
+            'name' => trim($data['new_campaign_name']),
+            'description' => $data['new_campaign_description'] ?? null,
+            'utm_source' => $data['new_campaign_utm_source'] ?? null,
+            'utm_medium' => $data['new_campaign_utm_medium'] ?? null,
+            'utm_campaign' => $data['new_campaign_utm_campaign'] ?? null,
+            'utm_content' => $data['new_campaign_utm_content'] ?? null, 'ref' => $data['new_campaign_ref'] ?? null, 'bref' => $data['new_campaign_bref'] ?? null, 'sem' => $data['new_campaign_sem'] ?? null,
+            'is_active' => true,
+            'created_by' => $userId,
+        ])->id;
+    }
+
+    private function resolveTagIds(array $data): array
+    {
+        $tagIds = array_map('intval', $data['tag_ids'] ?? []);
+        $names = preg_split('/[,،\r\n]+/u', (string) ($data['new_tags'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach (array_unique(array_map('trim', $names ?: [])) as $name) {
+            if ($name === '') {
+                continue;
+            }
+
+            $tagIds[] = Tag::firstOrCreate(
+                ['name' => mb_substr($name, 0, 60)],
+                ['color' => $data['new_tag_color'] ?? '#072841'],
+            )->id;
+        }
+
+        return array_values(array_unique($tagIds));
     }
 
     private function growthData(): array
@@ -174,7 +227,7 @@ class ShortLinkController extends Controller
 
         $parts = parse_url($destination);
         parse_str($parts['query'] ?? '', $query);
-        foreach (['utm_source', 'utm_medium', 'utm_campaign'] as $field) {
+        foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'bref', 'sem'] as $field) {
             if ($campaign->{$field} && ! isset($query[$field])) {
                 $query[$field] = $campaign->{$field};
             }
