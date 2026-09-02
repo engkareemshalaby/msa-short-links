@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/analytics', [AnalyticsController::class, 'index'])->middleware('permission:analytics.view')->name('analytics.index');
     Route::get('/analytics/links/{link}', [AnalyticsController::class, 'link'])->middleware('permission:analytics.view')->name('analytics.link');
     Route::get('/audit', [AuditLogController::class, 'index'])->middleware('permission:audit.view')->name('audit.index');
+    Route::view('/documentation', 'documentation')->name('documentation');
     Route::get('/exports/links.csv', [ExportController::class, 'links'])->middleware('permission:analytics.view')->name('exports.links');
     Route::get('/exports/visits.csv', [ExportController::class, 'visits'])->middleware('permission:analytics.view')->name('exports.visits');
     Route::get('/campaigns', [CampaignController::class, 'index'])->middleware('permission:links.create')->name('campaigns.index');

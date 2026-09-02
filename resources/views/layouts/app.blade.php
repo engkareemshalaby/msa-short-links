@@ -35,6 +35,7 @@
             @endcan
             @can('analytics.view')
                 <a href="{{ route('analytics.index') }}" class="nav-item {{ request()->routeIs('analytics.*') ? 'active' : '' }}"><span>⌁</span>{{ __('Analytics') }}</a>
+                <a href="{{ route('documentation') }}" class="nav-item {{ request()->routeIs('documentation') ? 'active' : '' }}"><span>?</span>{{ __('Documentation') }}</a>
             @endcan
             @can('users.manage')
                 <div class="nav-label">{{ __('Administration') }}</div>
