@@ -15,11 +15,11 @@ class DatabaseSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $permissions = [
+        $rolePermissions = [
             'dashboard.view', 'links.view', 'links.create', 'links.update', 'links.delete',
             'analytics.view', 'audit.view', 'users.manage', 'roles.manage',
         ];
-        foreach ($permissions as $permission) {
+        foreach ([...$rolePermissions, 'crm.submissions.view'] as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         $administrator = Role::firstOrCreate(['name' => 'Administrator', 'guard_name' => 'web']);
         $analyst = Role::firstOrCreate(['name' => 'Analyst', 'guard_name' => 'web']);
 
-        $superAdmin->syncPermissions(Permission::all());
+        $superAdmin->syncPermissions($rolePermissions);
         $administrator->syncPermissions(['dashboard.view', 'links.view', 'links.create', 'links.update', 'links.delete', 'analytics.view', 'audit.view']);
         $analyst->syncPermissions(['dashboard.view', 'links.view', 'analytics.view']);
 
@@ -36,5 +36,6 @@ class DatabaseSeeder extends Seeder
             ['name' => env('ADMIN_NAME', 'MSA Administrator'), 'password' => Hash::make(env('ADMIN_PASSWORD', 'ChangeMe123!'))]
         );
         $admin->syncRoles([$superAdmin]);
+        $admin->givePermissionTo('crm.submissions.view');
     }
 }

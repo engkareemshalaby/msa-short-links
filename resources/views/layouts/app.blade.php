@@ -48,6 +48,10 @@
             @can('audit.view')
                 <a href="{{ route('audit.index') }}" class="nav-item {{ request()->routeIs('audit.*') ? 'active' : '' }}"><span>≡</span>{{ __('Activity Log') }}</a>
             @endcan
+            @can('crm.submissions.view')
+                <div class="nav-label">{{ __('Private') }}</div>
+                <a href="{{ route('crm.submissions.index') }}" class="nav-item {{ request()->routeIs('crm.submissions.*') ? 'active' : '' }}"><span>◫</span>{{ __('Partner applications') }}</a>
+            @endcan
         </nav>
         <div class="sidebar-footer">
             <div class="user-chip"><span class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span><span><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->roles->first()?->name ?? __('User') }}</small></span></div>

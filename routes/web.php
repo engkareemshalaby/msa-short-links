@@ -1,17 +1,19 @@
 <?php
 
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\BulkLinkController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\CrmSubmissionController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LocaleController;
-use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\PixelController;
+use App\Http\Controllers\PublicCrmSubmissionController;
 use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShortLinkController;
 use App\Http\Controllers\SmartTargetController;
@@ -20,6 +22,12 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/locale/{locale}', LocaleController::class)->name('locale');
+
+Route::prefix('crm')->name('crm.')->group(function () {
+    Route::get('/new', [PublicCrmSubmissionController::class, 'create'])->name('new');
+    Route::post('/new', [PublicCrmSubmissionController::class, 'store'])->middleware('throttle:10,1')->name('store');
+    Route::get('/thank-you', [PublicCrmSubmissionController::class, 'thankYou'])->name('thank-you');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
@@ -65,6 +73,13 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('users', UserController::class)->except('show')->middleware('permission:users.manage');
     Route::resource('roles', RoleController::class)->except('show')->middleware('role:Super Admin');
+
+    Route::prefix('crm/submissions')->name('crm.submissions.')->middleware(['permission:crm.submissions.view', 'cache.headers:no_store;private'])->group(function () {
+        Route::get('/', [CrmSubmissionController::class, 'index'])->name('index');
+        Route::get('/export', [CrmSubmissionController::class, 'export'])->name('export');
+        Route::get('/{submission}', [CrmSubmissionController::class, 'show'])->name('show');
+        Route::patch('/{submission}', [CrmSubmissionController::class, 'update'])->name('update');
+    });
 });
 
 Route::post('/{code}/unlock', [RedirectController::class, 'unlock'])->middleware('throttle:10,1')->name('redirect.unlock');
