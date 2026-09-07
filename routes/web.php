@@ -12,11 +12,14 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PixelController;
 use App\Http\Controllers\PublicCrmSubmissionController;
+use App\Http\Controllers\PublicStudentReferralController;
 use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\RecruitmentPartnerController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShortLinkController;
 use App\Http\Controllers\SmartTargetController;
+use App\Http\Controllers\StudentReferralController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +30,12 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/new', [PublicCrmSubmissionController::class, 'create'])->name('new');
     Route::post('/new', [PublicCrmSubmissionController::class, 'store'])->middleware('throttle:10,1')->name('store');
     Route::get('/thank-you', [PublicCrmSubmissionController::class, 'thankYou'])->name('thank-you');
+});
+
+Route::prefix('students/register/{token}')->name('student-referrals.')->group(function () {
+    Route::get('/', [PublicStudentReferralController::class, 'create'])->name('create');
+    Route::post('/', [PublicStudentReferralController::class, 'store'])->middleware('throttle:10,1')->name('store');
+    Route::get('/thank-you', [PublicStudentReferralController::class, 'thankYou'])->name('thank-you');
 });
 
 Route::middleware('guest')->group(function () {
@@ -79,6 +88,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/export', [CrmSubmissionController::class, 'export'])->name('export');
         Route::get('/{submission}', [CrmSubmissionController::class, 'show'])->name('show');
         Route::patch('/{submission}', [CrmSubmissionController::class, 'update'])->name('update');
+    });
+
+    Route::middleware(['permission:crm.submissions.view', 'cache.headers:no_store;private'])->group(function () {
+        Route::get('/crm/partners', [RecruitmentPartnerController::class, 'index'])->name('crm.partners.index');
+        Route::post('/crm/partners', [RecruitmentPartnerController::class, 'store'])->name('crm.partners.store');
+        Route::patch('/crm/partners/{partner}/toggle', [RecruitmentPartnerController::class, 'toggle'])->name('crm.partners.toggle');
+        Route::post('/crm/partners/{partner}/regenerate', [RecruitmentPartnerController::class, 'regenerate'])->name('crm.partners.regenerate');
+        Route::get('/crm/student-referrals', [StudentReferralController::class, 'index'])->name('crm.student-referrals.index');
+        Route::patch('/crm/student-referrals/{referral}', [StudentReferralController::class, 'update'])->name('crm.student-referrals.update');
+        Route::get('/crm/student-referrals/{referral}/passport', [StudentReferralController::class, 'passport'])->name('crm.student-referrals.passport');
     });
 });
 

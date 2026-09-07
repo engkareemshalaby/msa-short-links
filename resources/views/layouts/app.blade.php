@@ -51,6 +51,8 @@
             @can('crm.submissions.view')
                 <div class="nav-label">{{ __('Private') }}</div>
                 <a href="{{ route('crm.submissions.index') }}" class="nav-item {{ request()->routeIs('crm.submissions.*') ? 'active' : '' }}"><span>◫</span>{{ __('Partner applications') }}</a>
+                <a href="{{ route('crm.student-referrals.index') }}" class="nav-item {{ request()->routeIs('crm.student-referrals.*') ? 'active' : '' }}"><span>♙</span>{{ __('Student referrals') }}</a>
+                <a href="{{ route('crm.partners.index') }}" class="nav-item {{ request()->routeIs('crm.partners.*') ? 'active' : '' }}"><span>◎</span>{{ __('Partner links') }}</a>
             @endcan
         </nav>
         <div class="sidebar-footer">
