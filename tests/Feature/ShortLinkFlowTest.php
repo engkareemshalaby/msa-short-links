@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Campaign;
 use App\Models\ShortLink;
+use App\Models\Tag;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,6 +23,15 @@ class ShortLinkFlowTest extends TestCase
     public function test_guest_is_redirected_to_login(): void
     {
         $this->get('/dashboard')->assertRedirect('/login');
+    }
+
+    public function test_missing_link_uses_the_branded_not_found_page(): void
+    {
+        $this->get('/missing-short-link')
+            ->assertNotFound()
+            ->assertSee('MSA Go')
+            ->assertSee(__('Link not found'))
+            ->assertSee('404');
     }
 
     public function test_admin_can_create_a_random_six_digit_link(): void
@@ -104,5 +115,53 @@ class ShortLinkFlowTest extends TestCase
         $analyst = User::factory()->create();
         $analyst->assignRole('Analyst');
         $this->actingAs($analyst)->get('/links/create')->assertForbidden();
+    }
+
+    public function test_links_can_be_filtered_by_tag_campaign_creator_status_and_creation_date(): void
+    {
+        $admin = User::first();
+        $otherUser = User::factory()->create();
+        $campaign = Campaign::create(['name' => 'Autumn campaign', 'created_by' => $admin->id]);
+        $tag = Tag::create(['name' => 'Admissions', 'color' => '#538F3F']);
+
+        $matching = ShortLink::create([
+            'title' => 'Matching link', 'code' => 'match1', 'destination_url' => 'https://example.com/match',
+            'code_type' => 'custom', 'is_active' => true, 'created_by' => $admin->id, 'campaign_id' => $campaign->id,
+        ]);
+        $matching->tags()->attach($tag);
+        $matching->forceFill(['created_at' => '2026-08-15 10:00:00'])->saveQuietly();
+
+        ShortLink::create([
+            'title' => 'Different link', 'code' => 'other1', 'destination_url' => 'https://example.com/other',
+            'code_type' => 'custom', 'is_active' => false, 'created_by' => $otherUser->id,
+        ]);
+
+        $this->actingAs($admin)->get(route('links.index', [
+            'tag_id' => $tag->id,
+            'campaign_id' => $campaign->id,
+            'created_by' => $admin->id,
+            'status' => 'active',
+            'created_from' => '2026-08-01',
+            'created_to' => '2026-08-31',
+        ]))->assertOk()->assertSee('Matching link')->assertDontSee('Different link');
+    }
+
+    public function test_admin_can_view_and_restore_an_archived_link(): void
+    {
+        $admin = User::first();
+        $link = ShortLink::create([
+            'title' => 'Archived link', 'code' => 'archive1', 'destination_url' => 'https://example.com/archive',
+            'code_type' => 'custom', 'is_active' => true, 'created_by' => $admin->id,
+        ]);
+        $link->delete();
+
+        $this->actingAs($admin)->get(route('links.index', ['archive' => 'archived']))
+            ->assertOk()->assertSee('Archived link')->assertSee(__('Restore'));
+
+        $this->actingAs($admin)->patch(route('links.restore', $link->id))
+            ->assertRedirect(route('links.index', ['archive' => 'archived']));
+
+        $this->assertNotSoftDeleted($link);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'restored', 'subject_id' => $link->id]);
     }
 }

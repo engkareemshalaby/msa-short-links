@@ -10,9 +10,11 @@ use App\Http\Controllers\CrmSubmissionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\PartnerAuthController;
+use App\Http\Controllers\PartnerStudentReferralController;
 use App\Http\Controllers\PixelController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCrmSubmissionController;
-use App\Http\Controllers\PublicStudentReferralController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\RecruitmentPartnerController;
 use App\Http\Controllers\RedirectController;
@@ -26,26 +28,36 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/locale/{locale}', LocaleController::class)->name('locale');
 
+Route::get('/', fn () => auth()->check()
+    ? redirect()->route('dashboard')
+    : view('welcome'))->name('home');
+
 Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/new', [PublicCrmSubmissionController::class, 'create'])->name('new');
     Route::post('/new', [PublicCrmSubmissionController::class, 'store'])->middleware('throttle:10,1')->name('store');
     Route::get('/thank-you', [PublicCrmSubmissionController::class, 'thankYou'])->name('thank-you');
 });
 
-Route::prefix('students/register/{token}')->name('student-referrals.')->group(function () {
-    Route::get('/', [PublicStudentReferralController::class, 'create'])->name('create');
-    Route::post('/', [PublicStudentReferralController::class, 'store'])->middleware('throttle:10,1')->name('store');
-    Route::get('/thank-you', [PublicStudentReferralController::class, 'thankYou'])->name('thank-you');
-});
-
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+    Route::get('/partner/login', [PartnerAuthController::class, 'create'])->name('partner.login');
+    Route::post('/partner/login', [PartnerAuthController::class, 'store'])->name('partner.login.store');
+});
+
+Route::middleware(['auth', 'role:Partner', 'cache.headers:no_store;private'])->prefix('partner')->name('partner.')->group(function () {
+    Route::post('/logout', [PartnerAuthController::class, 'destroy'])->name('logout');
+    Route::get('/students', [PartnerStudentReferralController::class, 'index'])->name('referrals.index');
+    Route::get('/students/create', [PartnerStudentReferralController::class, 'create'])->name('referrals.create');
+    Route::post('/students', [PartnerStudentReferralController::class, 'store'])->name('referrals.store');
+    Route::get('/students/{referral}/edit', [PartnerStudentReferralController::class, 'edit'])->name('referrals.edit');
+    Route::put('/students/{referral}', [PartnerStudentReferralController::class, 'update'])->name('referrals.update');
 });
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
-    Route::get('/', fn () => redirect()->route('dashboard'));
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/dashboard', DashboardController::class)->middleware('permission:dashboard.view')->name('dashboard');
 
     Route::get('/links', [ShortLinkController::class, 'index'])->middleware('permission:links.view')->name('links.index');
@@ -53,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/links/bulk', [BulkLinkController::class, 'store'])->middleware('permission:links.create')->name('links.bulk.store');
     Route::get('/links/create', [ShortLinkController::class, 'create'])->middleware('permission:links.create')->name('links.create');
     Route::post('/links', [ShortLinkController::class, 'store'])->middleware('permission:links.create')->name('links.store');
+    Route::patch('/links/{link}/restore', [ShortLinkController::class, 'restore'])->whereNumber('link')->middleware('permission:links.delete')->name('links.restore');
     Route::get('/links/{link}', [ShortLinkController::class, 'show'])->middleware('permission:links.view')->name('links.show');
     Route::get('/links/{link}/qr/{format?}', [QrCodeController::class, 'show'])->where('format', 'png|svg')->middleware('permission:links.view')->name('links.qr');
     Route::get('/links/{link}/smart-targets', [SmartTargetController::class, 'index'])->middleware('permission:links.update')->name('links.smart-targets.index');
@@ -94,7 +107,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/crm/partners', [RecruitmentPartnerController::class, 'index'])->name('crm.partners.index');
         Route::post('/crm/partners', [RecruitmentPartnerController::class, 'store'])->name('crm.partners.store');
         Route::patch('/crm/partners/{partner}/toggle', [RecruitmentPartnerController::class, 'toggle'])->name('crm.partners.toggle');
-        Route::post('/crm/partners/{partner}/regenerate', [RecruitmentPartnerController::class, 'regenerate'])->name('crm.partners.regenerate');
         Route::get('/crm/student-referrals', [StudentReferralController::class, 'index'])->name('crm.student-referrals.index');
         Route::patch('/crm/student-referrals/{referral}', [StudentReferralController::class, 'update'])->name('crm.student-referrals.update');
         Route::get('/crm/student-referrals/{referral}/passport', [StudentReferralController::class, 'passport'])->name('crm.student-referrals.passport');

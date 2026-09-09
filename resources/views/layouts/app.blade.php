@@ -16,49 +16,48 @@
     @stack('head')
 </head>
 <body>
-<div class="app-shell">
+<div class="app-shell" id="appShell">
     <aside class="sidebar" id="sidebar">
         <a class="brand" href="{{ route('dashboard') }}">
             <img class="brand-logo" src="{{ asset('images/msa-logo.png') }}" alt="MSA University">
-            <span><strong>MSA Go</strong><small>{{ __('Short Link Manager') }}</small></span>
+            <span class="nav-text"><strong>MSA Go</strong><small>{{ __('Short Link Manager') }}</small></span>
         </a>
-        <nav class="nav-list">
+        <nav class="nav-list" aria-label="{{ __('Main navigation') }}">
             @can('dashboard.view')
-                <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}"><span>⌂</span>{{ __('Dashboard') }}</a>
+                <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="{{ __('Dashboard') }}"><span>⌂</span><span class="nav-text">{{ __('Dashboard') }}</span></a>
             @endcan
             @can('links.view')
-                <a href="{{ route('links.index') }}" class="nav-item {{ request()->routeIs('links.*') ? 'active' : '' }}"><span>↗</span>{{ __('Short Links') }}</a>
+                <a href="{{ route('links.index') }}" class="nav-item {{ request()->routeIs('links.*') ? 'active' : '' }}" title="{{ __('Short Links') }}"><span>↗</span><span class="nav-text">{{ __('Short Links') }}</span></a>
             @endcan
             @can('links.create')
-                <a href="{{ route('campaigns.index') }}" class="nav-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}"><span>◇</span>{{ __('Campaigns') }}</a>
-                <a href="{{ route('tags.index') }}" class="nav-item {{ request()->routeIs('tags.*') ? 'active' : '' }}"><span>●</span>{{ __('Tags') }}</a>
+                <a href="{{ route('campaigns.index') }}" class="nav-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}" title="{{ __('Campaigns') }}"><span>◇</span><span class="nav-text">{{ __('Campaigns') }}</span></a>
+                <a href="{{ route('tags.index') }}" class="nav-item {{ request()->routeIs('tags.*') ? 'active' : '' }}" title="{{ __('Tags') }}"><span>●</span><span class="nav-text">{{ __('Tags') }}</span></a>
             @endcan
             @can('analytics.view')
-                <a href="{{ route('analytics.index') }}" class="nav-item {{ request()->routeIs('analytics.*') ? 'active' : '' }}"><span>⌁</span>{{ __('Analytics') }}</a>
-                <a href="{{ route('documentation') }}" class="nav-item {{ request()->routeIs('documentation') ? 'active' : '' }}"><span>?</span>{{ __('Documentation') }}</a>
+                <a href="{{ route('analytics.index') }}" class="nav-item {{ request()->routeIs('analytics.*') ? 'active' : '' }}" title="{{ __('Analytics') }}"><span>⌁</span><span class="nav-text">{{ __('Analytics') }}</span></a>
+                <a href="{{ route('documentation') }}" class="nav-item {{ request()->routeIs('documentation') ? 'active' : '' }}" title="{{ __('Documentation') }}"><span>?</span><span class="nav-text">{{ __('Documentation') }}</span></a>
             @endcan
             @can('users.manage')
-                <div class="nav-label">{{ __('Administration') }}</div>
-                <a href="{{ route('users.index') }}" class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}"><span>◎</span>{{ __('Users') }}</a>
+                <div class="nav-label"><span class="nav-text">{{ __('Administration') }}</span></div>
+                <a href="{{ route('users.index') }}" class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}" title="{{ __('Users') }}"><span>◎</span><span class="nav-text">{{ __('Users') }}</span></a>
             @endcan
             @role('Super Admin')
-                <a href="{{ route('roles.index') }}" class="nav-item {{ request()->routeIs('roles.*') ? 'active' : '' }}"><span>◇</span>{{ __('Roles & Permissions') }}</a>
+                <a href="{{ route('roles.index') }}" class="nav-item {{ request()->routeIs('roles.*') ? 'active' : '' }}" title="{{ __('Roles & Permissions') }}"><span>◇</span><span class="nav-text">{{ __('Roles & Permissions') }}</span></a>
                 {{-- API keys and retargeting pixels are intentionally hidden from the navigation for now. --}}
             @endrole
             @can('audit.view')
-                <a href="{{ route('audit.index') }}" class="nav-item {{ request()->routeIs('audit.*') ? 'active' : '' }}"><span>≡</span>{{ __('Activity Log') }}</a>
-            @endcan
-            @can('crm.submissions.view')
-                <div class="nav-label">{{ __('Private') }}</div>
-                <a href="{{ route('crm.submissions.index') }}" class="nav-item {{ request()->routeIs('crm.submissions.*') ? 'active' : '' }}"><span>◫</span>{{ __('Partner applications') }}</a>
-                <a href="{{ route('crm.student-referrals.index') }}" class="nav-item {{ request()->routeIs('crm.student-referrals.*') ? 'active' : '' }}"><span>♙</span>{{ __('Student referrals') }}</a>
-                <a href="{{ route('crm.partners.index') }}" class="nav-item {{ request()->routeIs('crm.partners.*') ? 'active' : '' }}"><span>◎</span>{{ __('Partner links') }}</a>
+                <a href="{{ route('audit.index') }}" class="nav-item {{ request()->routeIs('audit.*') ? 'active' : '' }}" title="{{ __('Activity Log') }}"><span>≡</span><span class="nav-text">{{ __('Activity Log') }}</span></a>
             @endcan
         </nav>
-        <div class="sidebar-footer">
-            <div class="user-chip"><span class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span><span><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->roles->first()?->name ?? __('User') }}</small></span></div>
-            <form action="{{ route('logout') }}" method="POST">@csrf<button class="icon-button" title="{{ __('Sign out') }}">⇥</button></form>
-        </div>
+        @can('crm.submissions.view')
+            <nav class="nav-list partner-nav" aria-label="{{ __('Partner system') }}">
+                <div class="nav-label"><span class="nav-text">{{ __('Partner system') }}</span></div>
+                <a href="{{ route('crm.submissions.index') }}" class="nav-item {{ request()->routeIs('crm.submissions.*') ? 'active' : '' }}" title="{{ __('Partner applications') }}"><span>◫</span><span class="nav-text">{{ __('Partner applications') }}</span></a>
+                <a href="{{ route('crm.student-referrals.index') }}" class="nav-item {{ request()->routeIs('crm.student-referrals.*') ? 'active' : '' }}" title="{{ __('Student referrals') }}"><span>♙</span><span class="nav-text">{{ __('Student referrals') }}</span></a>
+                <a href="{{ route('crm.partners.index') }}" class="nav-item {{ request()->routeIs('crm.partners.*') ? 'active' : '' }}" title="{{ __('Partner accounts') }}"><span>◎</span><span class="nav-text">{{ __('Partner accounts') }}</span></a>
+            </nav>
+        @endcan
+        <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-label="{{ __('Collapse sidebar') }}" title="{{ __('Collapse sidebar') }}"><span>‹</span><span class="nav-text">{{ __('Collapse') }}</span></button>
     </aside>
     <main class="main-content">
         <header class="topbar">
@@ -67,6 +66,14 @@
             <div class="top-actions">
                 <a class="lang-switch" href="{{ route('locale', app()->getLocale() === 'ar' ? 'en' : 'ar') }}">{{ app()->getLocale() === 'ar' ? 'EN' : 'عربي' }}</a>
                 @can('links.create')<a class="button primary" href="{{ route('links.create') }}">＋ {{ __('New link') }}</a>@endcan
+                <details class="account-menu">
+                    <summary class="account-trigger" aria-label="{{ __('Account menu') }}"><span class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span></summary>
+                    <div class="account-dropdown">
+                        <div class="account-card"><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->roles->first()?->name ?? __('User') }}</small></div>
+                        <a href="{{ route('profile.edit') }}">{{ __('My profile') }}</a>
+                        <form action="{{ route('logout') }}" method="POST">@csrf<button type="submit">{{ __('Sign out') }}</button></form>
+                    </div>
+                </details>
             </div>
         </header>
         <section class="content">
@@ -111,6 +118,19 @@ document.querySelectorAll('[data-copy]').forEach(button => button.addEventListen
 
     setTimeout(() => button.textContent = original, 1600);
 }));
+
+const appShell = document.getElementById('appShell');
+const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
+const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+
+if (sidebarCollapsed) {
+    appShell.classList.add('sidebar-collapsed');
+}
+
+sidebarToggle?.addEventListener('click', () => {
+    appShell.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sidebar-collapsed', appShell.classList.contains('sidebar-collapsed'));
+});
 </script>
 @stack('scripts')
 </body>

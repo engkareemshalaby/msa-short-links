@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RecruitmentPartner extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'code', 'access_token', 'is_active'];
+    protected $fillable = ['user_id', 'name', 'code', 'access_token', 'is_active'];
 
     protected function casts(): array
     {
@@ -20,5 +21,10 @@ class RecruitmentPartner extends Model
     public function studentReferrals(): HasMany
     {
         return $this->hasMany(StudentReferral::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

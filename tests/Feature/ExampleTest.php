@@ -6,8 +6,11 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    public function test_the_application_redirects_guests_to_login(): void
+    public function test_the_application_shows_the_guest_landing_page(): void
     {
-        $this->get('/')->assertRedirect('/login');
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('MSA Go')
+            ->assertSee(route('login'), false);
     }
 }

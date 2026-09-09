@@ -6,6 +6,7 @@ use App\Models\ShortLink;
 use App\Models\Campaign;
 use App\Models\RetargetingPixel;
 use App\Models\Tag;
+use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,15 +21,43 @@ class ShortLinkController extends Controller
 
     public function index(Request $request): View
     {
-        $links = ShortLink::with('creator')->withCount([
-            'visits' => fn ($query) => $query->where('is_bot', false),
-        ])->when($request->search, fn ($query, $search) => $query->where(function ($query) use ($search) {
-            $query->where('title', 'like', "%{$search}%")
-                ->orWhere('code', 'like', "%{$search}%")
-                ->orWhere('destination_url', 'like', "%{$search}%");
-        }))->latest()->paginate(15)->withQueryString();
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'tag_id' => ['nullable', 'integer', 'exists:tags,id'],
+            'campaign_id' => ['nullable', 'integer', 'exists:campaigns,id'],
+            'created_by' => ['nullable', 'integer', 'exists:users,id'],
+            'status' => ['nullable', Rule::in(['active', 'inactive', 'expired'])],
+            'archive' => ['nullable', Rule::in(['current', 'archived', 'all'])],
+            'created_from' => ['nullable', 'date_format:Y-m-d'],
+            'created_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:created_from'],
+        ]);
 
-        return view('links.index', compact('links'));
+        $archive = $filters['archive'] ?? 'current';
+        $links = ShortLink::query()
+            ->when($archive === 'archived', fn ($query) => $query->onlyTrashed())
+            ->when($archive === 'all', fn ($query) => $query->withTrashed())
+            ->with('creator')->withCount([
+                'visits' => fn ($query) => $query->where('is_bot', false),
+            ])->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($query) use ($search) {
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('destination_url', 'like', "%{$search}%");
+            }))
+            ->when($filters['tag_id'] ?? null, fn ($query, $tagId) => $query->whereHas('tags', fn ($query) => $query->whereKey($tagId)))
+            ->when($filters['campaign_id'] ?? null, fn ($query, $campaignId) => $query->where('campaign_id', $campaignId))
+            ->when($filters['created_by'] ?? null, fn ($query, $userId) => $query->where('created_by', $userId))
+            ->when($filters['created_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['created_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date))
+            ->when(($filters['status'] ?? null) === 'active', fn ($query) => $query->where('is_active', true)->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now())))
+            ->when(($filters['status'] ?? null) === 'inactive', fn ($query) => $query->where('is_active', false))
+            ->when(($filters['status'] ?? null) === 'expired', fn ($query) => $query->where('is_active', true)->where('expires_at', '<=', now()))
+            ->latest()->paginate(15)->withQueryString();
+
+        $tags = Tag::query()->orderBy('name')->get(['id', 'name']);
+        $campaigns = Campaign::query()->orderBy('name')->get(['id', 'name']);
+        $creators = User::query()->whereHas('shortLinks', fn ($query) => $query->withTrashed())->orderBy('name')->get(['id', 'name']);
+
+        return view('links.index', compact('links', 'tags', 'campaigns', 'creators'));
     }
 
     public function create(): View
@@ -129,6 +158,15 @@ class ShortLinkController extends Controller
         $link->delete();
 
         return redirect()->route('links.index')->with('success', __('Short link archived successfully.'));
+    }
+
+    public function restore(int $link): RedirectResponse
+    {
+        $link = ShortLink::onlyTrashed()->findOrFail($link);
+        $link->restore();
+        AuditLogger::log('restored', $link, 'Restored short link '.$link->code, [], $link->only(['title', 'code', 'destination_url']));
+
+        return redirect()->route('links.index', ['archive' => 'archived'])->with('success', __('Short link restored successfully.'));
     }
 
     public function toggle(Request $request, ShortLink $link): RedirectResponse

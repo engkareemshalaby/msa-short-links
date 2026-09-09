@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -27,5 +28,10 @@ class User extends Authenticatable
     public function shortLinks(): HasMany
     {
         return $this->hasMany(ShortLink::class, 'created_by');
+    }
+
+    public function recruitmentPartner(): HasOne
+    {
+        return $this->hasOne(RecruitmentPartner::class);
     }
 }

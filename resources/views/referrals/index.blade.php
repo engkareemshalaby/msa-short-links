@@ -19,7 +19,7 @@
         <button class="button" type="submit">{{ __('Filter') }}</button>
         @if(request()->hasAny(['search','partner','status']))<a class="button ghost" href="{{ route('crm.student-referrals.index') }}">{{ __('Clear') }}</a>@endif
     </form>
-    <a class="button primary" href="{{ route('crm.partners.index') }}">{{ __('Manage partner links') }}</a>
+    <a class="button primary" href="{{ route('crm.partners.index') }}">{{ __('Manage partner accounts') }}</a>
 </div>
 
 <div class="card table-card"><div class="table-wrap"><table class="data-table">

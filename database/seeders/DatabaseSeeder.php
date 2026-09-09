@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
         $administrator = Role::firstOrCreate(['name' => 'Administrator', 'guard_name' => 'web']);
         $analyst = Role::firstOrCreate(['name' => 'Analyst', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Partner', 'guard_name' => 'web']);
 
         $superAdmin->syncPermissions($rolePermissions);
         $administrator->syncPermissions(['dashboard.view', 'links.view', 'links.create', 'links.update', 'links.delete', 'analytics.view', 'audit.view']);
