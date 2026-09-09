@@ -16,7 +16,7 @@
 @php
     $initialStep = $errors->hasAny(['commission_type', 'commission_value', 'commission_basis', 'exclusive_discount_percent', 'consent'])
         ? 3
-        : ($errors->hasAny(['recruitment_countries', 'annual_students_range', 'works_with_egyptian_universities', 'current_universities', 'expected_msa_students_range', 'interested_programs', 'notes']) ? 2 : 1);
+        : ($errors->hasAny(['password', 'password_confirmation', 'recruitment_countries', 'annual_students_range', 'works_with_egyptian_universities', 'current_universities', 'expected_msa_students_range', 'interested_programs', 'notes']) ? 2 : 1);
 @endphp
 
 <form class="crm-form" method="POST" action="{{ route('crm.store') }}" data-initial-step="{{ $initialStep }}" novalidate>
@@ -26,7 +26,7 @@
 
     <div class="form-progress" aria-label="{{ __('Application progress') }}">
         <div class="progress-line"><span id="progressFill"></span></div>
-        @foreach([[1, __('Agency & contact')], [2, __('Recruitment profile')], [3, __('Commercial proposal')]] as [$number, $label])
+        @foreach([[1, __('Agency & contact')], [2, __('Account & recruitment')], [3, __('Commercial proposal')]] as [$number, $label])
             <button class="progress-step" type="button" data-progress-step="{{ $number }}" aria-label="{{ __('Go to step :number', ['number' => $number]) }}">
                 <span>{{ $number }}</span><strong>{{ $label }}</strong>
             </button>
@@ -54,16 +54,21 @@
     </div>
 
     <div class="step-panel" data-step-panel="2">
-        <div class="step-intro"><span>{{ __('Step 2 of 3') }}</span><h2>{{ __('Your recruitment experience') }}</h2><p>{{ __('Share your current reach and realistic opportunity with MSA.') }}</p></div>
+        <div class="step-intro"><span>{{ __('Step 2 of 3') }}</span><h2>{{ __('Your account and recruitment experience') }}</h2><p>{{ __('Create your sign-in details and share your current reach with MSA.') }}</p></div>
 
-    <section class="form-section"><div class="form-section-head"><span class="section-number">3</span><div><h2>{{ __('Recruitment experience') }}</h2><p>{{ __('Help us understand your reach and current activity.') }}</p></div></div><div class="form-section-body"><div class="form-grid">
+    <section class="form-section"><div class="form-section-head"><span class="section-number">3</span><div><h2>{{ __('Partner portal sign-in') }}</h2><p>{{ __('You will use this password if your partner account is approved.') }}</p></div></div><div class="form-section-body"><div class="form-grid">
+        <label class="field"><span>{{ __('Password') }} <b class="required">*</b></span><input type="password" name="password" required minlength="8" autocomplete="new-password"><small>{{ __('At least 8 characters.') }}</small></label>
+        <label class="field"><span>{{ __('Confirm password') }} <b class="required">*</b></span><input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password"></label>
+    </div></div></section>
+
+    <section class="form-section"><div class="form-section-head"><span class="section-number">4</span><div><h2>{{ __('Recruitment experience') }}</h2><p>{{ __('Help us understand your reach and current activity.') }}</p></div></div><div class="form-section-body"><div class="form-grid">
         <label class="field full"><span>{{ __('Countries you recruit students from') }} <b class="required">*</b></span><textarea name="recruitment_countries" required placeholder="{{ __('Example: Egypt, Saudi Arabia, Nigeria') }}">{{ old('recruitment_countries') }}</textarea><small>{{ __('Separate multiple countries with commas.') }}</small></label>
         <label class="field"><span>{{ __('Approximate students recruited annually') }} <b class="required">*</b></span><select name="annual_students_range" required><option value="">{{ __('Choose a range') }}</option>@foreach(['1-25','26-50','51-100','101-250','251+'] as $range)<option value="{{ $range }}" @selected(old('annual_students_range') === $range)>{{ $range }}</option>@endforeach</select></label>
         <div class="field"><span>{{ __('Do you work with universities in Egypt?') }} <b class="required">*</b></span><div class="inline-options"><label class="choice"><input type="radio" name="works_with_egyptian_universities" value="1" @checked(old('works_with_egyptian_universities') === '1') required>{{ __('Yes') }}</label><label class="choice"><input type="radio" name="works_with_egyptian_universities" value="0" @checked(old('works_with_egyptian_universities') === '0') required>{{ __('No') }}</label></div></div>
         <label class="field full conditional" id="universitiesField"><span>{{ __('Universities you currently work with') }} <b class="required">*</b></span><textarea name="current_universities">{{ old('current_universities') }}</textarea></label>
     </div></div></section>
 
-    <section class="form-section"><div class="form-section-head"><span class="section-number">4</span><div><h2>{{ __('Partnership opportunity') }}</h2><p>{{ __('Your realistic expectations for the first year with MSA.') }}</p></div></div><div class="form-section-body"><div class="form-grid">
+    <section class="form-section"><div class="form-section-head"><span class="section-number">5</span><div><h2>{{ __('Partnership opportunity') }}</h2><p>{{ __('Your realistic expectations for the first year with MSA.') }}</p></div></div><div class="form-section-body"><div class="form-grid">
         <label class="field"><span>{{ __('Expected MSA students in the first 12 months') }} <b class="required">*</b></span><select name="expected_msa_students_range" required><option value="">{{ __('Choose a range') }}</option>@foreach(['1-10','11-25','26-50','51-100','101+'] as $range)<option value="{{ $range }}" @selected(old('expected_msa_students_range') === $range)>{{ $range }}</option>@endforeach</select></label>
         <div></div>
         <div class="field full"><span>{{ __('Interested faculties / programs') }} <b class="required">*</b></span><div class="choice-grid">@foreach(['Dentistry','Pharmacy','Biotechnology','Engineering','Computer Science','Arts & Design','Management Sciences','Languages','Other'] as $program)<label class="choice"><input type="checkbox" name="interested_programs[]" value="{{ $program }}" @checked(in_array($program, old('interested_programs', [])))>{{ __($program) }}</label>@endforeach</div></div>
@@ -76,7 +81,7 @@
     <div class="step-panel" data-step-panel="3">
         <div class="step-intro"><span>{{ __('Step 3 of 3') }}</span><h2>{{ __('Complete your proposal') }}</h2><p>{{ __('Add the commercial terms, review your answers and submit.') }}</p></div>
 
-    <section class="form-section"><div class="form-section-head"><span class="section-number">5</span><div><h2>{{ __('Commercial proposal') }}</h2><p>{{ __('Tell us the commission you request and the exclusive student discount you can offer.') }}</p></div></div><div class="form-section-body"><div class="form-grid">
+    <section class="form-section"><div class="form-section-head"><span class="section-number">6</span><div><h2>{{ __('Commercial proposal') }}</h2><p>{{ __('Tell us the commission you request and the exclusive student discount you can offer.') }}</p></div></div><div class="form-section-body"><div class="form-grid">
         <div class="field full"><span>{{ __('Preferred commission model') }} <b class="required">*</b></span><div class="choice-grid"><label class="choice"><input type="radio" name="commission_type" value="fixed_usd" @checked(old('commission_type') === 'fixed_usd') required><span><strong>{{ __('Fixed amount in USD') }}</strong><small>{{ __('A fixed commission for each enrolled student.') }}</small></span></label><label class="choice"><input type="radio" name="commission_type" value="percentage" @checked(old('commission_type') === 'percentage') required><span><strong>{{ __('Percentage') }}</strong><small>{{ __('A percentage of an installment or academic year.') }}</small></span></label></div></div>
         <label class="field"><span id="commissionValueLabel">{{ __('Requested commission value') }} <b class="required">*</b></span><input type="number" name="commission_value" value="{{ old('commission_value') }}" min="0" step="0.01" required inputmode="decimal"><small id="commissionValueHelp">{{ __('Enter the amount in USD or percentage based on your selection.') }}</small></label>
         <label class="field conditional" id="commissionBasisField"><span>{{ __('Percentage calculated on') }} <b class="required">*</b></span><select name="commission_basis"><option value="">{{ __('Choose one') }}</option><option value="installment" @selected(old('commission_basis') === 'installment')>{{ __('One tuition installment') }}</option><option value="academic_year" @selected(old('commission_basis') === 'academic_year')>{{ __('One academic year') }}</option></select></label>

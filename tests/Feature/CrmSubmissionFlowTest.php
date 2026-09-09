@@ -92,6 +92,8 @@ class CrmSubmissionFlowTest extends TestCase
             'job_title' => 'Managing Director',
             'mobile' => '+971 50 123 4567',
             'email' => 'Partner@Example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
             'recruitment_countries' => 'Saudi Arabia, Nigeria',
             'annual_students_range' => '101-250',
             'works_with_egyptian_universities' => '1',

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CrmSubmission;
 use App\Models\RecruitmentPartner;
 use App\Models\StudentReferral;
 use App\Models\User;
@@ -101,5 +102,43 @@ class StudentReferralFlowTest extends TestCase
         $this->actingAs($admin)->get(route('crm.student-referrals.index'))->assertOk();
         $this->actingAs($otherUser)->get(route('crm.partners.index'))->assertForbidden();
         $this->actingAs($otherUser)->get(route('crm.student-referrals.index'))->assertForbidden();
+    }
+
+    public function test_staff_can_create_partner_account_from_full_application(): void
+    {
+        $admin = User::firstOrFail();
+        $submission = CrmSubmission::create([
+            'agency_name' => 'Global Education',
+            'country' => 'United Arab Emirates',
+            'city' => 'Dubai',
+            'contact_name' => 'Sara Ahmed',
+            'mobile' => '+971 50 123 4567',
+            'email' => 'partner@example.com',
+            'password' => 'Password123!',
+            'recruitment_countries' => ['Saudi Arabia'],
+            'annual_students_range' => '26-50',
+            'works_with_egyptian_universities' => true,
+            'current_universities' => 'Example University',
+            'expected_msa_students_range' => '11-25',
+            'interested_programs' => ['Engineering'],
+            'commission_type' => 'fixed_usd',
+            'commission_value' => 500,
+            'exclusive_discount_percent' => 5,
+            'consent' => true,
+        ]);
+
+        $this->actingAs($admin)->from(route('crm.partners.index'))->post(route('crm.partners.store', $submission))
+            ->assertRedirect(route('crm.partners.index'))
+            ->assertSessionHas('success');
+
+        $partner = RecruitmentPartner::firstWhere('crm_submission_id', $submission->id);
+
+        $this->assertNotNull($partner);
+        $this->assertSame('Global Education', $partner->name);
+        $this->assertTrue($partner->user->hasRole('Partner'));
+        auth()->logout();
+
+        $this->post(route('partner.login.store'), ['email' => 'partner@example.com', 'password' => 'Password123!'])
+            ->assertRedirect(route('partner.referrals.index'));
     }
 }

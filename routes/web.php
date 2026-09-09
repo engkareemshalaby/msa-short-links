@@ -105,7 +105,9 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['permission:crm.submissions.view', 'cache.headers:no_store;private'])->group(function () {
         Route::get('/crm/partners', [RecruitmentPartnerController::class, 'index'])->name('crm.partners.index');
-        Route::post('/crm/partners', [RecruitmentPartnerController::class, 'store'])->name('crm.partners.store');
+        Route::post('/crm/partners/{submission}', [RecruitmentPartnerController::class, 'store'])->name('crm.partners.store');
+        Route::get('/crm/partners/{partner}/edit', [RecruitmentPartnerController::class, 'edit'])->name('crm.partners.edit');
+        Route::put('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'update'])->name('crm.partners.update');
         Route::patch('/crm/partners/{partner}/toggle', [RecruitmentPartnerController::class, 'toggle'])->name('crm.partners.toggle');
         Route::get('/crm/student-referrals', [StudentReferralController::class, 'index'])->name('crm.student-referrals.index');
         Route::patch('/crm/student-referrals/{referral}', [StudentReferralController::class, 'update'])->name('crm.student-referrals.update');

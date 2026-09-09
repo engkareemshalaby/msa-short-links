@@ -24,6 +24,7 @@ class StoreCrmSubmissionRequest extends FormRequest
             'job_title' => ['nullable', 'string', 'max:150'],
             'mobile' => ['required', 'string', 'max:50', 'regex:/^[0-9+()\-\s]{7,50}$/'],
             'email' => ['required', 'email:rfc', 'max:255'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'recruitment_countries' => ['required', 'string', 'max:2000'],
             'annual_students_range' => ['required', Rule::in(['1-25', '26-50', '51-100', '101-250', '251+'])],
             'works_with_egyptian_universities' => ['required', 'boolean'],
