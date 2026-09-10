@@ -25,6 +25,8 @@ class StoreExhibitionRegistrationRequest extends FormRequest
             'interested_faculties' => ['required', 'array', 'min:1', 'max:4'],
             'interested_faculties.*' => ['required', 'distinct', Rule::in(ExhibitionRegistration::FACULTIES)],
             'preferred_contact_method' => ['required', Rule::in(['email', 'whatsapp'])],
+            'has_relatives_or_acquaintances_in_egypt' => ['required', 'boolean'],
+            'has_accommodation_in_egypt' => ['nullable', 'required_if:has_relatives_or_acquaintances_in_egypt,1', 'boolean'],
             'consent' => ['accepted'],
             'company_fax' => ['nullable', 'max:0'],
         ];

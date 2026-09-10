@@ -30,10 +30,15 @@ class ExhibitionRegistration extends Model
         'student_name', 'student_mobile', 'parent_mobile', 'certificate_type',
         'certificate_type_other', 'current_result', 'interested_faculties',
         'preferred_contact_method', 'exhibition_location', 'status', 'ip_hash',
+        'has_relatives_or_acquaintances_in_egypt', 'has_accommodation_in_egypt',
     ];
 
     protected function casts(): array
     {
-        return ['interested_faculties' => 'array'];
+        return [
+            'interested_faculties' => 'array',
+            'has_relatives_or_acquaintances_in_egypt' => 'boolean',
+            'has_accommodation_in_egypt' => 'boolean',
+        ];
     }
 }

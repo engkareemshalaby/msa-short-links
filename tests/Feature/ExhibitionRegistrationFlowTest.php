@@ -75,6 +75,8 @@ class ExhibitionRegistrationFlowTest extends TestCase
             'certificate_type' => 'Cambridge IGCSE', 'current_result' => 'Predicted A grades',
             'interested_faculties' => ['Faculty of Dentistry', 'Faculty of Engineering'],
             'preferred_contact_method' => 'whatsapp', 'consent' => '1', 'company_fax' => '',
+            'has_relatives_or_acquaintances_in_egypt' => '1',
+            'has_accommodation_in_egypt' => '1',
         ];
     }
 }

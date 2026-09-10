@@ -38,6 +38,8 @@
             <div class="card-header"><div><h2>{{ __('Registration information') }}</h2><p>{{ __('Contact preference, exhibition, and submission time.') }}</p></div></div>
             <div class="card-body meta-grid">
                 <div class="meta-item"><span>{{ __('Preferred contact method') }}</span><strong>{{ __(ucfirst($registration->preferred_contact_method)) }}</strong></div>
+                <div class="meta-item"><span>{{ __('Relatives or acquaintances in Egypt') }}</span><strong>{{ is_null($registration->has_relatives_or_acquaintances_in_egypt) ? __('Not specified') : ($registration->has_relatives_or_acquaintances_in_egypt ? __('Yes') : __('No')) }}</strong></div>
+                @if($registration->has_relatives_or_acquaintances_in_egypt)<div class="meta-item"><span>{{ __('Accommodation or a place to stay in Egypt') }}</span><strong>{{ is_null($registration->has_accommodation_in_egypt) ? __('Not specified') : ($registration->has_accommodation_in_egypt ? __('Yes') : __('No')) }}</strong></div>@endif
                 <div class="meta-item"><span>{{ __('Exhibition location') }}</span><strong>{{ __($registration->exhibition_location) }}</strong></div>
                 <div class="meta-item"><span>{{ __('Submitted') }}</span><strong>{{ $registration->created_at->format('M d, Y · H:i') }}</strong></div>
                 <div class="meta-item"><span>{{ __('Last updated') }}</span><strong>{{ $registration->updated_at->format('M d, Y · H:i') }}</strong></div>
