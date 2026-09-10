@@ -31,14 +31,19 @@ class RecruitmentPartnerController extends Controller
     public function store(CrmSubmission $submission, Request $request): RedirectResponse
     {
         abort_if($submission->recruitmentPartner()->exists(), 422, __('This application already has a partner account.'));
-        abort_if(blank($submission->password), 422, __('This application has no password. Set a password before creating the account.'));
         abort_if(User::query()->where('email', mb_strtolower(trim($submission->email)))->exists(), 422, __('This email address is already used by another account.'));
 
-        $partner = DB::transaction(function () use ($submission): RecruitmentPartner {
+        $data = $request->validate([
+            'password' => [blank($submission->password) ? 'required' : 'nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $password = filled($data['password'] ?? null) ? Hash::make($data['password']) : $submission->password;
+
+        $partner = DB::transaction(function () use ($password, $submission): RecruitmentPartner {
             $user = User::create([
                 'name' => trim($submission->contact_name),
                 'email' => mb_strtolower(trim($submission->email)),
-                'password' => $submission->password,
+                'password' => $password,
             ]);
             $user->assignRole(Role::firstOrCreate(['name' => 'Partner', 'guard_name' => 'web']));
 
@@ -70,28 +75,31 @@ class RecruitmentPartnerController extends Controller
     public function update(Request $request, RecruitmentPartner $partner): RedirectResponse
     {
         $partner->load(['user', 'crmSubmission']);
+        $countries = ['Egypt', 'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Jordan', 'Oman', 'Bahrain', 'Iraq', 'Palestine', 'Lebanon', 'Syria', 'Libya', 'Sudan', 'Yemen', 'Algeria', 'Morocco', 'Tunisia'];
+        $programs = ['Dentistry', 'Pharmacy', 'Biotechnology', 'Engineering', 'Computer Science', 'Arts & Design', 'Management Sciences', 'Languages', 'Other'];
 
         $data = $request->validate([
             'agency_name' => ['required', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:120'],
+            'country' => ['nullable', 'string', Rule::in($countries)],
             'city' => ['nullable', 'string', 'max:120'],
             'website' => ['nullable', 'url:http,https', 'max:500'],
             'contact_name' => ['required', 'string', 'max:255'],
             'job_title' => ['nullable', 'string', 'max:150'],
             'mobile' => ['nullable', 'string', 'max:50'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($partner->user_id)],
-            'recruitment_countries' => ['nullable', 'string', 'max:2000'],
+            'recruitment_countries' => ['nullable', 'array'],
+            'recruitment_countries.*' => ['string', Rule::in($countries)],
             'annual_students_range' => ['nullable', 'string', 'max:50'],
             'works_with_egyptian_universities' => ['nullable', 'boolean'],
             'current_universities' => ['nullable', 'string', 'max:3000'],
             'expected_msa_students_range' => ['nullable', 'string', 'max:50'],
             'interested_programs' => ['nullable', 'array'],
-            'interested_programs.*' => ['string', 'max:100'],
+            'interested_programs.*' => ['string', Rule::in($programs)],
             'notes' => ['nullable', 'string', 'max:5000'],
-            'commission_type' => ['nullable', Rule::in(['fixed_usd', 'percentage'])],
+            'commission_type' => ['nullable', Rule::in(['percentage'])],
             'commission_value' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
             'commission_basis' => ['nullable', Rule::in(['installment', 'academic_year'])],
-            'exclusive_discount_percent' => ['nullable', 'numeric', 'between:0,100'],
+            'exclusive_discount_percent' => ['nullable', 'numeric', 'between:0,30'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -116,8 +124,7 @@ class RecruitmentPartnerController extends Controller
             }
 
             if ($partner->crmSubmission) {
-                $countries = collect(preg_split('/[,،\n]+/u', (string) ($data['recruitment_countries'] ?? '')))
-                    ->map(fn (string $country) => trim($country))->filter()->unique()->values()->all();
+                $recruitmentCountries = collect($data['recruitment_countries'] ?? [])->unique()->values()->all();
 
                 $partner->crmSubmission->update([
                     'agency_name' => trim($data['agency_name']),
@@ -128,16 +135,16 @@ class RecruitmentPartnerController extends Controller
                     'job_title' => $data['job_title'] ?? null,
                     'mobile' => $data['mobile'] ?? '',
                     'email' => mb_strtolower(trim($data['email'])),
-                    'recruitment_countries' => $countries,
+                    'recruitment_countries' => $recruitmentCountries,
                     'annual_students_range' => $data['annual_students_range'] ?? '',
                     'works_with_egyptian_universities' => (bool) ($data['works_with_egyptian_universities'] ?? false),
                     'current_universities' => $data['current_universities'] ?? null,
                     'expected_msa_students_range' => $data['expected_msa_students_range'] ?? '',
                     'interested_programs' => $data['interested_programs'] ?? [],
                     'notes' => $data['notes'] ?? null,
-                    'commission_type' => $data['commission_type'] ?? 'fixed_usd',
+                    'commission_type' => 'percentage',
                     'commission_value' => $data['commission_value'] ?? 0,
-                    'commission_basis' => ($data['commission_type'] ?? null) === 'percentage' ? ($data['commission_basis'] ?? null) : null,
+                    'commission_basis' => $data['commission_basis'] ?? null,
                     'exclusive_discount_percent' => $data['exclusive_discount_percent'] ?? 0,
                 ]);
             }

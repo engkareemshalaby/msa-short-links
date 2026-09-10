@@ -16,7 +16,13 @@
                 <td><span class="badge {{ $submission->status === 'new' ? 'warning' : 'purple' }}">{{ __(ucfirst($submission->status)) }}</span></td>
                 <td><div class="row-actions">
                     <a class="button small" href="{{ route('crm.submissions.show', $submission) }}">{{ __('View') }}</a>
-                    <form method="POST" action="{{ route('crm.partners.store', $submission) }}">@csrf<button class="button small primary" type="submit">{{ __('Create account') }}</button></form>
+                    <form class="inline-account-form" method="POST" action="{{ route('crm.partners.store', $submission) }}">@csrf
+                        @if(blank($submission->password))
+                            <input type="password" name="password" required minlength="8" placeholder="{{ __('Temporary password') }}">
+                            <input type="password" name="password_confirmation" required minlength="8" placeholder="{{ __('Confirm password') }}">
+                        @endif
+                        <button class="button small primary" type="submit">{{ __('Create account') }}</button>
+                    </form>
                 </div></td>
             </tr>
         @empty<tr><td colspan="5"><div class="empty-state"><strong>{{ __('No pending partner applications') }}</strong>{{ __('New full partner applications will appear here.') }}</div></td></tr>@endforelse</tbody>
@@ -37,7 +43,7 @@
             </div></td>
         </tr>
     @empty<tr><td colspan="5"><div class="empty-state"><strong>{{ __('No partner accounts yet') }}</strong>{{ __('Approve a partner application above to create the first account.') }}</div></td></tr>@endforelse</tbody>
-</table></div>@if($partners->hasPages())<div class="pagination">{{ $partners->links() }}</div>@endif</div>
+</table></div>{{ $partners->onEachSide(1)->links('pagination.msa') }}</div>
 @endsection
 
-@push('head')<style>.pending-partners{margin-bottom:22px}.row-actions{display:flex;align-items:center;gap:6px;justify-content:flex-end}.row-actions form{margin:0}@media(max-width:700px){.card-header{align-items:stretch;flex-direction:column}.card-header .button{width:100%}.row-actions{justify-content:flex-start;flex-wrap:wrap}}</style>@endpush
+@push('head')<style>.pending-partners{margin-bottom:22px}.row-actions{display:flex;align-items:center;gap:6px;justify-content:flex-end}.row-actions form{margin:0}.inline-account-form{display:flex;align-items:center;gap:6px}.inline-account-form input{width:145px;border:1px solid #dfe4eb;border-radius:9px;padding:8px 10px;font-size:12px}@media(max-width:900px){.row-actions{align-items:stretch;flex-direction:column}.inline-account-form{align-items:stretch;flex-direction:column}.inline-account-form input{width:100%}}@media(max-width:700px){.card-header{align-items:stretch;flex-direction:column}.card-header .button{width:100%}.row-actions{justify-content:flex-start;flex-wrap:wrap}}</style>@endpush

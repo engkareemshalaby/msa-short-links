@@ -111,3 +111,89 @@
 .pagination .active {
     background: #072841;
 }
+
+.msa-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px 18px;
+    border-top: 1px solid var(--line);
+}
+
+.msa-pagination .pagination-summary {
+    margin: 0;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.msa-pagination .pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.msa-pagination .pagination-page,
+.msa-pagination .pagination-control,
+.msa-pagination .pagination-ellipsis {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.msa-pagination .pagination-page:hover,
+.msa-pagination .pagination-control:hover {
+    border-color: #538F3F;
+    color: #3f7032;
+    background: #f4f8f2;
+}
+
+.msa-pagination .pagination-page.active {
+    border-color: #072841;
+    background: #072841;
+    color: #fff;
+}
+
+.msa-pagination .pagination-control {
+    font-size: 20px;
+}
+
+.msa-pagination .pagination-control.disabled {
+    color: #b8c0c5;
+    background: #f7f9f7;
+    cursor: not-allowed;
+}
+
+.msa-pagination .pagination-ellipsis {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+}
+
+html[dir=rtl] .msa-pagination .pagination-control {
+    transform: scaleX(-1);
+}
+
+@media (max-width: 600px) {
+    .msa-pagination {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .msa-pagination .pagination-summary {
+        text-align: center;
+    }
+
+    .msa-pagination .pagination-pages {
+        justify-content: center;
+    }
+}

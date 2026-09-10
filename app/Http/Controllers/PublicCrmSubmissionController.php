@@ -21,8 +21,7 @@ class PublicCrmSubmissionController extends Controller
         $data['commission_basis'] = $data['commission_type'] === 'percentage' ? $data['commission_basis'] : null;
         $data['current_universities'] = $data['works_with_egyptian_universities'] ? ($data['current_universities'] ?? null) : null;
 
-        $countries = collect(preg_split('/[,،\n]+/u', $data['recruitment_countries']))
-            ->map(fn (string $country) => trim($country))->filter()->unique()->values()->all();
+        $countries = collect($data['recruitment_countries'])->unique()->values()->all();
 
         $existing = CrmSubmission::query()
             ->where('email', $data['email'])
@@ -35,6 +34,7 @@ class PublicCrmSubmissionController extends Controller
 
         CrmSubmission::create(array_replace($data, [
             'recruitment_countries' => $countries,
+            'interested_programs' => $data['interested_programs'] ?? [],
             'ip_hash' => $request->ip() ? hash_hmac('sha256', $request->ip(), config('app.key')) : null,
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 500),
         ]));

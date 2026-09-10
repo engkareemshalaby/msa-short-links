@@ -10,7 +10,7 @@ class StudentReferral extends Model
 {
     use HasFactory;
 
-    public const STATUSES = ['new', 'contacted', 'enrolled', 'incomplete'];
+    public const STATUSES = ['new', 'contacted', 'applied_on_study_in_egypt', 'enrolled', 'incomplete'];
 
     public const PROGRAMS = [
         'Dentistry', 'Pharmacy', 'Biotechnology', 'Engineering',
@@ -18,18 +18,34 @@ class StudentReferral extends Model
         'Languages', 'Other',
     ];
 
+    public const COUNTRIES = [
+        'Egypt', 'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Jordan',
+        'Oman', 'Bahrain', 'Iraq', 'Palestine', 'Lebanon', 'Syria', 'Libya', 'Sudan',
+        'Yemen', 'Algeria', 'Morocco', 'Tunisia', 'Other',
+    ];
+
     protected $fillable = [
         'recruitment_partner_id', 'reference_code', 'student_name', 'mobile',
-        'nationality', 'desired_program', 'passport_path', 'consent', 'status', 'ip_hash',
+        'email', 'nationality', 'desired_program', 'passport_path', 'consent', 'status', 'ip_hash',
+        'study_in_egypt_applied', 'study_in_egypt_updated_by', 'study_in_egypt_updated_at',
     ];
 
     protected function casts(): array
     {
-        return ['consent' => 'boolean'];
+        return [
+            'consent' => 'boolean',
+            'study_in_egypt_applied' => 'boolean',
+            'study_in_egypt_updated_at' => 'datetime',
+        ];
     }
 
     public function partner(): BelongsTo
     {
         return $this->belongsTo(RecruitmentPartner::class, 'recruitment_partner_id');
+    }
+
+    public function studyInEgyptUpdatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'study_in_egypt_updated_by');
     }
 }

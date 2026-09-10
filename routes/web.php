@@ -12,6 +12,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PartnerAuthController;
 use App\Http\Controllers\PartnerStudentReferralController;
+use App\Http\Controllers\PartnerProfileController;
 use App\Http\Controllers\PixelController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCrmSubmissionController;
@@ -41,17 +42,21 @@ Route::prefix('crm')->name('crm.')->group(function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
-    Route::get('/partner/login', [PartnerAuthController::class, 'create'])->name('partner.login');
-    Route::post('/partner/login', [PartnerAuthController::class, 'store'])->name('partner.login.store');
+    Route::get('/crm/partner/login', [PartnerAuthController::class, 'create'])->name('partner.login');
+    Route::post('/crm/partner/login', [PartnerAuthController::class, 'store'])->name('partner.login.store');
+    Route::redirect('/crm/partners/login', '/crm/partner/login')->name('partner.login.legacy');
 });
 
-Route::middleware(['auth', 'role:Partner', 'cache.headers:no_store;private'])->prefix('partner')->name('partner.')->group(function () {
+Route::middleware(['auth', 'role:Partner', 'cache.headers:no_store;private'])->prefix('crm/partner')->name('partner.')->group(function () {
     Route::post('/logout', [PartnerAuthController::class, 'destroy'])->name('logout');
     Route::get('/students', [PartnerStudentReferralController::class, 'index'])->name('referrals.index');
     Route::get('/students/create', [PartnerStudentReferralController::class, 'create'])->name('referrals.create');
     Route::post('/students', [PartnerStudentReferralController::class, 'store'])->name('referrals.store');
     Route::get('/students/{referral}/edit', [PartnerStudentReferralController::class, 'edit'])->name('referrals.edit');
     Route::put('/students/{referral}', [PartnerStudentReferralController::class, 'update'])->name('referrals.update');
+    Route::patch('/students/{referral}/study-in-egypt', [PartnerStudentReferralController::class, 'updateStudyInEgypt'])->name('referrals.study-in-egypt');
+    Route::get('/profile', [PartnerProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [PartnerProfileController::class, 'update'])->name('profile.update');
 });
 
 Route::middleware('auth')->group(function () {
@@ -105,11 +110,14 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['permission:crm.submissions.view', 'cache.headers:no_store;private'])->group(function () {
         Route::get('/crm/partners', [RecruitmentPartnerController::class, 'index'])->name('crm.partners.index');
-        Route::post('/crm/partners/{submission}', [RecruitmentPartnerController::class, 'store'])->name('crm.partners.store');
-        Route::get('/crm/partners/{partner}/edit', [RecruitmentPartnerController::class, 'edit'])->name('crm.partners.edit');
-        Route::put('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'update'])->name('crm.partners.update');
-        Route::patch('/crm/partners/{partner}/toggle', [RecruitmentPartnerController::class, 'toggle'])->name('crm.partners.toggle');
+        Route::post('/crm/partners/{submission}', [RecruitmentPartnerController::class, 'store'])->whereNumber('submission')->name('crm.partners.store');
+        Route::get('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'edit'])->whereNumber('partner')->name('crm.partners.show');
+        Route::get('/crm/partners/{partner}/edit', [RecruitmentPartnerController::class, 'edit'])->whereNumber('partner')->name('crm.partners.edit');
+        Route::put('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'update'])->whereNumber('partner')->name('crm.partners.update');
+        Route::patch('/crm/partners/{partner}/toggle', [RecruitmentPartnerController::class, 'toggle'])->whereNumber('partner')->name('crm.partners.toggle');
         Route::get('/crm/student-referrals', [StudentReferralController::class, 'index'])->name('crm.student-referrals.index');
+        Route::get('/crm/student-referrals/create', [StudentReferralController::class, 'create'])->name('crm.student-referrals.create');
+        Route::post('/crm/student-referrals', [StudentReferralController::class, 'store'])->name('crm.student-referrals.store');
         Route::patch('/crm/student-referrals/{referral}', [StudentReferralController::class, 'update'])->name('crm.student-referrals.update');
         Route::get('/crm/student-referrals/{referral}/passport', [StudentReferralController::class, 'passport'])->name('crm.student-referrals.passport');
     });

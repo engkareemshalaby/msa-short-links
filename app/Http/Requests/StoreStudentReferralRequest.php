@@ -18,7 +18,8 @@ class StoreStudentReferralRequest extends FormRequest
         return [
             'student_name' => ['required', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'max:50', 'regex:/^[0-9+()\-\s]{7,50}$/'],
-            'nationality' => ['required', 'string', 'max:120'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'nationality' => ['required', Rule::in([...StudentReferral::COUNTRIES, 'Egyptian'])],
             'desired_program' => ['required', Rule::in(StudentReferral::PROGRAMS)],
             'passport' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'consent' => ['accepted'],
@@ -32,6 +33,7 @@ class StoreStudentReferralRequest extends FormRequest
             'student_name' => trim((string) $this->input('student_name')),
             'mobile' => trim((string) $this->input('mobile')),
             'nationality' => trim((string) $this->input('nationality')),
+            'email' => filled($this->input('email')) ? mb_strtolower(trim((string) $this->input('email'))) : null,
         ]);
     }
 }

@@ -32,7 +32,7 @@
         <td>{{ $submission->created_at->format('M d, Y') }}<small class="link-destination">{{ $submission->created_at->format('H:i') }}</small></td>
         <td><a class="button small" href="{{ route('crm.submissions.show', $submission) }}">{{ __('View') }}</a></td>
     </tr>@empty<tr><td colspan="7"><div class="empty-state"><strong>{{ __('No applications found') }}</strong>{{ __('New partner applications will appear here.') }}</div></td></tr>@endforelse</tbody>
-</table></div>@if($submissions->hasPages())<div class="pagination">{{ $submissions->links() }}</div>@endif</div>
+</table></div>{{ $submissions->onEachSide(1)->links('pagination.msa') }}</div>
 @endsection
 
 @push('head')<style>.crm-stats{grid-template-columns:repeat(4,1fr)}.filter-row{flex:1}.filter-row .field:first-child{min-width:280px}@media(max-width:900px){.crm-stats{grid-template-columns:1fr 1fr}}@media(max-width:600px){.crm-stats{grid-template-columns:1fr}.filter-row .field{width:100%;min-width:0!important}}</style>@endpush

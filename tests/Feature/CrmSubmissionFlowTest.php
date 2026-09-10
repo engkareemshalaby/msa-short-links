@@ -35,7 +35,7 @@ class CrmSubmissionFlowTest extends TestCase
         ]);
 
         $submission = CrmSubmission::firstOrFail();
-        $this->assertSame(['Saudi Arabia', 'Nigeria'], $submission->recruitment_countries);
+        $this->assertSame(['Saudi Arabia', 'Egypt'], $submission->recruitment_countries);
         $this->assertSame(['Dentistry', 'Engineering'], $submission->interested_programs);
         $this->assertNotNull($submission->ip_hash);
     }
@@ -50,6 +50,20 @@ class CrmSubmissionFlowTest extends TestCase
             ->assertSessionHasErrors(['commission_value', 'commission_basis']);
 
         $this->assertDatabaseEmpty('crm_submissions');
+    }
+
+    public function test_discount_cannot_exceed_thirty_percent_and_programs_are_optional(): void
+    {
+        $payload = $this->validPayload();
+        unset($payload['interested_programs']);
+        $payload['exclusive_discount_percent'] = 30;
+
+        $this->post('/crm/new', $payload)->assertRedirect('/crm/thank-you');
+        $this->assertSame([], CrmSubmission::firstOrFail()->interested_programs);
+
+        $payload['email'] = 'another@example.com';
+        $payload['exclusive_discount_percent'] = 30.01;
+        $this->post('/crm/new', $payload)->assertSessionHasErrors('exclusive_discount_percent');
     }
 
     public function test_duplicate_agency_and_email_is_not_created_twice(): void
@@ -94,7 +108,7 @@ class CrmSubmissionFlowTest extends TestCase
             'email' => 'Partner@Example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'recruitment_countries' => 'Saudi Arabia, Nigeria',
+            'recruitment_countries' => ['Saudi Arabia', 'Egypt'],
             'annual_students_range' => '101-250',
             'works_with_egyptian_universities' => '1',
             'current_universities' => 'Example University',
