@@ -9,6 +9,7 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\CrmSubmissionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ExhibitionRegistrationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PartnerAuthController;
 use App\Http\Controllers\PartnerStudentReferralController;
@@ -37,6 +38,9 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/new', [PublicCrmSubmissionController::class, 'create'])->name('new');
     Route::post('/new', [PublicCrmSubmissionController::class, 'store'])->middleware('throttle:10,1')->name('store');
     Route::get('/thank-you', [PublicCrmSubmissionController::class, 'thankYou'])->name('thank-you');
+    Route::get('/jordan-exhibition', [ExhibitionRegistrationController::class, 'create'])->name('jordan.create');
+    Route::post('/jordan-exhibition', [ExhibitionRegistrationController::class, 'store'])->middleware('throttle:10,1')->name('jordan.store');
+    Route::get('/jordan-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYou'])->name('jordan.thank-you');
 });
 
 Route::middleware('guest')->group(function () {
@@ -109,6 +113,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware(['permission:crm.submissions.view', 'cache.headers:no_store;private'])->group(function () {
+        Route::get('/crm/exhibition-registrations', [ExhibitionRegistrationController::class, 'index'])->name('crm.exhibition.index');
+        Route::get('/crm/exhibition-registrations-analytics', [ExhibitionRegistrationController::class, 'analytics'])->name('crm.exhibition.analytics');
+        Route::get('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'show'])->name('crm.exhibition.show');
+        Route::patch('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'update'])->name('crm.exhibition.update');
         Route::get('/crm/partners', [RecruitmentPartnerController::class, 'index'])->name('crm.partners.index');
         Route::post('/crm/partners/{submission}', [RecruitmentPartnerController::class, 'store'])->whereNumber('submission')->name('crm.partners.store');
         Route::get('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'edit'])->whereNumber('partner')->name('crm.partners.show');
