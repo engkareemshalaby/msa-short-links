@@ -228,4 +228,64 @@ class StudentReferralFlowTest extends TestCase
         $this->post(route('partner.login.store'), ['email' => 'old-partner@example.com', 'password' => 'Password123!'])
             ->assertRedirect(route('partner.referrals.index'));
     }
+
+    public function test_only_super_admin_can_delete_a_partner_application(): void
+    {
+        $superAdmin = User::firstOrFail();
+        $staff = User::factory()->create();
+        $staff->givePermissionTo('crm.submissions.view');
+        $submission = CrmSubmission::create([
+            'agency_name' => 'Disposable Application', 'country' => 'Egypt', 'contact_name' => 'Test Contact',
+            'mobile' => '+201000000000', 'email' => 'application-delete@example.com', 'recruitment_countries' => ['Egypt'],
+            'annual_students_range' => '1-25', 'works_with_egyptian_universities' => false,
+            'expected_msa_students_range' => '1-10', 'interested_programs' => ['Engineering'],
+            'commission_type' => 'fixed_usd', 'commission_value' => 100, 'exclusive_discount_percent' => 0, 'consent' => true,
+        ]);
+
+        $this->actingAs($staff)->delete(route('crm.submissions.destroy', $submission))->assertForbidden();
+        $this->assertDatabaseHas('crm_submissions', ['id' => $submission->id]);
+
+        $this->actingAs($superAdmin)->delete(route('crm.submissions.destroy', $submission))->assertRedirect();
+        $this->assertDatabaseMissing('crm_submissions', ['id' => $submission->id]);
+    }
+
+    public function test_only_super_admin_can_delete_an_empty_partner_account_and_its_login(): void
+    {
+        $superAdmin = User::firstOrFail();
+        $staff = User::factory()->create();
+        $staff->givePermissionTo('crm.submissions.view');
+        $partnerUser = User::factory()->create();
+        $partnerUser->assignRole('Partner');
+        $partner = RecruitmentPartner::create([
+            'user_id' => $partnerUser->id, 'name' => 'Disposable Partner', 'code' => 'disposable-partner',
+            'access_token' => str_repeat('g', 48), 'is_active' => true,
+        ]);
+
+        $this->actingAs($staff)->delete(route('crm.partners.destroy', $partner))->assertForbidden();
+        $this->assertDatabaseHas('recruitment_partners', ['id' => $partner->id]);
+
+        $this->actingAs($superAdmin)->delete(route('crm.partners.destroy', $partner))->assertRedirect();
+        $this->assertDatabaseMissing('recruitment_partners', ['id' => $partner->id]);
+        $this->assertDatabaseMissing('users', ['id' => $partnerUser->id]);
+    }
+
+    public function test_partner_account_with_student_referrals_cannot_be_deleted(): void
+    {
+        $superAdmin = User::firstOrFail();
+        $partnerUser = User::factory()->create();
+        $partnerUser->assignRole('Partner');
+        $partner = RecruitmentPartner::create([
+            'user_id' => $partnerUser->id, 'name' => 'Partner With Students', 'code' => 'partner-with-students',
+            'access_token' => str_repeat('h', 48), 'is_active' => true,
+        ]);
+        StudentReferral::create([
+            'recruitment_partner_id' => $partner->id, 'reference_code' => 'MSA-260919-DELETE',
+            'student_name' => 'Protected Student', 'mobile' => '+201000000001', 'nationality' => 'Egypt',
+            'desired_program' => 'Engineering', 'consent' => true,
+        ]);
+
+        $this->actingAs($superAdmin)->delete(route('crm.partners.destroy', $partner))->assertUnprocessable();
+        $this->assertDatabaseHas('recruitment_partners', ['id' => $partner->id]);
+        $this->assertDatabaseHas('student_referrals', ['recruitment_partner_id' => $partner->id]);
+    }
 }

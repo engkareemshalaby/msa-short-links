@@ -10,6 +10,7 @@ use App\Http\Controllers\CrmSubmissionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ExhibitionRegistrationController;
+use App\Http\Controllers\EventContactController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PartnerAuthController;
 use App\Http\Controllers\PartnerStudentReferralController;
@@ -33,6 +34,8 @@ Route::get('/locale/{locale}', LocaleController::class)->name('locale');
 Route::get('/', fn () => auth()->check()
     ? redirect()->route('dashboard')
     : view('welcome'))->name('home');
+
+Route::view('/msauniversity/links', 'public.msa-links')->name('msa.links');
 
 Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/new', [PublicCrmSubmissionController::class, 'create'])->name('new');
@@ -110,19 +113,30 @@ Route::middleware('auth')->group(function () {
         Route::get('/export', [CrmSubmissionController::class, 'export'])->name('export');
         Route::get('/{submission}', [CrmSubmissionController::class, 'show'])->name('show');
         Route::patch('/{submission}', [CrmSubmissionController::class, 'update'])->name('update');
+        Route::delete('/{submission}', [CrmSubmissionController::class, 'destroy'])->middleware('role:Super Admin')->name('destroy');
     });
 
     Route::middleware(['permission:crm.submissions.view', 'cache.headers:no_store;private'])->group(function () {
         Route::get('/crm/exhibition-registrations', [ExhibitionRegistrationController::class, 'index'])->name('crm.exhibition.index');
+        Route::get('/crm/exhibition-registrations/export', [ExhibitionRegistrationController::class, 'export'])->name('crm.exhibition.export');
         Route::get('/crm/exhibition-registrations-analytics', [ExhibitionRegistrationController::class, 'analytics'])->name('crm.exhibition.analytics');
         Route::get('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'show'])->name('crm.exhibition.show');
         Route::patch('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'update'])->name('crm.exhibition.update');
+        Route::get('/crm/event-contacts', [EventContactController::class, 'index'])->name('crm.event-contacts.index');
+        Route::get('/crm/event-contacts/create', [EventContactController::class, 'create'])->name('crm.event-contacts.create');
+        Route::post('/crm/event-contacts', [EventContactController::class, 'store'])->name('crm.event-contacts.store');
+        Route::get('/crm/event-contacts/{contact}', [EventContactController::class, 'show'])->whereNumber('contact')->name('crm.event-contacts.show');
+        Route::get('/crm/event-contacts/{contact}/edit', [EventContactController::class, 'edit'])->whereNumber('contact')->name('crm.event-contacts.edit');
+        Route::put('/crm/event-contacts/{contact}', [EventContactController::class, 'update'])->whereNumber('contact')->name('crm.event-contacts.update');
+        Route::patch('/crm/event-contacts/{contact}/follow-up', [EventContactController::class, 'updateFollowUp'])->whereNumber('contact')->name('crm.event-contacts.follow-up');
+        Route::delete('/crm/event-contacts/{contact}', [EventContactController::class, 'destroy'])->whereNumber('contact')->name('crm.event-contacts.destroy');
         Route::get('/crm/partners', [RecruitmentPartnerController::class, 'index'])->name('crm.partners.index');
         Route::post('/crm/partners/{submission}', [RecruitmentPartnerController::class, 'store'])->whereNumber('submission')->name('crm.partners.store');
         Route::get('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'edit'])->whereNumber('partner')->name('crm.partners.show');
         Route::get('/crm/partners/{partner}/edit', [RecruitmentPartnerController::class, 'edit'])->whereNumber('partner')->name('crm.partners.edit');
         Route::put('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'update'])->whereNumber('partner')->name('crm.partners.update');
         Route::patch('/crm/partners/{partner}/toggle', [RecruitmentPartnerController::class, 'toggle'])->whereNumber('partner')->name('crm.partners.toggle');
+        Route::delete('/crm/partners/{partner}', [RecruitmentPartnerController::class, 'destroy'])->whereNumber('partner')->middleware('role:Super Admin')->name('crm.partners.destroy');
         Route::get('/crm/student-referrals', [StudentReferralController::class, 'index'])->name('crm.student-referrals.index');
         Route::get('/crm/student-referrals/create', [StudentReferralController::class, 'create'])->name('crm.student-referrals.create');
         Route::post('/crm/student-referrals', [StudentReferralController::class, 'store'])->name('crm.student-referrals.store');

@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'meta' => [
+        'crm_pixel_id' => env('META_CRM_PIXEL_ID'),
+    ],
+
 ];

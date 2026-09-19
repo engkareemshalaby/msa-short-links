@@ -163,6 +163,23 @@ class RecruitmentPartnerController extends Controller
         return back()->with('success', __('Partner account status updated.'));
     }
 
+    public function destroy(Request $request, RecruitmentPartner $partner): RedirectResponse
+    {
+        abort_if($partner->studentReferrals()->exists(), 422, __('This partner account has student referrals and cannot be deleted. Disable it instead.'));
+
+        DB::transaction(function () use ($partner, $request): void {
+            $user = $partner->user;
+            AuditLogger::log('deleted', $partner, 'Deleted recruitment partner account', [
+                'name' => $partner->name,
+                'email' => $user?->email,
+            ], [], $request);
+            $partner->delete();
+            $user?->delete();
+        });
+
+        return back()->with('success', __('Partner account deleted successfully.'));
+    }
+
     private function uniqueCode(string $name): string
     {
         $base = Str::slug($name) ?: 'partner';

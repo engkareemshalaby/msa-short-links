@@ -24,7 +24,26 @@ class ExhibitionRegistrationFlowTest extends TestCase
             'exhibition_location' => 'Jordan',
             'status' => 'new',
         ]);
-        $this->assertSame(['Faculty of Dentistry', 'Faculty of Engineering'], ExhibitionRegistration::firstOrFail()->interested_faculties);
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame(['Faculty of Dentistry', 'Faculty of Engineering'], $registration->interested_faculties);
+        $this->assertMatchesRegularExpression('/^JOR-\d{6}$/', $registration->reference_code);
+    }
+
+    public function test_jordan_form_uses_the_crm_meta_pixel_and_thank_you_shows_the_next_step(): void
+    {
+        config()->set('services.meta.crm_pixel_id', '123456789012345');
+
+        $this->get('/crm/jordan-exhibition')
+            ->assertOk()
+            ->assertSee("fbq('init', \"123456789012345\")", false)
+            ->assertSee("fbq('track', 'PageView')", false);
+
+        $this->followingRedirects()->post('/crm/jordan-exhibition', $this->payload())
+            ->assertOk()
+            ->assertSee('Complete your application by registering on the Study in Egypt platform.')
+            ->assertSee('https://admission.study-in-egypt.gov.eg/signup', false)
+            ->assertDontSee('Your reference number')
+            ->assertSee("fbq('track', 'CompleteRegistration'", false);
     }
 
     public function test_a_student_can_select_no_more_than_four_faculties(): void
@@ -65,6 +84,21 @@ class ExhibitionRegistrationFlowTest extends TestCase
             ->assertOk()->assertDontSee('Jordan Student');
         $this->actingAs($admin)->get('/crm/exhibition-registrations-analytics?days=30')
             ->assertOk()->assertSee('Registrations over time')->assertSee('Top interested faculties');
+    }
+
+    public function test_authorized_user_can_export_filtered_registrations_as_excel(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->post('/crm/jordan-exhibition', $this->payload());
+        $admin = User::firstOrFail();
+
+        $response = $this->actingAs($admin)->get(route('crm.exhibition.export', ['status' => 'new']));
+
+        $response->assertOk()->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertStringContainsString('.xlsx', (string) $response->headers->get('content-disposition'));
+        $content = $response->streamedContent();
+        $this->assertStringStartsWith('PK', $content);
+        $this->assertGreaterThan(2000, strlen($content));
     }
 
     private function payload(): array

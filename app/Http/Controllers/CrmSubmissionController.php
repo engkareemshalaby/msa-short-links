@@ -62,6 +62,19 @@ class CrmSubmissionController extends Controller
         return back()->with('success', __('Application status updated.'));
     }
 
+    public function destroy(Request $request, CrmSubmission $submission): RedirectResponse
+    {
+        abort_if($submission->recruitmentPartner()->exists(), 422, __('Delete the linked partner account before deleting this application.'));
+
+        AuditLogger::log('deleted', $submission, 'Deleted partner application', [
+            'agency_name' => $submission->agency_name,
+            'email' => $submission->email,
+        ], [], $request);
+        $submission->delete();
+
+        return back()->with('success', __('Partner application deleted successfully.'));
+    }
+
     public function export(): StreamedResponse
     {
         return response()->streamDownload(function (): void {

@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\EventContact;
+use App\Services\AuditLogger;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
+
+class EventContactController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:200'],
+            'status' => ['nullable', Rule::in(EventContact::STATUSES)],
+            'event' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $contacts = EventContact::query()
+            ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('primary_email', 'like', "%{$search}%")
+                ->orWhere('emails', 'like', "%{$search}%")))
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($filters['event'] ?? null, fn ($query, string $event) => $query->where('event_name', $event))
+            ->latest()->paginate(20)->withQueryString();
+
+        return view('crm.event-contacts.index', [
+            'contacts' => $contacts,
+            'events' => EventContact::query()->distinct()->orderBy('event_name')->pluck('event_name'),
+        ]);
+    }
+
+    public function show(EventContact $contact): View
+    {
+        return view('crm.event-contacts.show', compact('contact'));
+    }
+
+    public function create(): View
+    {
+        return view('crm.event-contacts.create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        [$data, $emails] = $this->validatedContact($request);
+        $contact = EventContact::create($data + [
+            'import_key' => 'manual:'.Str::uuid(),
+            'primary_email' => $emails[0],
+            'emails' => $emails,
+            'raw_data' => ['name' => $data['name'], 'emails' => $emails, 'event_name' => $data['event_name'], 'source' => $data['source']],
+        ]);
+        AuditLogger::log('created', $contact, 'Created event contact', [], $contact->only(['name', 'emails', 'event_name', 'source', 'status']), $request);
+
+        return redirect()->route('crm.event-contacts.show', $contact)->with('success', __('Event contact created successfully.'));
+    }
+
+    public function edit(EventContact $contact): View
+    {
+        return view('crm.event-contacts.edit', compact('contact'));
+    }
+
+    public function update(Request $request, EventContact $contact): RedirectResponse
+    {
+        [$data, $emails] = $this->validatedContact($request);
+        $old = $contact->only(['name', 'emails', 'event_name', 'source', 'status', 'notes']);
+        $contact->update($data + ['primary_email' => $emails[0], 'emails' => $emails]);
+        AuditLogger::log('updated', $contact, 'Updated event contact', $old, $contact->only(['name', 'emails', 'event_name', 'source', 'status', 'notes']), $request);
+
+        return redirect()->route('crm.event-contacts.show', $contact)->with('success', __('Event contact updated successfully.'));
+    }
+
+    public function updateFollowUp(Request $request, EventContact $contact): RedirectResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', Rule::in(EventContact::STATUSES)],
+            'notes' => ['nullable', 'string', 'max:5000'],
+        ]);
+        $old = $contact->only(['status', 'notes']);
+        $contact->update($data);
+        AuditLogger::log('updated', $contact, 'Updated event contact follow-up', $old, $contact->only(['status', 'notes']), $request);
+
+        return back()->with('success', __('Event contact updated successfully.'));
+    }
+
+    public function destroy(Request $request, EventContact $contact): RedirectResponse
+    {
+        AuditLogger::log('deleted', $contact, 'Deleted event contact', $contact->only(['name', 'emails', 'event_name', 'source', 'status']), [], $request);
+        $contact->delete();
+
+        return redirect()->route('crm.event-contacts.index')->with('success', __('Event contact deleted successfully.'));
+    }
+
+    private function validatedContact(Request $request): array
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'emails_text' => ['required', 'string', 'max:3000'],
+            'event_name' => ['required', 'string', 'max:255'],
+            'source' => ['required', 'string', 'max:100'],
+            'status' => ['required', Rule::in(EventContact::STATUSES)],
+            'notes' => ['nullable', 'string', 'max:5000'],
+        ]);
+        $emails = collect(preg_split('/[\s,;]+/', trim($data['emails_text'])) ?: [])
+            ->filter()->map(fn (string $email) => mb_strtolower(trim($email)))->unique()->values()->all();
+        Validator::make(['emails' => $emails], [
+            'emails' => ['required', 'array', 'min:1', 'max:10'],
+            'emails.*' => ['required', 'email', 'max:255', 'distinct'],
+        ])->validate();
+        unset($data['emails_text']);
+        $data['name'] = trim($data['name']);
+        $data['event_name'] = trim($data['event_name']);
+        $data['source'] = Str::snake(trim($data['source']));
+
+        return [$data, $emails];
+    }
+}

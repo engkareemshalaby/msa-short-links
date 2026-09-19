@@ -55,6 +55,7 @@
                 <a href="{{ route('crm.submissions.index') }}" class="nav-item {{ request()->routeIs('crm.submissions.*') ? 'active' : '' }}" title="{{ __('Partner applications') }}"><span>◫</span><span class="nav-text">{{ __('Partner applications') }}</span></a>
                 <a href="{{ route('crm.student-referrals.index') }}" class="nav-item {{ request()->routeIs('crm.student-referrals.*') ? 'active' : '' }}" title="{{ __('Student referrals') }}"><span>♙</span><span class="nav-text">{{ __('Student referrals') }}</span></a>
                 <a href="{{ route('crm.exhibition.index') }}" class="nav-item {{ request()->routeIs('crm.exhibition.*') ? 'active' : '' }}" title="{{ __('Jordan exhibition') }}"><span>✦</span><span class="nav-text">{{ __('Jordan exhibition') }}</span></a>
+                <a href="{{ route('crm.event-contacts.index') }}" class="nav-item {{ request()->routeIs('crm.event-contacts.*') ? 'active' : '' }}" title="{{ __('Exhibition contacts') }}"><span>✉</span><span class="nav-text">{{ __('Exhibition contacts') }}</span></a>
                 <a href="{{ route('crm.partners.index') }}" class="nav-item {{ request()->routeIs('crm.partners.*') ? 'active' : '' }}" title="{{ __('Partner accounts') }}"><span>◎</span><span class="nav-text">{{ __('Partner accounts') }}</span></a>
             </nav>
         @endcan

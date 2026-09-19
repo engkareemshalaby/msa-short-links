@@ -16,6 +16,9 @@
                 <td><span class="badge {{ $submission->status === 'new' ? 'warning' : 'purple' }}">{{ __(ucfirst($submission->status)) }}</span></td>
                 <td><div class="row-actions">
                     <a class="button small" href="{{ route('crm.submissions.show', $submission) }}">{{ __('View') }}</a>
+                    @role('Super Admin')
+                        <form method="POST" action="{{ route('crm.submissions.destroy', $submission) }}" onsubmit="return confirm(@js(__('Are you sure you want to delete this application?')))" >@csrf @method('DELETE')<button class="button small danger" type="submit">{{ __('Delete') }}</button></form>
+                    @endrole
                     <form class="inline-account-form" method="POST" action="{{ route('crm.partners.store', $submission) }}">@csrf
                         @if(blank($submission->password))
                             <input type="password" name="password" required minlength="8" placeholder="{{ __('Temporary password') }}">
@@ -40,6 +43,9 @@
             <td><div class="row-actions">
                 <a class="button small" href="{{ route('crm.partners.edit', $partner) }}">{{ __('Edit') }}</a>
                 <form method="POST" action="{{ route('crm.partners.toggle', $partner) }}">@csrf @method('PATCH')<button class="button small" type="submit">{{ $partner->is_active ? __('Disable') : __('Enable') }}</button></form>
+                @role('Super Admin')
+                    <form method="POST" action="{{ route('crm.partners.destroy', $partner) }}" onsubmit="return confirm(@js(__('Are you sure you want to delete this partner account?')))" >@csrf @method('DELETE')<button class="button small danger" type="submit">{{ __('Delete') }}</button></form>
+                @endrole
             </div></td>
         </tr>
     @empty<tr><td colspan="5"><div class="empty-state"><strong>{{ __('No partner accounts yet') }}</strong>{{ __('Approve a partner application above to create the first account.') }}</div></td></tr>@endforelse</tbody>

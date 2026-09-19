@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class EventContact extends Model
+{
+    use HasFactory;
+
+    public const STATUSES = ['new', 'contacted', 'qualified', 'closed'];
+
+    protected $fillable = ['import_key', 'name', 'primary_email', 'emails', 'event_name', 'source', 'status', 'notes', 'raw_data'];
+
+    protected function casts(): array
+    {
+        return ['emails' => 'array', 'raw_data' => 'array'];
+    }
+}
