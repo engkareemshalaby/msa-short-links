@@ -9,6 +9,7 @@
     <div class="meta-item"><span>{{ __('Exhibition') }}</span><strong>{{ __($contact->event_name) }}</strong></div>
     <div class="meta-item"><span>{{ __('Emails') }}</span>@foreach($contact->emails as $email)<a class="contact-email" href="mailto:{{ $email }}" dir="ltr">{{ $email }}</a>@endforeach</div>
     <div class="meta-item"><span>{{ __('Phone numbers') }}</span>@forelse($contact->phones ?? [] as $phone)<a class="contact-email" href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" dir="ltr">{{ $phone }}</a>@empty<strong>{{ __('Not provided') }}</strong>@endforelse</div>
+    <div class="meta-item"><span>{{ __('Tags') }}</span><div class="contact-tags">@forelse($contact->tags as $tag)<span style="--tag-color:{{ $tag->color }}"><i></i>{{ $tag->name }}</span>@empty<strong>{{ __('Not provided') }}</strong>@endforelse</div></div>
     <div class="meta-item"><span>{{ __('Source') }}</span><strong>{{ __(ucwords(str_replace('_', ' ', $contact->source))) }}</strong></div>
     <div class="meta-item"><span>{{ __('Imported') }}</span><strong>{{ $contact->created_at->format('M d, Y · H:i') }}</strong></div><div class="meta-item"><span>{{ __('Notes') }}</span><strong>{{ $contact->notes ?: __('Not provided') }}</strong></div>
 </div></section></main>
@@ -19,4 +20,4 @@
 </form><a class="button full edit-button" href="{{ route('crm.event-contacts.edit', $contact) }}">{{ __('Edit contact') }}</a><form method="POST" action="{{ route('crm.event-contacts.destroy', $contact) }}" onsubmit="return confirm(@js(__('Are you sure you want to delete this contact?')))" >@csrf @method('DELETE')<button class="button danger full delete-button" type="submit">{{ __('Delete contact') }}</button></form><a class="button full back-button" href="{{ route('crm.event-contacts.index') }}">← {{ __('Back to contacts') }}</a></div></section></aside></div>
 @endsection
 
-@push('head')<style>.contact-email{display:block;color:#3f7032;margin:4px 0;overflow-wrap:anywhere}.notes-field{margin-top:18px}.edit-button{margin-top:14px}.delete-button,.back-button{margin-top:10px}</style>@endpush
+@push('head')<style>.contact-email{display:block;color:#3f7032;margin:4px 0;overflow-wrap:anywhere}.contact-tags{display:flex;flex-wrap:wrap;gap:6px}.contact-tags span{display:flex;align-items:center;gap:6px;background:#f2f5f3;padding:5px 8px;border-radius:10px;font-size:10px}.contact-tags i{width:8px;height:8px;border-radius:50%;background:var(--tag-color)}.notes-field{margin-top:18px}.edit-button{margin-top:14px}.delete-button,.back-button{margin-top:10px}</style>@endpush

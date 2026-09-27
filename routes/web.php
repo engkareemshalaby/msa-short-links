@@ -9,6 +9,7 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\CrmSubmissionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventContactController;
+use App\Http\Controllers\EventContactTagController;
 use App\Http\Controllers\ExhibitionRegistrationController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LocaleController;
@@ -126,6 +127,10 @@ Route::middleware('auth')->group(function () {
             Route::patch('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'update'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.update');
         });
         Route::middleware('permission:crm.event_contacts.view')->group(function () {
+            Route::get('/crm/event-contact-tags', [EventContactTagController::class, 'index'])->name('crm.event-contact-tags.index');
+            Route::post('/crm/event-contact-tags', [EventContactTagController::class, 'store'])->middleware('permission:crm.event_contacts.manage')->name('crm.event-contact-tags.store');
+            Route::put('/crm/event-contact-tags/{tag}', [EventContactTagController::class, 'update'])->middleware('permission:crm.event_contacts.manage')->name('crm.event-contact-tags.update');
+            Route::delete('/crm/event-contact-tags/{tag}', [EventContactTagController::class, 'destroy'])->middleware('permission:crm.event_contacts.manage')->name('crm.event-contact-tags.destroy');
             Route::get('/crm/event-contacts', [EventContactController::class, 'index'])->name('crm.event-contacts.index');
             Route::get('/crm/event-contacts/create', [EventContactController::class, 'create'])->middleware('permission:crm.event_contacts.manage')->name('crm.event-contacts.create');
             Route::post('/crm/event-contacts', [EventContactController::class, 'store'])->middleware('permission:crm.event_contacts.manage')->name('crm.event-contacts.store');

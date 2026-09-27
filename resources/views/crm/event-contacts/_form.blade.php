@@ -1,13 +1,17 @@
 @php($editing = isset($contact))
+@php($selectedTagIds = array_map('intval', old('tag_ids', $editing ? $contact->tags->pluck('id')->all() : [])))
 <div class="card form-card"><div class="card-body"><form method="POST" action="{{ $editing ? route('crm.event-contacts.update', $contact) : route('crm.event-contacts.store') }}">@csrf @if($editing) @method('PUT') @endif
     <div class="form-grid">
         <label class="field"><span>{{ __('Name') }}</span><input name="name" required maxlength="255" value="{{ old('name', $contact->name ?? '') }}"></label>
         <label class="field"><span>{{ __('Exhibition') }}</span><input name="event_name" required maxlength="255" value="{{ old('event_name', $contact->event_name ?? '') }}" placeholder="Nigeria Exhibition"></label>
         <label class="field full"><span>{{ __('Emails') }}</span><textarea name="emails_text" required rows="4" placeholder="name@example.com&#10;another@example.com">{{ old('emails_text', isset($contact) ? implode("\n", $contact->emails) : '') }}</textarea><small>{{ __('Enter one email per line. The first email will be the primary email.') }}</small></label>
         <label class="field full"><span>{{ __('Phone numbers') }}</span><textarea name="phones_text" required rows="3" dir="ltr" placeholder="+20 100 123 4567&#10;+962 7 9000 0000">{{ old('phones_text', isset($contact) ? implode("\n", $contact->phones ?? []) : '') }}</textarea><small>{{ __('Enter one phone number per line. The first number will be the primary phone.') }}</small></label>
+        <div class="field full"><span>{{ __('Tags') }}</span>@if($tags->isNotEmpty())<div class="contact-tag-options">@foreach($tags as $tag)<label style="--tag-color:{{ $tag->color }}"><input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" @checked(in_array($tag->id, $selectedTagIds, true))><i></i><span>{{ $tag->name }}</span></label>@endforeach</div>@else<small>{{ __('No contact tags have been created yet.') }} <a href="{{ route('crm.event-contact-tags.index') }}">{{ __('Create tags') }}</a></small>@endif</div>
         <label class="field"><span>{{ __('Source') }}</span><input name="source" required maxlength="100" value="{{ old('source', isset($contact) ? ucwords(str_replace('_', ' ', $contact->source)) : 'Business Card') }}"></label>
         <label class="field"><span>{{ __('Status') }}</span><select name="status">@foreach(\App\Models\EventContact::STATUSES as $status)<option value="{{ $status }}" @selected(old('status', $contact->status ?? 'new') === $status)>{{ __(ucfirst($status)) }}</option>@endforeach</select></label>
         <label class="field full"><span>{{ __('Notes') }}</span><textarea name="notes" rows="6">{{ old('notes', $contact->notes ?? '') }}</textarea></label>
     </div>
     <div class="form-footer"><a class="button" href="{{ $editing ? route('crm.event-contacts.show', $contact) : route('crm.event-contacts.index') }}">{{ __('Cancel') }}</a><button class="button primary" type="submit">{{ $editing ? __('Save changes') : __('Add contact') }}</button></div>
 </form></div></div>
+
+@push('head')<style>.contact-tag-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.contact-tag-options label{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;cursor:pointer}.contact-tag-options label:has(input:checked){background:#f0f6ed;border-color:var(--tag-color)}.contact-tag-options input{width:auto;margin:0}.contact-tag-options i{width:9px;height:9px;border-radius:50%;background:var(--tag-color)}</style>@endpush

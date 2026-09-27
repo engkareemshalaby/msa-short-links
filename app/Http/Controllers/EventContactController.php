@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EventContact;
+use App\Models\EventContactTag;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,11 @@ class EventContactController extends Controller
             'search' => ['nullable', 'string', 'max:200'],
             'status' => ['nullable', Rule::in(EventContact::STATUSES)],
             'event' => ['nullable', 'string', 'max:255'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'distinct', 'exists:event_contact_tags,id'],
         ]);
 
-        $contacts = EventContact::query()
+        $contacts = EventContact::query()->with('tags')
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
                 ->where('name', 'like', "%{$search}%")
                 ->orWhere('primary_email', 'like', "%{$search}%")
@@ -30,27 +33,33 @@ class EventContactController extends Controller
                 ->orWhere('phones', 'like', "%{$search}%")))
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['event'] ?? null, fn ($query, string $event) => $query->where('event_name', $event))
+            ->when($filters['tag_ids'] ?? null, fn ($query, array $tagIds) => $query->whereHas(
+                'tags', fn ($query) => $query->whereIn('event_contact_tags.id', $tagIds)
+            ))
             ->latest()->paginate(20)->withQueryString();
 
         return view('crm.event-contacts.index', [
             'contacts' => $contacts,
             'events' => EventContact::query()->distinct()->orderBy('event_name')->pluck('event_name'),
+            'tags' => EventContactTag::query()->withCount('contacts')->orderBy('name')->get(),
         ]);
     }
 
     public function show(EventContact $contact): View
     {
+        $contact->load('tags');
+
         return view('crm.event-contacts.show', compact('contact'));
     }
 
     public function create(): View
     {
-        return view('crm.event-contacts.create');
+        return view('crm.event-contacts.create', ['tags' => EventContactTag::query()->orderBy('name')->get()]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        [$data, $emails, $phones] = $this->validatedContact($request);
+        [$data, $emails, $phones, $tagIds] = $this->validatedContact($request);
         $contact = EventContact::create($data + [
             'import_key' => 'manual:'.Str::uuid(),
             'primary_email' => $emails[0],
@@ -59,6 +68,7 @@ class EventContactController extends Controller
             'phones' => $phones,
             'raw_data' => ['name' => $data['name'], 'emails' => $emails, 'phones' => $phones, 'event_name' => $data['event_name'], 'source' => $data['source']],
         ]);
+        $contact->tags()->sync($tagIds);
         AuditLogger::log('created', $contact, 'Created event contact', [], $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status']), $request);
 
         return redirect()->route('crm.event-contacts.show', $contact)->with('success', __('Event contact created successfully.'));
@@ -66,14 +76,20 @@ class EventContactController extends Controller
 
     public function edit(EventContact $contact): View
     {
-        return view('crm.event-contacts.edit', compact('contact'));
+        $contact->load('tags');
+
+        return view('crm.event-contacts.edit', [
+            'contact' => $contact,
+            'tags' => EventContactTag::query()->orderBy('name')->get(),
+        ]);
     }
 
     public function update(Request $request, EventContact $contact): RedirectResponse
     {
-        [$data, $emails, $phones] = $this->validatedContact($request);
+        [$data, $emails, $phones, $tagIds] = $this->validatedContact($request);
         $old = $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']);
         $contact->update($data + ['primary_email' => $emails[0], 'emails' => $emails, 'primary_phone' => $phones[0], 'phones' => $phones]);
+        $contact->tags()->sync($tagIds);
         AuditLogger::log('updated', $contact, 'Updated event contact', $old, $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']), $request);
 
         return redirect()->route('crm.event-contacts.show', $contact)->with('success', __('Event contact updated successfully.'));
@@ -106,6 +122,8 @@ class EventContactController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'emails_text' => ['required', 'string', 'max:3000'],
             'phones_text' => ['required', 'string', 'max:1000'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'distinct', 'exists:event_contact_tags,id'],
             'event_name' => ['required', 'string', 'max:255'],
             'source' => ['required', 'string', 'max:100'],
             'status' => ['required', Rule::in(EventContact::STATUSES)],
@@ -123,11 +141,12 @@ class EventContactController extends Controller
             'phones' => ['required', 'array', 'min:1', 'max:10'],
             'phones.*' => ['required', 'string', 'max:40', 'regex:/^\+?[0-9][0-9\s().-]{5,38}$/', 'distinct'],
         ])->validate();
-        unset($data['emails_text'], $data['phones_text']);
+        $tagIds = array_map('intval', $data['tag_ids'] ?? []);
+        unset($data['emails_text'], $data['phones_text'], $data['tag_ids']);
         $data['name'] = trim($data['name']);
         $data['event_name'] = trim($data['event_name']);
         $data['source'] = Str::snake(trim($data['source']));
 
-        return [$data, $emails, $phones];
+        return [$data, $emails, $phones, $tagIds];
     }
 }

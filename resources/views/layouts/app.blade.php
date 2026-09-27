@@ -69,6 +69,7 @@
                 @endcan
                 @can('crm.event_contacts.view')
                 <a href="{{ route('crm.event-contacts.index') }}" class="nav-item {{ request()->routeIs('crm.event-contacts.*') ? 'active' : '' }}" title="{{ __('Exhibition contacts') }}"><span>✉</span><span class="nav-text">{{ __('Exhibition contacts') }}</span></a>
+                <a href="{{ route('crm.event-contact-tags.index') }}" class="nav-item {{ request()->routeIs('crm.event-contact-tags.*') ? 'active' : '' }}" title="{{ __('Contact tags') }}"><span>●</span><span class="nav-text">{{ __('Contact tags') }}</span></a>
                 @endcan
                 @can('crm.partners.view')
                 <a href="{{ route('crm.partners.index') }}" class="nav-item {{ request()->routeIs('crm.partners.*') ? 'active' : '' }}" title="{{ __('Partner accounts') }}"><span>◎</span><span class="nav-text">{{ __('Partner accounts') }}</span></a>

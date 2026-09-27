@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class EventContact extends Model
 {
@@ -16,5 +17,10 @@ class EventContact extends Model
     protected function casts(): array
     {
         return ['emails' => 'array', 'phones' => 'array', 'raw_data' => 'array'];
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(EventContactTag::class, 'event_contact_tag_assignments');
     }
 }

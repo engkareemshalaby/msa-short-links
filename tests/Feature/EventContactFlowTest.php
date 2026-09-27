@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\EventContact;
+use App\Models\EventContactTag;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +55,7 @@ class EventContactFlowTest extends TestCase
     public function test_authorized_staff_can_create_edit_and_delete_event_contacts(): void
     {
         $admin = User::firstOrFail();
+        $tag = EventContactTag::create(['name' => 'New lead', 'color' => '#538F3F']);
 
         $response = $this->actingAs($admin)->post(route('crm.event-contacts.store'), [
             'name' => 'New Contact',
@@ -63,12 +65,14 @@ class EventContactFlowTest extends TestCase
             'source' => 'Business Card',
             'status' => 'new',
             'notes' => 'Met at the admissions stand.',
+            'tag_ids' => [$tag->id],
         ]);
         $contact = EventContact::where('primary_email', 'primary@example.com')->firstOrFail();
         $response->assertRedirect(route('crm.event-contacts.show', $contact));
         $this->assertSame(['primary@example.com', 'secondary@example.com'], $contact->emails);
         $this->assertSame(['+20 100 123 4567', '+20 111 765 4321'], $contact->phones);
         $this->assertSame('+20 100 123 4567', $contact->primary_phone);
+        $this->assertTrue($contact->tags()->whereKey($tag->id)->exists());
         $this->assertSame('business_card', $contact->source);
 
         $this->actingAs($admin)->put(route('crm.event-contacts.update', $contact), [
@@ -103,6 +107,49 @@ class EventContactFlowTest extends TestCase
         $this->actingAs($admin)->get(route('crm.event-contacts.index', ['search' => '111 999']))
             ->assertOk()
             ->assertSee($contact->name);
+    }
+
+    public function test_contact_tags_are_independent_many_to_many_and_support_multiple_filter_values(): void
+    {
+        $admin = User::firstOrFail();
+        $vip = EventContactTag::create(['name' => 'VIP', 'color' => '#C0392B']);
+        $followUp = EventContactTag::create(['name' => 'Follow up', 'color' => '#2980B9']);
+        $first = EventContact::firstOrFail();
+        $second = EventContact::query()->whereKeyNot($first->id)->firstOrFail();
+
+        $first->tags()->attach([$vip->id, $followUp->id]);
+        $second->tags()->attach($followUp);
+
+        $this->assertCount(2, $first->fresh()->tags);
+        $this->assertCount(2, $followUp->fresh()->contacts);
+
+        $this->actingAs($admin)->get(route('crm.event-contacts.index', ['tag_ids' => [$vip->id]]))
+            ->assertOk()
+            ->assertSee($first->name)
+            ->assertDontSee($second->name);
+
+        $this->actingAs($admin)->get(route('crm.event-contacts.index', ['tag_ids' => [$vip->id, $followUp->id]]))
+            ->assertOk()
+            ->assertSee($first->name)
+            ->assertSee($second->name);
+    }
+
+    public function test_admin_can_manage_contact_tags(): void
+    {
+        $admin = User::firstOrFail();
+
+        $this->actingAs($admin)->post(route('crm.event-contact-tags.store'), [
+            'name' => 'Priority', 'color' => '#123ABC',
+        ])->assertRedirect();
+
+        $tag = EventContactTag::firstWhere('name', 'Priority');
+        $this->actingAs($admin)->put(route('crm.event-contact-tags.update', $tag), [
+            'name' => 'High priority', 'color' => '#ABC123',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('event_contact_tags', ['id' => $tag->id, 'name' => 'High priority', 'color' => '#ABC123']);
+
+        $this->actingAs($admin)->delete(route('crm.event-contact-tags.destroy', $tag))->assertRedirect();
+        $this->assertDatabaseMissing('event_contact_tags', ['id' => $tag->id]);
     }
 
     public function test_unauthorized_users_cannot_access_event_contacts(): void
