@@ -18,9 +18,15 @@
 <body>
 <div class="app-shell" id="appShell">
     <aside class="sidebar" id="sidebar">
-        <a class="brand" href="{{ route('dashboard') }}">
+        <a class="brand" href="{{ route('home') }}">
             <img class="brand-logo" src="{{ asset('images/msa-logo.png') }}" alt="MSA University">
-            <span class="nav-text"><strong>MSA Go</strong><small>{{ __('Short Link Manager') }}</small></span>
+            <span class="nav-text"><strong>MSA Go</strong><small>
+                @if(auth()->user()->canAny(['dashboard.view', 'links.view', 'links.create', 'analytics.view']))
+                    {{ __('Short Link Manager') }}
+                @else
+                    {{ __('CRM Manager') }}
+                @endif
+            </small></span>
         </a>
         <nav class="nav-list" aria-label="{{ __('Main navigation') }}">
             @can('dashboard.view')
@@ -49,16 +55,26 @@
                 <a href="{{ route('audit.index') }}" class="nav-item {{ request()->routeIs('audit.*') ? 'active' : '' }}" title="{{ __('Activity Log') }}"><span>≡</span><span class="nav-text">{{ __('Activity Log') }}</span></a>
             @endcan
         </nav>
-        @can('crm.submissions.view')
+        @canany(['crm.submissions.view', 'crm.exhibitions.view', 'crm.event_contacts.view', 'crm.partners.view', 'crm.referrals.view'])
             <nav class="nav-list partner-nav" aria-label="{{ __('Partner system') }}">
                 <div class="nav-label"><span class="nav-text">{{ __('Partner system') }}</span></div>
+                @can('crm.submissions.view')
                 <a href="{{ route('crm.submissions.index') }}" class="nav-item {{ request()->routeIs('crm.submissions.*') ? 'active' : '' }}" title="{{ __('Partner applications') }}"><span>◫</span><span class="nav-text">{{ __('Partner applications') }}</span></a>
+                @endcan
+                @can('crm.referrals.view')
                 <a href="{{ route('crm.student-referrals.index') }}" class="nav-item {{ request()->routeIs('crm.student-referrals.*') ? 'active' : '' }}" title="{{ __('Student referrals') }}"><span>♙</span><span class="nav-text">{{ __('Student referrals') }}</span></a>
+                @endcan
+                @can('crm.exhibitions.view')
                 <a href="{{ route('crm.exhibition.index') }}" class="nav-item {{ request()->routeIs('crm.exhibition.*') ? 'active' : '' }}" title="{{ __('Jordan exhibition') }}"><span>✦</span><span class="nav-text">{{ __('Jordan exhibition') }}</span></a>
+                @endcan
+                @can('crm.event_contacts.view')
                 <a href="{{ route('crm.event-contacts.index') }}" class="nav-item {{ request()->routeIs('crm.event-contacts.*') ? 'active' : '' }}" title="{{ __('Exhibition contacts') }}"><span>✉</span><span class="nav-text">{{ __('Exhibition contacts') }}</span></a>
+                @endcan
+                @can('crm.partners.view')
                 <a href="{{ route('crm.partners.index') }}" class="nav-item {{ request()->routeIs('crm.partners.*') ? 'active' : '' }}" title="{{ __('Partner accounts') }}"><span>◎</span><span class="nav-text">{{ __('Partner accounts') }}</span></a>
+                @endcan
             </nav>
-        @endcan
+        @endcanany
         <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-label="{{ __('Collapse sidebar') }}" title="{{ __('Collapse sidebar') }}"><span>‹</span><span class="nav-text">{{ __('Collapse') }}</span></button>
     </aside>
     <main class="main-content">
