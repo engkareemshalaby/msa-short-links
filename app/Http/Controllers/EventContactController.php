@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\EventContact;
+use App\Models\EventContactStage;
 use App\Models\EventContactTag;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class EventContactController extends Controller
@@ -18,20 +18,22 @@ class EventContactController extends Controller
     {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:200'],
-            'status' => ['nullable', Rule::in(EventContact::STATUSES)],
+            'stage_id' => ['nullable', 'integer', 'exists:event_contact_stages,id'],
             'event' => ['nullable', 'string', 'max:255'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer', 'distinct', 'exists:event_contact_tags,id'],
         ]);
 
-        $contacts = EventContact::query()->with('tags')
+        $contacts = EventContact::query()->with(['tags', 'stage'])
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
                 ->where('name', 'like', "%{$search}%")
                 ->orWhere('primary_email', 'like', "%{$search}%")
                 ->orWhere('emails', 'like', "%{$search}%")
                 ->orWhere('primary_phone', 'like', "%{$search}%")
                 ->orWhere('phones', 'like', "%{$search}%")))
-            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when(array_key_exists('stage_id', $filters), fn ($query) => $filters['stage_id']
+                ? $query->where('event_contact_stage_id', $filters['stage_id'])
+                : $query)
             ->when($filters['event'] ?? null, fn ($query, string $event) => $query->where('event_name', $event))
             ->when($filters['tag_ids'] ?? null, fn ($query, array $tagIds) => $query->whereHas(
                 'tags', fn ($query) => $query->whereIn('event_contact_tags.id', $tagIds)
@@ -42,19 +44,27 @@ class EventContactController extends Controller
             'contacts' => $contacts,
             'events' => EventContact::query()->distinct()->orderBy('event_name')->pluck('event_name'),
             'tags' => EventContactTag::query()->withCount('contacts')->orderBy('name')->get(),
+            'stages' => EventContactStage::query()->where('is_active', true)->orderBy('position')->orderBy('name')->get(),
         ]);
     }
 
     public function show(EventContact $contact): View
     {
-        $contact->load('tags');
+        $contact->load(['tags', 'stage']);
 
-        return view('crm.event-contacts.show', compact('contact'));
+        return view('crm.event-contacts.show', [
+            'contact' => $contact,
+            'stages' => EventContactStage::query()->where(fn ($query) => $query->where('is_active', true)->orWhere('id', $contact->event_contact_stage_id))->orderBy('position')->orderBy('name')->get(),
+        ]);
     }
 
     public function create(): View
     {
-        return view('crm.event-contacts.create', ['tags' => EventContactTag::query()->orderBy('name')->get()]);
+        return view('crm.event-contacts.create', [
+            'tags' => EventContactTag::query()->orderBy('name')->get(),
+            'stages' => EventContactStage::query()->where('is_active', true)->orderBy('position')->orderBy('name')->get(),
+            'defaultStageId' => EventContactStage::query()->where('name', 'Awareness')->value('id'),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -66,6 +76,7 @@ class EventContactController extends Controller
             'emails' => $emails,
             'primary_phone' => $phones[0] ?? null,
             'phones' => $phones,
+            'event_contact_stage_id' => $data['event_contact_stage_id'] ?? EventContactStage::query()->where('name', 'Awareness')->value('id'),
             'raw_data' => ['name' => $data['name'], 'emails' => $emails, 'phones' => $phones, 'event_name' => $data['event_name'], 'source' => $data['source']],
         ]);
         $contact->tags()->sync($tagIds);
@@ -76,11 +87,13 @@ class EventContactController extends Controller
 
     public function edit(EventContact $contact): View
     {
-        $contact->load('tags');
+        $contact->load(['tags', 'stage']);
 
         return view('crm.event-contacts.edit', [
             'contact' => $contact,
             'tags' => EventContactTag::query()->orderBy('name')->get(),
+            'stages' => EventContactStage::query()->where(fn ($query) => $query->where('is_active', true)->orWhere('id', $contact->event_contact_stage_id))->orderBy('position')->orderBy('name')->get(),
+            'defaultStageId' => null,
         ]);
     }
 
@@ -98,12 +111,12 @@ class EventContactController extends Controller
     public function updateFollowUp(Request $request, EventContact $contact): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['required', Rule::in(EventContact::STATUSES)],
+            'event_contact_stage_id' => ['nullable', 'integer', 'exists:event_contact_stages,id'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ]);
-        $old = $contact->only(['status', 'notes']);
+        $old = $contact->only(['event_contact_stage_id', 'notes']);
         $contact->update($data);
-        AuditLogger::log('updated', $contact, 'Updated event contact follow-up', $old, $contact->only(['status', 'notes']), $request);
+        AuditLogger::log('updated', $contact, 'Updated event contact follow-up', $old, $contact->only(['event_contact_stage_id', 'notes']), $request);
 
         return back()->with('success', __('Event contact updated successfully.'));
     }
@@ -126,7 +139,7 @@ class EventContactController extends Controller
             'tag_ids.*' => ['integer', 'distinct', 'exists:event_contact_tags,id'],
             'event_name' => ['required', 'string', 'max:255'],
             'source' => ['required', 'string', 'max:100'],
-            'status' => ['required', Rule::in(EventContact::STATUSES)],
+            'event_contact_stage_id' => ['nullable', 'integer', 'exists:event_contact_stages,id'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ]);
         $emails = collect(preg_split('/[\s,;]+/', trim($data['emails_text'])) ?: [])

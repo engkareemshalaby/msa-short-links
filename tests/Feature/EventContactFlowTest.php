@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\EventContact;
+use App\Models\EventContactStage;
 use App\Models\EventContactTag;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -35,17 +36,18 @@ class EventContactFlowTest extends TestCase
     {
         $admin = User::firstOrFail();
         $contact = EventContact::where('name', 'Richard Morgan')->firstOrFail();
+        $stage = EventContactStage::firstWhere('name', 'Consideration');
 
         $this->actingAs($admin)->get(route('crm.event-contacts.index', ['search' => 'morganoxford']))
             ->assertOk()->assertSee('Richard Morgan')->assertDontSee('Bolanle Jegede');
         $this->actingAs($admin)->get(route('crm.event-contacts.show', $contact))
             ->assertOk()->assertSee('richard@morganoxfordeducation.co.uk');
         $this->actingAs($admin)->patch(route('crm.event-contacts.follow-up', $contact), [
-            'status' => 'contacted', 'notes' => 'Follow-up email sent.',
+            'event_contact_stage_id' => $stage->id, 'notes' => 'Follow-up email sent.',
         ])->assertRedirect();
 
         $this->assertDatabaseHas('event_contacts', [
-            'id' => $contact->id, 'status' => 'contacted', 'notes' => 'Follow-up email sent.',
+            'id' => $contact->id, 'event_contact_stage_id' => $stage->id, 'status' => 'new', 'notes' => 'Follow-up email sent.',
         ]);
         $this->assertDatabaseHas('audit_logs', [
             'subject_type' => EventContact::class, 'subject_id' => $contact->id, 'action' => 'updated',
@@ -56,6 +58,8 @@ class EventContactFlowTest extends TestCase
     {
         $admin = User::firstOrFail();
         $tag = EventContactTag::create(['name' => 'New lead', 'color' => '#538F3F']);
+        $awareness = EventContactStage::firstWhere('name', 'Awareness');
+        $decision = EventContactStage::firstWhere('name', 'Decision');
 
         $response = $this->actingAs($admin)->post(route('crm.event-contacts.store'), [
             'name' => 'New Contact',
@@ -63,7 +67,7 @@ class EventContactFlowTest extends TestCase
             'phones_text' => "+20 100 123 4567\n+20 111 765 4321",
             'event_name' => 'Lagos Education Fair',
             'source' => 'Business Card',
-            'status' => 'new',
+            'event_contact_stage_id' => $awareness->id,
             'notes' => 'Met at the admissions stand.',
             'tag_ids' => [$tag->id],
         ]);
@@ -73,6 +77,7 @@ class EventContactFlowTest extends TestCase
         $this->assertSame(['+20 100 123 4567', '+20 111 765 4321'], $contact->phones);
         $this->assertSame('+20 100 123 4567', $contact->primary_phone);
         $this->assertTrue($contact->tags()->whereKey($tag->id)->exists());
+        $this->assertTrue($contact->stage->is($awareness));
         $this->assertSame('business_card', $contact->source);
 
         $this->actingAs($admin)->put(route('crm.event-contacts.update', $contact), [
@@ -81,13 +86,14 @@ class EventContactFlowTest extends TestCase
             'phones_text' => '+962 (7) 9000-0000',
             'event_name' => 'Lagos Education Fair 2026',
             'source' => 'Manual Entry',
-            'status' => 'qualified',
+            'event_contact_stage_id' => $decision->id,
             'notes' => 'Ready for follow-up.',
         ])->assertRedirect(route('crm.event-contacts.show', $contact));
         $this->assertDatabaseHas('event_contacts', [
             'id' => $contact->id, 'name' => 'Updated Contact', 'primary_email' => 'updated@example.com',
             'primary_phone' => '+962 (7) 9000-0000',
-            'event_name' => 'Lagos Education Fair 2026', 'source' => 'manual_entry', 'status' => 'qualified',
+            'event_name' => 'Lagos Education Fair 2026', 'source' => 'manual_entry',
+            'event_contact_stage_id' => $decision->id, 'status' => 'new',
         ]);
 
         $this->actingAs($admin)->delete(route('crm.event-contacts.destroy', $contact))
@@ -120,7 +126,6 @@ class EventContactFlowTest extends TestCase
             'phones_text' => '',
             'event_name' => $contact->event_name,
             'source' => 'Business Card',
-            'status' => $contact->status,
         ])->assertRedirect(route('crm.event-contacts.show', $contact));
 
         $contact->refresh();
@@ -171,6 +176,44 @@ class EventContactFlowTest extends TestCase
         $this->assertDatabaseMissing('event_contact_tags', ['id' => $tag->id]);
     }
 
+    public function test_legacy_status_is_preserved_while_stages_are_managed_separately(): void
+    {
+        $admin = User::firstOrFail();
+        $contact = EventContact::firstOrFail();
+        $contact->update(['status' => 'qualified']);
+        $partner = EventContactStage::firstWhere('name', 'Partner');
+
+        $this->actingAs($admin)->patch(route('crm.event-contacts.follow-up', $contact), [
+            'event_contact_stage_id' => $partner->id,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('event_contacts', [
+            'id' => $contact->id,
+            'status' => 'qualified',
+            'event_contact_stage_id' => $partner->id,
+        ]);
+    }
+
+    public function test_admin_can_manage_dynamic_contact_stages_but_cannot_delete_one_in_use(): void
+    {
+        $admin = User::firstOrFail();
+
+        $this->actingAs($admin)->post(route('crm.event-contact-stages.store'), [
+            'name' => 'Negotiation', 'color' => '#123ABC', 'position' => 6, 'is_active' => '1',
+        ])->assertRedirect();
+        $stage = EventContactStage::firstWhere('name', 'Negotiation');
+
+        $this->actingAs($admin)->put(route('crm.event-contact-stages.update', $stage), [
+            'name' => 'Final negotiation', 'color' => '#ABC123', 'position' => 7,
+        ])->assertRedirect();
+        $this->assertDatabaseHas('event_contact_stages', ['id' => $stage->id, 'name' => 'Final negotiation', 'is_active' => false]);
+
+        EventContact::firstOrFail()->update(['event_contact_stage_id' => $stage->id]);
+        $this->actingAs($admin)->delete(route('crm.event-contact-stages.destroy', $stage))
+            ->assertSessionHasErrors('stage');
+        $this->assertDatabaseHas('event_contact_stages', ['id' => $stage->id]);
+    }
+
     public function test_unauthorized_users_cannot_access_event_contacts(): void
     {
         $user = User::factory()->create();
@@ -178,7 +221,7 @@ class EventContactFlowTest extends TestCase
 
         $this->actingAs($user)->get(route('crm.event-contacts.index'))->assertForbidden();
         $this->actingAs($user)->patch(route('crm.event-contacts.follow-up', $contact), [
-            'status' => 'contacted',
+            'event_contact_stage_id' => EventContactStage::first()->id,
         ])->assertForbidden();
     }
 }
