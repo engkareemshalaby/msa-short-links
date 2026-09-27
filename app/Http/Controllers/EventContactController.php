@@ -64,7 +64,7 @@ class EventContactController extends Controller
             'import_key' => 'manual:'.Str::uuid(),
             'primary_email' => $emails[0],
             'emails' => $emails,
-            'primary_phone' => $phones[0],
+            'primary_phone' => $phones[0] ?? null,
             'phones' => $phones,
             'raw_data' => ['name' => $data['name'], 'emails' => $emails, 'phones' => $phones, 'event_name' => $data['event_name'], 'source' => $data['source']],
         ]);
@@ -88,7 +88,7 @@ class EventContactController extends Controller
     {
         [$data, $emails, $phones, $tagIds] = $this->validatedContact($request);
         $old = $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']);
-        $contact->update($data + ['primary_email' => $emails[0], 'emails' => $emails, 'primary_phone' => $phones[0], 'phones' => $phones]);
+        $contact->update($data + ['primary_email' => $emails[0], 'emails' => $emails, 'primary_phone' => $phones[0] ?? null, 'phones' => $phones]);
         $contact->tags()->sync($tagIds);
         AuditLogger::log('updated', $contact, 'Updated event contact', $old, $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']), $request);
 
@@ -121,7 +121,7 @@ class EventContactController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'emails_text' => ['required', 'string', 'max:3000'],
-            'phones_text' => ['required', 'string', 'max:1000'],
+            'phones_text' => ['nullable', 'string', 'max:1000'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer', 'distinct', 'exists:event_contact_tags,id'],
             'event_name' => ['required', 'string', 'max:255'],
@@ -135,10 +135,10 @@ class EventContactController extends Controller
             'emails' => ['required', 'array', 'min:1', 'max:10'],
             'emails.*' => ['required', 'email', 'max:255', 'distinct'],
         ])->validate();
-        $phones = collect(preg_split('/\R+/', trim($data['phones_text'])) ?: [])
+        $phones = collect(preg_split('/\R+/', trim((string) ($data['phones_text'] ?? ''))) ?: [])
             ->map(fn (string $phone) => trim($phone))->filter()->unique()->values()->all();
         Validator::make(['phones' => $phones], [
-            'phones' => ['required', 'array', 'min:1', 'max:10'],
+            'phones' => ['array', 'max:10'],
             'phones.*' => ['required', 'string', 'max:40', 'regex:/^\+?[0-9][0-9\s().-]{5,38}$/', 'distinct'],
         ])->validate();
         $tagIds = array_map('intval', $data['tag_ids'] ?? []);

@@ -109,6 +109,25 @@ class EventContactFlowTest extends TestCase
             ->assertSee($contact->name);
     }
 
+    public function test_phone_numbers_are_optional_when_updating_a_contact(): void
+    {
+        $admin = User::firstOrFail();
+        $contact = EventContact::firstOrFail();
+
+        $this->actingAs($admin)->put(route('crm.event-contacts.update', $contact), [
+            'name' => $contact->name,
+            'emails_text' => implode("\n", $contact->emails),
+            'phones_text' => '',
+            'event_name' => $contact->event_name,
+            'source' => 'Business Card',
+            'status' => $contact->status,
+        ])->assertRedirect(route('crm.event-contacts.show', $contact));
+
+        $contact->refresh();
+        $this->assertNull($contact->primary_phone);
+        $this->assertSame([], $contact->phones);
+    }
+
     public function test_contact_tags_are_independent_many_to_many_and_support_multiple_filter_values(): void
     {
         $admin = User::firstOrFail();
