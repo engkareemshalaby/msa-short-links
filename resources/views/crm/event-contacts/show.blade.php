@@ -8,6 +8,7 @@
     <div class="meta-item"><span>{{ __('Name') }}</span><strong>{{ $contact->name }}</strong></div>
     <div class="meta-item"><span>{{ __('Exhibition') }}</span><strong>{{ __($contact->event_name) }}</strong></div>
     <div class="meta-item"><span>{{ __('Emails') }}</span>@foreach($contact->emails as $email)<a class="contact-email" href="mailto:{{ $email }}" dir="ltr">{{ $email }}</a>@endforeach</div>
+    <div class="meta-item"><span>{{ __('Phone numbers') }}</span>@forelse($contact->phones ?? [] as $phone)<a class="contact-email" href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" dir="ltr">{{ $phone }}</a>@empty<strong>{{ __('Not provided') }}</strong>@endforelse</div>
     <div class="meta-item"><span>{{ __('Source') }}</span><strong>{{ __(ucwords(str_replace('_', ' ', $contact->source))) }}</strong></div>
     <div class="meta-item"><span>{{ __('Imported') }}</span><strong>{{ $contact->created_at->format('M d, Y · H:i') }}</strong></div><div class="meta-item"><span>{{ __('Notes') }}</span><strong>{{ $contact->notes ?: __('Not provided') }}</strong></div>
 </div></section></main>

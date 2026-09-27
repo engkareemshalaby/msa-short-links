@@ -58,6 +58,7 @@ class EventContactFlowTest extends TestCase
         $response = $this->actingAs($admin)->post(route('crm.event-contacts.store'), [
             'name' => 'New Contact',
             'emails_text' => "PRIMARY@EXAMPLE.COM\nsecondary@example.com",
+            'phones_text' => "+20 100 123 4567\n+20 111 765 4321",
             'event_name' => 'Lagos Education Fair',
             'source' => 'Business Card',
             'status' => 'new',
@@ -66,11 +67,14 @@ class EventContactFlowTest extends TestCase
         $contact = EventContact::where('primary_email', 'primary@example.com')->firstOrFail();
         $response->assertRedirect(route('crm.event-contacts.show', $contact));
         $this->assertSame(['primary@example.com', 'secondary@example.com'], $contact->emails);
+        $this->assertSame(['+20 100 123 4567', '+20 111 765 4321'], $contact->phones);
+        $this->assertSame('+20 100 123 4567', $contact->primary_phone);
         $this->assertSame('business_card', $contact->source);
 
         $this->actingAs($admin)->put(route('crm.event-contacts.update', $contact), [
             'name' => 'Updated Contact',
             'emails_text' => 'updated@example.com',
+            'phones_text' => '+962 (7) 9000-0000',
             'event_name' => 'Lagos Education Fair 2026',
             'source' => 'Manual Entry',
             'status' => 'qualified',
@@ -78,6 +82,7 @@ class EventContactFlowTest extends TestCase
         ])->assertRedirect(route('crm.event-contacts.show', $contact));
         $this->assertDatabaseHas('event_contacts', [
             'id' => $contact->id, 'name' => 'Updated Contact', 'primary_email' => 'updated@example.com',
+            'primary_phone' => '+962 (7) 9000-0000',
             'event_name' => 'Lagos Education Fair 2026', 'source' => 'manual_entry', 'status' => 'qualified',
         ]);
 
@@ -87,6 +92,17 @@ class EventContactFlowTest extends TestCase
         $this->assertDatabaseHas('audit_logs', [
             'subject_type' => EventContact::class, 'subject_id' => $contact->id, 'action' => 'deleted',
         ]);
+    }
+
+    public function test_contacts_can_be_found_by_phone_number(): void
+    {
+        $admin = User::firstOrFail();
+        $contact = EventContact::firstOrFail();
+        $contact->update(['primary_phone' => '+20 100 555 1234', 'phones' => ['+20 100 555 1234', '+20 111 999 8888']]);
+
+        $this->actingAs($admin)->get(route('crm.event-contacts.index', ['search' => '111 999']))
+            ->assertOk()
+            ->assertSee($contact->name);
     }
 
     public function test_unauthorized_users_cannot_access_event_contacts(): void

@@ -11,10 +11,10 @@ class EventContact extends Model
 
     public const STATUSES = ['new', 'contacted', 'qualified', 'closed'];
 
-    protected $fillable = ['import_key', 'name', 'primary_email', 'emails', 'event_name', 'source', 'status', 'notes', 'raw_data'];
+    protected $fillable = ['import_key', 'name', 'primary_email', 'emails', 'primary_phone', 'phones', 'event_name', 'source', 'status', 'notes', 'raw_data'];
 
     protected function casts(): array
     {
-        return ['emails' => 'array', 'raw_data' => 'array'];
+        return ['emails' => 'array', 'phones' => 'array', 'raw_data' => 'array'];
     }
 }

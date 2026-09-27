@@ -25,7 +25,9 @@ class EventContactController extends Controller
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
                 ->where('name', 'like', "%{$search}%")
                 ->orWhere('primary_email', 'like', "%{$search}%")
-                ->orWhere('emails', 'like', "%{$search}%")))
+                ->orWhere('emails', 'like', "%{$search}%")
+                ->orWhere('primary_phone', 'like', "%{$search}%")
+                ->orWhere('phones', 'like', "%{$search}%")))
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['event'] ?? null, fn ($query, string $event) => $query->where('event_name', $event))
             ->latest()->paginate(20)->withQueryString();
@@ -48,14 +50,16 @@ class EventContactController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        [$data, $emails] = $this->validatedContact($request);
+        [$data, $emails, $phones] = $this->validatedContact($request);
         $contact = EventContact::create($data + [
             'import_key' => 'manual:'.Str::uuid(),
             'primary_email' => $emails[0],
             'emails' => $emails,
-            'raw_data' => ['name' => $data['name'], 'emails' => $emails, 'event_name' => $data['event_name'], 'source' => $data['source']],
+            'primary_phone' => $phones[0],
+            'phones' => $phones,
+            'raw_data' => ['name' => $data['name'], 'emails' => $emails, 'phones' => $phones, 'event_name' => $data['event_name'], 'source' => $data['source']],
         ]);
-        AuditLogger::log('created', $contact, 'Created event contact', [], $contact->only(['name', 'emails', 'event_name', 'source', 'status']), $request);
+        AuditLogger::log('created', $contact, 'Created event contact', [], $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status']), $request);
 
         return redirect()->route('crm.event-contacts.show', $contact)->with('success', __('Event contact created successfully.'));
     }
@@ -67,10 +71,10 @@ class EventContactController extends Controller
 
     public function update(Request $request, EventContact $contact): RedirectResponse
     {
-        [$data, $emails] = $this->validatedContact($request);
-        $old = $contact->only(['name', 'emails', 'event_name', 'source', 'status', 'notes']);
-        $contact->update($data + ['primary_email' => $emails[0], 'emails' => $emails]);
-        AuditLogger::log('updated', $contact, 'Updated event contact', $old, $contact->only(['name', 'emails', 'event_name', 'source', 'status', 'notes']), $request);
+        [$data, $emails, $phones] = $this->validatedContact($request);
+        $old = $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']);
+        $contact->update($data + ['primary_email' => $emails[0], 'emails' => $emails, 'primary_phone' => $phones[0], 'phones' => $phones]);
+        AuditLogger::log('updated', $contact, 'Updated event contact', $old, $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']), $request);
 
         return redirect()->route('crm.event-contacts.show', $contact)->with('success', __('Event contact updated successfully.'));
     }
@@ -90,7 +94,7 @@ class EventContactController extends Controller
 
     public function destroy(Request $request, EventContact $contact): RedirectResponse
     {
-        AuditLogger::log('deleted', $contact, 'Deleted event contact', $contact->only(['name', 'emails', 'event_name', 'source', 'status']), [], $request);
+        AuditLogger::log('deleted', $contact, 'Deleted event contact', $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status']), [], $request);
         $contact->delete();
 
         return redirect()->route('crm.event-contacts.index')->with('success', __('Event contact deleted successfully.'));
@@ -101,6 +105,7 @@ class EventContactController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'emails_text' => ['required', 'string', 'max:3000'],
+            'phones_text' => ['required', 'string', 'max:1000'],
             'event_name' => ['required', 'string', 'max:255'],
             'source' => ['required', 'string', 'max:100'],
             'status' => ['required', Rule::in(EventContact::STATUSES)],
@@ -112,11 +117,17 @@ class EventContactController extends Controller
             'emails' => ['required', 'array', 'min:1', 'max:10'],
             'emails.*' => ['required', 'email', 'max:255', 'distinct'],
         ])->validate();
-        unset($data['emails_text']);
+        $phones = collect(preg_split('/\R+/', trim($data['phones_text'])) ?: [])
+            ->map(fn (string $phone) => trim($phone))->filter()->unique()->values()->all();
+        Validator::make(['phones' => $phones], [
+            'phones' => ['required', 'array', 'min:1', 'max:10'],
+            'phones.*' => ['required', 'string', 'max:40', 'regex:/^\+?[0-9][0-9\s().-]{5,38}$/', 'distinct'],
+        ])->validate();
+        unset($data['emails_text'], $data['phones_text']);
         $data['name'] = trim($data['name']);
         $data['event_name'] = trim($data['event_name']);
         $data['source'] = Str::snake(trim($data['source']));
 
-        return [$data, $emails];
+        return [$data, $emails, $phones];
     }
 }
