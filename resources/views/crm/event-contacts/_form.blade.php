@@ -1,17 +1,54 @@
 @php($editing = isset($contact))
 @php($selectedTagIds = array_map('intval', old('tag_ids', $editing ? $contact->tags->pluck('id')->all() : [])))
+@php($extraData = old('extra_data', $editing ? ($contact->extra_data ?? []) : []))
 <div class="card form-card"><div class="card-body"><form method="POST" action="{{ $editing ? route('crm.event-contacts.update', $contact) : route('crm.event-contacts.store') }}">@csrf @if($editing) @method('PUT') @endif
     <div class="form-grid">
         <label class="field"><span>{{ __('Name') }}</span><input name="name" required maxlength="255" value="{{ old('name', $contact->name ?? '') }}"></label>
         <label class="field"><span>{{ __('Exhibition') }}</span><input name="event_name" required maxlength="255" value="{{ old('event_name', $contact->event_name ?? '') }}" placeholder="Nigeria Exhibition"></label>
+        <label class="field"><span>{{ __('Organization') }} <small>{{ __('Optional') }}</small></span><input name="organization_name" maxlength="255" value="{{ old('organization_name', $contact->organization_name ?? '') }}" placeholder="Ajman University"></label>
+        <label class="field"><span>{{ __('Job title') }} <small>{{ __('Optional') }}</small></span><input name="job_title" maxlength="255" value="{{ old('job_title', $contact->job_title ?? '') }}" placeholder="Managing Director"></label>
         <label class="field full"><span>{{ __('Emails') }}</span><textarea name="emails_text" required rows="4" placeholder="name@example.com&#10;another@example.com">{{ old('emails_text', isset($contact) ? implode("\n", $contact->emails) : '') }}</textarea><small>{{ __('Enter one email per line. The first email will be the primary email.') }}</small></label>
         <label class="field full"><span>{{ __('Phone numbers') }} <small>{{ __('Optional') }}</small></span><textarea name="phones_text" rows="3" dir="ltr" placeholder="+20 100 123 4567&#10;+962 7 9000 0000">{{ old('phones_text', isset($contact) ? implode("\n", $contact->phones ?? []) : '') }}</textarea><small>{{ __('Enter one phone number per line. The first number will be the primary phone.') }}</small></label>
         <div class="field full"><span>{{ __('Tags') }}</span>@if($tags->isNotEmpty())<div class="contact-tag-options">@foreach($tags as $tag)<label style="--tag-color:{{ $tag->color }}"><input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" @checked(in_array($tag->id, $selectedTagIds, true))><i></i><span>{{ $tag->name }}</span></label>@endforeach</div>@else<small>{{ __('No contact tags have been created yet.') }} <a href="{{ route('crm.event-contact-tags.index') }}">{{ __('Create tags') }}</a></small>@endif</div>
         <label class="field"><span>{{ __('Source') }}</span><input name="source" required maxlength="100" value="{{ old('source', isset($contact) ? ucwords(str_replace('_', ' ', $contact->source)) : 'Business Card') }}"></label>
         <label class="field"><span>{{ __('Stage') }}</span><select name="event_contact_stage_id"><option value="">{{ __('Not assigned') }}</option>@foreach($stages as $stage)<option value="{{ $stage->id }}" @selected((int) old('event_contact_stage_id', $contact->event_contact_stage_id ?? $defaultStageId) === $stage->id)>{{ $stage->name }}</option>@endforeach</select></label>
+        <div class="field full extra-data-field"><span>{{ __('Extra data') }} <small>{{ __('Optional') }}</small></span><div id="extraDataRows"></div><button class="button small extra-add" type="button" id="addExtraData">＋ {{ __('Add field') }}</button></div>
         <label class="field full"><span>{{ __('Notes') }}</span><textarea name="notes" rows="6">{{ old('notes', $contact->notes ?? '') }}</textarea></label>
     </div>
     <div class="form-footer"><a class="button" href="{{ $editing ? route('crm.event-contacts.show', $contact) : route('crm.event-contacts.index') }}">{{ __('Cancel') }}</a><button class="button primary" type="submit">{{ $editing ? __('Save changes') : __('Add contact') }}</button></div>
 </form></div></div>
 
-@push('head')<style>.contact-tag-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.contact-tag-options label{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;cursor:pointer}.contact-tag-options label:has(input:checked){background:#f0f6ed;border-color:var(--tag-color)}.contact-tag-options input{width:auto;margin:0}.contact-tag-options i{width:9px;height:9px;border-radius:50%;background:var(--tag-color)}</style>@endpush
+@push('head')<style>.contact-tag-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.contact-tag-options label{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;cursor:pointer}.contact-tag-options label:has(input:checked){background:#f0f6ed;border-color:var(--tag-color)}.contact-tag-options input{width:auto;margin:0}.contact-tag-options i{width:9px;height:9px;border-radius:50%;background:var(--tag-color)}.extra-data-field>span{display:block}.extra-data-row{display:grid;grid-template-columns:minmax(150px,.7fr) minmax(200px,1.3fr) auto;gap:8px;align-items:center;margin-top:8px}.extra-key-wrap{position:relative}.extra-key-wrap input{padding-inline-start:38px}.extra-key-icon{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);pointer-events:none}.extra-remove{min-width:40px;padding:10px}.extra-add{margin-top:10px}@media(max-width:650px){.extra-data-row{grid-template-columns:1fr auto}.extra-value{grid-column:1/2}.extra-remove{grid-column:2;grid-row:1/3}}</style>@endpush
+
+@push('scripts')
+<datalist id="extraDataKeys"><option value="Website"><option value="WhatsApp"><option value="Address"><option value="Office phone"><option value="Fax"><option value="LinkedIn"><option value="Facebook"><option value="Instagram"><option value="X"><option value="Affiliation"></datalist>
+<script>
+(() => {
+    const initialRows = @json(array_values($extraData));
+    const icons = {website:'🌐', whatsapp:'💬', address:'📍', 'office phone':'☎️', fax:'📠', linkedin:'in', facebook:'f', instagram:'◎', x:'𝕏', affiliation:'🏢'};
+    const rows = document.getElementById('extraDataRows');
+    let nextIndex = 0;
+
+    const iconFor = key => icons[String(key).trim().toLowerCase()] || '＋';
+    const addRow = (item = {}) => {
+        const index = nextIndex++;
+        const row = document.createElement('div');
+        row.className = 'extra-data-row';
+        row.innerHTML = `<div class="extra-key-wrap"><span class="extra-key-icon"></span><input name="extra_data[${index}][key]" list="extraDataKeys" maxlength="80" placeholder="{{ __('Field name') }}"></div><input class="extra-value" name="extra_data[${index}][value]" maxlength="2000" placeholder="{{ __('Value') }}"><button class="button small danger extra-remove" type="button" aria-label="{{ __('Remove') }}">×</button>`;
+        const keyInput = row.querySelector('[name$="[key]"]');
+        const valueInput = row.querySelector('[name$="[value]"]');
+        const icon = row.querySelector('.extra-key-icon');
+        keyInput.value = item.key || '';
+        valueInput.value = item.value || '';
+        const refreshIcon = () => icon.textContent = iconFor(keyInput.value);
+        keyInput.addEventListener('input', refreshIcon);
+        row.querySelector('.extra-remove').addEventListener('click', () => row.remove());
+        refreshIcon();
+        rows.appendChild(row);
+    };
+
+    initialRows.forEach(addRow);
+    document.getElementById('addExtraData').addEventListener('click', () => addRow());
+})();
+</script>
+@endpush

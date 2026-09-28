@@ -27,10 +27,13 @@ class EventContactController extends Controller
         $contacts = EventContact::query()->with(['tags', 'stage'])
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
                 ->where('name', 'like', "%{$search}%")
+                ->orWhere('organization_name', 'like', "%{$search}%")
+                ->orWhere('job_title', 'like', "%{$search}%")
                 ->orWhere('primary_email', 'like', "%{$search}%")
                 ->orWhere('emails', 'like', "%{$search}%")
                 ->orWhere('primary_phone', 'like', "%{$search}%")
-                ->orWhere('phones', 'like', "%{$search}%")))
+                ->orWhere('phones', 'like', "%{$search}%")
+                ->orWhere('extra_data', 'like', "%{$search}%")))
             ->when(array_key_exists('stage_id', $filters), fn ($query) => $filters['stage_id']
                 ? $query->where('event_contact_stage_id', $filters['stage_id'])
                 : $query)
@@ -100,10 +103,10 @@ class EventContactController extends Controller
     public function update(Request $request, EventContact $contact): RedirectResponse
     {
         [$data, $emails, $phones, $tagIds] = $this->validatedContact($request);
-        $old = $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']);
+        $old = $contact->only(['name', 'organization_name', 'job_title', 'emails', 'phones', 'event_name', 'source', 'status', 'notes', 'extra_data']);
         $contact->update($data + ['primary_email' => $emails[0], 'emails' => $emails, 'primary_phone' => $phones[0] ?? null, 'phones' => $phones]);
         $contact->tags()->sync($tagIds);
-        AuditLogger::log('updated', $contact, 'Updated event contact', $old, $contact->only(['name', 'emails', 'phones', 'event_name', 'source', 'status', 'notes']), $request);
+        AuditLogger::log('updated', $contact, 'Updated event contact', $old, $contact->only(['name', 'organization_name', 'job_title', 'emails', 'phones', 'event_name', 'source', 'status', 'notes', 'extra_data']), $request);
 
         return redirect()->route('crm.event-contacts.show', $contact)->with('success', __('Event contact updated successfully.'));
     }
@@ -133,6 +136,8 @@ class EventContactController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'organization_name' => ['nullable', 'string', 'max:255'],
+            'job_title' => ['nullable', 'string', 'max:255'],
             'emails_text' => ['required', 'string', 'max:3000'],
             'phones_text' => ['nullable', 'string', 'max:1000'],
             'tag_ids' => ['nullable', 'array'],
@@ -141,6 +146,9 @@ class EventContactController extends Controller
             'source' => ['required', 'string', 'max:100'],
             'event_contact_stage_id' => ['nullable', 'integer', 'exists:event_contact_stages,id'],
             'notes' => ['nullable', 'string', 'max:5000'],
+            'extra_data' => ['nullable', 'array', 'max:20'],
+            'extra_data.*.key' => ['nullable', 'string', 'max:80', 'required_with:extra_data.*.value'],
+            'extra_data.*.value' => ['nullable', 'string', 'max:2000', 'required_with:extra_data.*.key'],
         ]);
         $emails = collect(preg_split('/[\s,;]+/', trim($data['emails_text'])) ?: [])
             ->filter()->map(fn (string $email) => mb_strtolower(trim($email)))->unique()->values()->all();
@@ -155,8 +163,14 @@ class EventContactController extends Controller
             'phones.*' => ['required', 'string', 'max:40', 'regex:/^\+?[0-9][0-9\s().-]{5,38}$/', 'distinct'],
         ])->validate();
         $tagIds = array_map('intval', $data['tag_ids'] ?? []);
+        $data['extra_data'] = collect($data['extra_data'] ?? [])
+            ->map(fn (array $item): array => ['key' => trim((string) ($item['key'] ?? '')), 'value' => trim((string) ($item['value'] ?? ''))])
+            ->filter(fn (array $item): bool => $item['key'] !== '' && $item['value'] !== '')
+            ->values()->all() ?: null;
         unset($data['emails_text'], $data['phones_text'], $data['tag_ids']);
         $data['name'] = trim($data['name']);
+        $data['organization_name'] = filled($data['organization_name'] ?? null) ? trim($data['organization_name']) : null;
+        $data['job_title'] = filled($data['job_title'] ?? null) ? trim($data['job_title']) : null;
         $data['event_name'] = trim($data['event_name']);
         $data['source'] = Str::snake(trim($data['source']));
 

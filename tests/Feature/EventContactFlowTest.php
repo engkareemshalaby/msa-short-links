@@ -63,12 +63,18 @@ class EventContactFlowTest extends TestCase
 
         $response = $this->actingAs($admin)->post(route('crm.event-contacts.store'), [
             'name' => 'New Contact',
+            'organization_name' => 'Example University',
+            'job_title' => 'Admissions Director',
             'emails_text' => "PRIMARY@EXAMPLE.COM\nsecondary@example.com",
             'phones_text' => "+20 100 123 4567\n+20 111 765 4321",
             'event_name' => 'Lagos Education Fair',
             'source' => 'Business Card',
             'event_contact_stage_id' => $awareness->id,
             'notes' => 'Met at the admissions stand.',
+            'extra_data' => [
+                ['key' => 'Website', 'value' => 'https://example.com'],
+                ['key' => 'Custom field', 'value' => 'Custom value'],
+            ],
             'tag_ids' => [$tag->id],
         ]);
         $contact = EventContact::where('primary_email', 'primary@example.com')->firstOrFail();
@@ -76,6 +82,9 @@ class EventContactFlowTest extends TestCase
         $this->assertSame(['primary@example.com', 'secondary@example.com'], $contact->emails);
         $this->assertSame(['+20 100 123 4567', '+20 111 765 4321'], $contact->phones);
         $this->assertSame('+20 100 123 4567', $contact->primary_phone);
+        $this->assertSame('Example University', $contact->organization_name);
+        $this->assertSame('Admissions Director', $contact->job_title);
+        $this->assertSame([['key' => 'Website', 'value' => 'https://example.com'], ['key' => 'Custom field', 'value' => 'Custom value']], $contact->extra_data);
         $this->assertTrue($contact->tags()->whereKey($tag->id)->exists());
         $this->assertTrue($contact->stage->is($awareness));
         $this->assertSame('business_card', $contact->source);

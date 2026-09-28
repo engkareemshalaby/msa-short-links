@@ -13,11 +13,11 @@ class EventContact extends Model
 
     public const STATUSES = ['new', 'contacted', 'qualified', 'closed'];
 
-    protected $fillable = ['import_key', 'name', 'primary_email', 'emails', 'primary_phone', 'phones', 'event_name', 'source', 'status', 'event_contact_stage_id', 'notes', 'raw_data'];
+    protected $fillable = ['import_key', 'name', 'organization_name', 'job_title', 'primary_email', 'emails', 'primary_phone', 'phones', 'event_name', 'source', 'status', 'event_contact_stage_id', 'notes', 'extra_data', 'raw_data'];
 
     protected function casts(): array
     {
-        return ['emails' => 'array', 'phones' => 'array', 'raw_data' => 'array'];
+        return ['emails' => 'array', 'phones' => 'array', 'extra_data' => 'array', 'raw_data' => 'array'];
     }
 
     public function tags(): BelongsToMany
