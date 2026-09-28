@@ -49,7 +49,7 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/jordan-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYou'])->name('jordan.thank-you');
 });
 
-Route::get('/crm/event-contacts/public', [EventContactController::class, 'publicIndex'])
+Route::get('/crm/event-contacts/public/20269', [EventContactController::class, 'publicIndex'])
     ->name('crm.event-contacts.public');
 
 Route::middleware('guest')->group(function () {
