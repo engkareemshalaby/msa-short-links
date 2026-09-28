@@ -49,6 +49,9 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/jordan-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYou'])->name('jordan.thank-you');
 });
 
+Route::get('/crm/event-contacts/public', [EventContactController::class, 'publicIndex'])
+    ->name('crm.event-contacts.public');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');

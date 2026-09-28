@@ -1,0 +1,42 @@
+@extends('layouts.crm-public')
+
+@section('title', __('Exhibition contacts'))
+
+@section('content')
+<main class="public-contacts">
+    <section class="public-heading">
+        <span>{{ __('CRM') }}</span>
+        <h1>{{ __('Exhibition contacts') }}</h1>
+        <p>{{ __('Browse and filter exhibition contacts. This page is read-only.') }}</p>
+    </section>
+
+    <div class="card filter-card"><div class="card-body"><form class="filter-row" method="GET">
+        <label class="field"><span>{{ __('Search') }}</span><input name="search" value="{{ request('search') }}" placeholder="{{ __('Name, email or phone') }}"></label>
+        <label class="field"><span>{{ __('Exhibition') }}</span><select name="event"><option value="">{{ __('All exhibitions') }}</option>@foreach($events as $event)<option value="{{ $event }}" @selected(request('event') === $event)>{{ __($event) }}</option>@endforeach</select></label>
+        <div class="field tag-filter"><span>{{ __('Tags') }}</span><details class="multi-filter"><summary>{{ count((array) request('tag_ids', [])) ? trans_choice(':count selected', count((array) request('tag_ids', [])), ['count' => count((array) request('tag_ids', []))]) : __('All tags') }} <b>⌄</b></summary><div>@forelse($tags as $tag)<label><input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" @checked(in_array((string) $tag->id, (array) request('tag_ids', []), true))><i style="background:{{ $tag->color }}"></i><span>{{ $tag->name }}</span><small>{{ $tag->contacts_count }}</small></label>@empty<span class="empty-filter">{{ __('No tags yet') }}</span>@endforelse</div></details></div>
+        <label class="field"><span>{{ __('Stage') }}</span><select name="stage_id"><option value="">{{ __('All stages') }}</option>@foreach($stages as $stage)<option value="{{ $stage->id }}" @selected((int) request('stage_id') === $stage->id)>{{ $stage->name }}</option>@endforeach</select></label>
+        <button class="button primary" type="submit">{{ __('Apply filters') }}</button>
+        @if(request()->hasAny(['search','event','stage_id','tag_ids']))<a class="button" href="{{ route('crm.event-contacts.public') }}">{{ __('Clear') }}</a>@endif
+    </form></div></div>
+
+    <div class="card table-card"><div class="table-wrap"><table class="data-table">
+        <thead><tr><th>{{ __('Name') }}</th><th>{{ __('Organization') }}</th><th>{{ __('Job title') }}</th><th>{{ __('Email') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Exhibition') }}</th><th>{{ __('Source') }}</th><th>{{ __('Stage') }}</th></tr></thead>
+        <tbody>@forelse($contacts as $contact)<tr>
+            <td><strong>{{ $contact->name }}</strong>@if($contact->tags->isNotEmpty())<div class="contact-tags">@foreach($contact->tags as $tag)<span style="--tag-color:{{ $tag->color }}"><i></i>{{ $tag->name }}</span>@endforeach</div>@endif</td>
+            <td>{{ $contact->organization_name ?: __('Not provided') }}</td>
+            <td>{{ $contact->job_title ?: __('Not provided') }}</td>
+            <td><a class="contact-link" href="mailto:{{ $contact->primary_email }}" dir="ltr">{{ $contact->primary_email }}</a></td>
+            <td>@if($contact->primary_phone)<a class="contact-link" href="tel:{{ preg_replace('/[^0-9+]/', '', $contact->primary_phone) }}" dir="ltr">{{ $contact->primary_phone }}</a>@else<span class="muted-text">{{ __('Not provided') }}</span>@endif</td>
+            <td>{{ __($contact->event_name) }}</td>
+            <td>{{ __(ucwords(str_replace('_', ' ', $contact->source))) }}</td>
+            <td>@if($contact->stage)<span class="stage-badge" style="--stage-color:{{ $contact->stage->color }}"><i></i>{{ $contact->stage->name }}</span>@else<span class="muted-text">{{ __('Not assigned') }}</span>@endif</td>
+        </tr>@empty<tr><td colspan="8"><div class="empty-state"><strong>{{ __('No exhibition contacts found') }}</strong></div></td></tr>@endforelse</tbody>
+    </table></div>{{ $contacts->onEachSide(1)->links('pagination.msa') }}</div>
+</main>
+@endsection
+
+@push('head')
+<style>
+.public-contacts{max-width:1400px;margin:auto;padding:42px 24px 70px}.public-heading{margin-bottom:24px}.public-heading>span{color:#538f3f;font-size:11px;font-weight:800;letter-spacing:.1em}.public-heading h1{font-size:30px;margin:7px 0}.public-heading p{color:#62717a;margin:0}.filter-card{margin-bottom:18px}.filter-row .field:first-child{flex:1;min-width:220px}.contact-link{display:block;color:#3f7032;margin:3px 0;white-space:nowrap}.stage-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:10px;background:#f2f5f3;font-size:9px;font-weight:700}.stage-badge i,.multi-filter i,.contact-tags i{width:8px;height:8px;border-radius:50%;flex:none}.stage-badge i{background:var(--stage-color)}.tag-filter{min-width:190px}.multi-filter{position:relative}.multi-filter summary{list-style:none;display:flex;justify-content:space-between;gap:12px;border:1px solid #dfe4eb;border-radius:10px;padding:11px 13px;background:#fff;cursor:pointer;font-size:12px}.multi-filter summary::-webkit-details-marker{display:none}.multi-filter[open] summary{border-color:#538f3f}.multi-filter>div{position:absolute;z-index:30;top:calc(100% + 5px);inset-inline:0;min-width:230px;max-height:260px;overflow:auto;padding:7px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 28px rgba(7,40,65,.15)}.multi-filter label{display:flex;align-items:center;gap:8px;padding:8px;border-radius:7px;cursor:pointer}.multi-filter label:hover,.multi-filter label:has(input:checked){background:#edf5ea}.multi-filter input{width:auto}.multi-filter small{margin-inline-start:auto}.empty-filter{display:block;padding:9px;color:var(--muted)}.contact-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.contact-tags span{display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:10px;background:#f2f5f3;font-size:8px;color:#52615a}.contact-tags i{background:var(--tag-color)}@media(max-width:900px){.filter-row{align-items:stretch}.filter-row .field,.filter-row .button{width:100%}}
+</style>
+@endpush

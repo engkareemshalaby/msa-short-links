@@ -254,4 +254,18 @@ class EventContactFlowTest extends TestCase
             'event_contact_stage_id' => EventContactStage::first()->id,
         ])->assertForbidden();
     }
+
+    public function test_public_read_only_contacts_page_is_available_to_guests_and_supports_filters(): void
+    {
+        $visible = EventContact::where('name', 'Richard Morgan')->firstOrFail();
+        $hidden = EventContact::whereKeyNot($visible->id)->firstOrFail();
+
+        $this->get(route('crm.event-contacts.public', ['search' => 'morganoxford']))
+            ->assertOk()
+            ->assertSee($visible->name)
+            ->assertDontSee($hidden->name)
+            ->assertDontSee(__('Actions'))
+            ->assertDontSee(route('crm.event-contacts.edit', $visible), false)
+            ->assertDontSee(route('crm.event-contacts.destroy', $visible), false);
+    }
 }

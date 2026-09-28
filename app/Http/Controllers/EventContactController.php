@@ -16,6 +16,16 @@ class EventContactController extends Controller
 {
     public function index(Request $request): View
     {
+        return view('crm.event-contacts.index', $this->indexData($request));
+    }
+
+    public function publicIndex(Request $request): View
+    {
+        return view('crm.event-contacts.public-index', $this->indexData($request));
+    }
+
+    private function indexData(Request $request): array
+    {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:200'],
             'stage_id' => ['nullable', 'integer', 'exists:event_contact_stages,id'],
@@ -43,12 +53,12 @@ class EventContactController extends Controller
             ))
             ->latest()->paginate(20)->withQueryString();
 
-        return view('crm.event-contacts.index', [
+        return [
             'contacts' => $contacts,
             'events' => EventContact::query()->distinct()->orderBy('event_name')->pluck('event_name'),
             'tags' => EventContactTag::query()->withCount('contacts')->orderBy('name')->get(),
             'stages' => EventContactStage::query()->where('is_active', true)->orderBy('position')->orderBy('name')->get(),
-        ]);
+        ];
     }
 
     public function show(EventContact $contact): View
