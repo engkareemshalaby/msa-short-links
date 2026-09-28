@@ -124,6 +124,27 @@ class EventContactFlowTest extends TestCase
             ->assertSee($contact->name);
     }
 
+    public function test_contact_index_shows_profile_fields_and_only_primary_contact_details(): void
+    {
+        $admin = User::firstOrFail();
+        $contact = EventContact::where('name', 'Comr. Ajir Victor')->firstOrFail();
+        $contact->update([
+            'organization_name' => 'RJA Empire Nigeria Limited',
+            'job_title' => 'Director',
+            'primary_phone' => '+234 800 111 2222',
+            'phones' => ['+234 800 111 2222', '+234 800 333 4444'],
+        ]);
+
+        $this->actingAs($admin)->get(route('crm.event-contacts.index'))
+            ->assertOk()
+            ->assertSee('RJA Empire Nigeria Limited')
+            ->assertSee('Director')
+            ->assertSee('ajirvictor@gmail.com')
+            ->assertDontSee('rjaempirenigerialimited@gmail.com')
+            ->assertSee('+234 800 111 2222')
+            ->assertDontSee('+234 800 333 4444');
+    }
+
     public function test_phone_numbers_are_optional_when_updating_a_contact(): void
     {
         $admin = User::firstOrFail();

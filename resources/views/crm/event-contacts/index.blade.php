@@ -13,15 +13,17 @@
     <button class="button primary" type="submit">{{ __('Apply filters') }}</button>@if(request()->hasAny(['search','event','stage_id','tag_ids']))<a class="button" href="{{ route('crm.event-contacts.index') }}">{{ __('Clear') }}</a>@endif
 </form></div></div>
 <div class="card table-card event-contacts-table"><div class="table-wrap"><table class="data-table">
-    <thead><tr><th>{{ __('Name') }}</th><th>{{ __('Emails') }}</th><th>{{ __('Phone numbers') }}</th><th>{{ __('Exhibition') }}</th><th>{{ __('Source') }}</th><th>{{ __('Stage') }}</th><th>{{ __('Actions') }}</th></tr></thead>
+    <thead><tr><th>{{ __('Name') }}</th><th>{{ __('Organization') }}</th><th>{{ __('Job title') }}</th><th>{{ __('Email') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Exhibition') }}</th><th>{{ __('Source') }}</th><th>{{ __('Stage') }}</th><th>{{ __('Actions') }}</th></tr></thead>
     <tbody>@forelse($contacts as $contact)<tr>
         <td><strong>{{ $contact->name }}</strong>@if($contact->tags->isNotEmpty())<div class="contact-tags">@foreach($contact->tags as $tag)<span style="--tag-color:{{ $tag->color }}"><i></i>{{ $tag->name }}</span>@endforeach</div>@endif</td>
-        <td>@foreach($contact->emails as $email)<a class="contact-email" href="mailto:{{ $email }}" dir="ltr">{{ $email }}</a>@endforeach</td>
-        <td>@forelse($contact->phones ?? [] as $phone)<a class="contact-phone" href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" dir="ltr">{{ $phone }}</a>@empty<span class="muted-text">{{ __('Not provided') }}</span>@endforelse</td>
+        <td>{{ $contact->organization_name ?: __('Not provided') }}</td>
+        <td>{{ $contact->job_title ?: __('Not provided') }}</td>
+        <td><a class="contact-email" href="mailto:{{ $contact->primary_email }}" dir="ltr">{{ $contact->primary_email }}</a></td>
+        <td>@if($contact->primary_phone)<a class="contact-phone" href="tel:{{ preg_replace('/[^0-9+]/', '', $contact->primary_phone) }}" dir="ltr">{{ $contact->primary_phone }}</a>@else<span class="muted-text">{{ __('Not provided') }}</span>@endif</td>
         <td>{{ __($contact->event_name) }}</td><td>{{ __(ucwords(str_replace('_', ' ', $contact->source))) }}</td>
         <td>@if($contact->stage)<span class="stage-badge" style="--stage-color:{{ $contact->stage->color }}"><i></i>{{ $contact->stage->name }}</span>@else<span class="muted-text">{{ __('Not assigned') }}</span>@endif</td>
         <td><div class="row-actions"><a class="button small" href="{{ route('crm.event-contacts.show', $contact) }}">{{ __('View') }}</a>@can('crm.event_contacts.manage')<a class="button small" href="{{ route('crm.event-contacts.edit', $contact) }}">{{ __('Edit') }}</a><form method="POST" action="{{ route('crm.event-contacts.destroy', $contact) }}" onsubmit="return confirm(@js(__('Are you sure you want to delete this contact?')))" >@csrf @method('DELETE')<button class="button small danger" type="submit">{{ __('Delete') }}</button></form>@endcan</div></td>
-    </tr>@empty<tr><td colspan="7"><div class="empty-state"><strong>{{ __('No exhibition contacts found') }}</strong></div></td></tr>@endforelse</tbody>
+    </tr>@empty<tr><td colspan="9"><div class="empty-state"><strong>{{ __('No exhibition contacts found') }}</strong></div></td></tr>@endforelse</tbody>
 </table></div>{{ $contacts->onEachSide(1)->links('pagination.msa') }}</div>
 @endsection
 
