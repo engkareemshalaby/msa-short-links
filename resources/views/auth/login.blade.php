@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{{ asset('css/brand.css') }}">
 </head>
 <body class="login-body">
-<div class="login-visual"><div class="visual-content"><img class="visual-logo" src="{{ asset('images/msa-logo.png') }}" alt="MSA University"><h1>{{ __('Our CRM System & Digital Marketing Tools') }}</h1><p>{{ __('Manage your data, track campaigns, and gain valuable insights — all in one place.') }}</p></div></div>
+<div class="login-visual"><div class="visual-content"><img class="visual-logo" src="{{ asset('images/msa-logo.png') }}" alt="MSA University"><h1>{{ __('MSA CRM System & Digital Marketing Tools') }}</h1><p>{{ __('Manage your data, track campaigns, and gain valuable insights — all in one place.') }}</p></div></div>
 <main class="login-panel">
     <a class="login-language" href="{{ route('locale', app()->getLocale() === 'ar' ? 'en' : 'ar') }}">{{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}</a>
     <form class="login-card" method="POST" action="{{ route('login.store') }}">@csrf
