@@ -8,6 +8,7 @@ use App\Models\EventContactTag;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -34,27 +35,43 @@ class EventContactController extends Controller
             'tag_ids.*' => ['integer', 'distinct', 'exists:event_contact_tags,id'],
         ]);
 
-        $contacts = EventContact::query()->with(['tags', 'stage'])
+        $query = EventContact::query()
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
-                ->where('name', 'like', "%{$search}%")
-                ->orWhere('organization_name', 'like', "%{$search}%")
-                ->orWhere('job_title', 'like', "%{$search}%")
-                ->orWhere('primary_email', 'like', "%{$search}%")
-                ->orWhere('emails', 'like', "%{$search}%")
-                ->orWhere('primary_phone', 'like', "%{$search}%")
-                ->orWhere('phones', 'like', "%{$search}%")
-                ->orWhere('extra_data', 'like', "%{$search}%")))
+                ->where('event_contacts.name', 'like', "%{$search}%")
+                ->orWhere('event_contacts.organization_name', 'like', "%{$search}%")
+                ->orWhere('event_contacts.job_title', 'like', "%{$search}%")
+                ->orWhere('event_contacts.primary_email', 'like', "%{$search}%")
+                ->orWhere('event_contacts.emails', 'like', "%{$search}%")
+                ->orWhere('event_contacts.primary_phone', 'like', "%{$search}%")
+                ->orWhere('event_contacts.phones', 'like', "%{$search}%")
+                ->orWhere('event_contacts.extra_data', 'like', "%{$search}%")))
             ->when(array_key_exists('stage_id', $filters), fn ($query) => $filters['stage_id']
-                ? $query->where('event_contact_stage_id', $filters['stage_id'])
+                ? $query->where('event_contacts.event_contact_stage_id', $filters['stage_id'])
                 : $query)
-            ->when($filters['event'] ?? null, fn ($query, string $event) => $query->where('event_name', $event))
+            ->when($filters['event'] ?? null, fn ($query, string $event) => $query->where('event_contacts.event_name', $event))
             ->when($filters['tag_ids'] ?? null, fn ($query, array $tagIds) => $query->whereHas(
                 'tags', fn ($query) => $query->whereIn('event_contact_tags.id', $tagIds)
-            ))
-            ->latest()->paginate(20)->withQueryString();
+            ));
+
+        $contacts = (clone $query)->with(['tags', 'stage'])->latest('event_contacts.created_at')->paginate(20)->withQueryString();
+        $exhibitionChart = (clone $query)->select('event_contacts.event_name', DB::raw('COUNT(*) as total'))
+            ->groupBy('event_contacts.event_name')->orderByDesc('total')->limit(10)->get();
+        $tagChart = (clone $query)->join('event_contact_tag_assignments', 'event_contacts.id', '=', 'event_contact_tag_assignments.event_contact_id')
+            ->join('event_contact_tags', 'event_contact_tags.id', '=', 'event_contact_tag_assignments.event_contact_tag_id')
+            ->select('event_contact_tags.name', 'event_contact_tags.color', DB::raw('COUNT(*) as total'))
+            ->groupBy('event_contact_tags.id', 'event_contact_tags.name', 'event_contact_tags.color')->orderByDesc('total')->limit(10)->get();
 
         return [
             'contacts' => $contacts,
+            'contactStats' => [
+                'total' => (clone $query)->count(),
+                'exhibitions' => (clone $query)->distinct()->count('event_contacts.event_name'),
+                'tagged' => (clone $query)->whereHas('tags')->count(),
+                'tags' => (clone $query)->join('event_contact_tag_assignments', 'event_contacts.id', '=', 'event_contact_tag_assignments.event_contact_id')
+                    ->distinct()->count('event_contact_tag_assignments.event_contact_tag_id'),
+            ],
+            'exhibitionChart' => $exhibitionChart,
+            'tagChart' => $tagChart,
             'events' => EventContact::query()->distinct()->orderBy('event_name')->pluck('event_name'),
             'tags' => EventContactTag::query()->withCount('contacts')->orderBy('name')->get(),
             'stages' => EventContactStage::query()->where('is_active', true)->orderBy('position')->orderBy('name')->get(),

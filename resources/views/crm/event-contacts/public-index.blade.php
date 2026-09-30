@@ -10,6 +10,7 @@
         <p>{{ __('Browse and filter exhibition contacts. This page is read-only.') }}</p>
     </section>
 
+    @include('crm.event-contacts._analytics')
     <div class="card filter-card"><div class="card-body"><form class="filter-row" method="GET">
         <label class="field"><span>{{ __('Search') }}</span><input name="search" value="{{ request('search') }}" placeholder="{{ __('Name, email or phone') }}"></label>
         <label class="field"><span>{{ __('Exhibition') }}</span><select name="event"><option value="">{{ __('All exhibitions') }}</option>@foreach($events as $event)<option value="{{ $event }}" @selected(request('event') === $event)>{{ __($event) }}</option>@endforeach</select></label>
@@ -19,6 +20,7 @@
         @if(request()->hasAny(['search','event','stage_id','tag_ids']))<a class="button" href="{{ route('crm.event-contacts.public') }}">{{ __('Clear') }}</a>@endif
     </form></div></div>
 
+    @include('crm.event-contacts._charts')
     <div class="card table-card"><div class="table-wrap"><table class="data-table">
         <thead><tr><th>{{ __('Name') }}</th><th>{{ __('Organization') }}</th><th>{{ __('Job title') }}</th><th>{{ __('Email') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Exhibition') }}</th><th>{{ __('Source') }}</th><th>{{ __('Stage') }}</th></tr></thead>
         <tbody>@forelse($contacts as $contact)<tr>

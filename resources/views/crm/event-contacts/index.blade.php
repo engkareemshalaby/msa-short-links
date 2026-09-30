@@ -5,6 +5,7 @@
 
 @section('content')
 <div class="toolbar"><div></div><div class="top-actions"><a class="button" href="{{ route('crm.event-contact-stages.index') }}">{{ __('Manage stages') }}</a><a class="button" href="{{ route('crm.event-contact-tags.index') }}">{{ __('Manage tags') }}</a>@can('crm.event_contacts.manage')<a class="button primary" href="{{ route('crm.event-contacts.create') }}">＋ {{ __('Add contact') }}</a>@endcan</div></div>
+@include('crm.event-contacts._analytics')
 <div class="card filter-card"><div class="card-body"><form class="filter-row" method="GET">
     <label class="field"><span>{{ __('Search') }}</span><input name="search" value="{{ request('search') }}" placeholder="{{ __('Name, email or phone') }}"></label>
     <label class="field"><span>{{ __('Exhibition') }}</span><select name="event"><option value="">{{ __('All exhibitions') }}</option>@foreach($events as $event)<option value="{{ $event }}" @selected(request('event') === $event)>{{ __($event) }}</option>@endforeach</select></label>
@@ -12,6 +13,7 @@
     <label class="field"><span>{{ __('Stage') }}</span><select name="stage_id"><option value="">{{ __('All stages') }}</option>@foreach($stages as $stage)<option value="{{ $stage->id }}" @selected((int) request('stage_id') === $stage->id)>{{ $stage->name }}</option>@endforeach</select></label>
     <button class="button primary" type="submit">{{ __('Apply filters') }}</button>@if(request()->hasAny(['search','event','stage_id','tag_ids']))<a class="button" href="{{ route('crm.event-contacts.index') }}">{{ __('Clear') }}</a>@endif
 </form></div></div>
+@include('crm.event-contacts._charts')
 <div class="card table-card event-contacts-table"><div class="table-wrap"><table class="data-table">
     <thead><tr><th>{{ __('Name') }}</th><th>{{ __('Organization') }}</th><th>{{ __('Job title') }}</th><th>{{ __('Email') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Exhibition') }}</th><th>{{ __('Source') }}</th><th>{{ __('Stage') }}</th><th>{{ __('Actions') }}</th></tr></thead>
     <tbody>@forelse($contacts as $contact)<tr>

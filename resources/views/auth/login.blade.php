@@ -10,11 +10,11 @@
     <link rel="stylesheet" href="{{ asset('css/brand.css') }}">
 </head>
 <body class="login-body">
-<div class="login-visual"><div class="visual-content"><img class="visual-logo" src="{{ asset('images/msa-logo.png') }}" alt="MSA University"><h1>{{ __('Links that move at the speed of your team.') }}</h1><p>{{ __('Create trusted short links, understand every visit, and keep a complete activity history.') }}</p><div class="visual-metric"><strong>MSA Go</strong><span>{{ __('Secure · Trackable · Branded') }}</span></div></div></div>
+<div class="login-visual"><div class="visual-content"><img class="visual-logo" src="{{ asset('images/msa-logo.png') }}" alt="MSA University"><h1>{{ __('Our CRM System & Digital Marketing Tools') }}</h1><p>{{ __('Manage your data, track campaigns, and gain valuable insights — all in one place.') }}</p></div></div>
 <main class="login-panel">
     <a class="login-language" href="{{ route('locale', app()->getLocale() === 'ar' ? 'en' : 'ar') }}">{{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}</a>
     <form class="login-card" method="POST" action="{{ route('login.store') }}">@csrf
-        <img class="login-official-logo" src="{{ asset('images/msa-logo-wide.png') }}" alt="MSA University"><h2>{{ __('Welcome back') }}</h2><p>{{ __('Sign in to manage your short links and analytics.') }}</p>
+        <img class="login-official-logo" src="{{ asset('images/msa-logo-wide.png') }}" alt="MSA University"><h2>{{ __('Welcome back') }}</h2><p>{{ __('Sign in to access the CRM system and digital marketing tools.') }}</p>
         @if($errors->any())<div class="alert danger">{{ $errors->first() }}</div>@endif
         <label class="field"><span>{{ __('Email address') }}</span><input type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="name@msa.edu.eg"></label>
         <label class="field"><span>{{ __('Password') }}</span><input type="password" name="password" required placeholder="••••••••"></label>
