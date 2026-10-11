@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExhibitionRegistrationRequest;
+use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
@@ -26,6 +28,45 @@ class ExhibitionRegistrationController extends Controller
         return view('crm.exhibition.create');
     }
 
+    public function createIraq(): View
+    {
+        if (! session()->has('iraq_locale_initialized')) {
+            session(['iraq_locale_initialized' => true, 'locale' => 'ar']);
+            app()->setLocale('ar');
+        }
+        return view('crm.exhibition.iraq-create');
+    }
+
+    public function storeIraq(StoreExhibitionRegistrationRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        unset($data['consent'], $data['company_fax']);
+        do {
+            $reference = 'IRQ-'.random_int(100000, 999999);
+        } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
+        $registration = ExhibitionRegistration::create(array_replace($data, [
+            'reference_code' => $reference,
+            'exhibition_location' => 'Iraq (Baghdad)',
+            'preferred_contact_method' => 'email',
+            'status' => 'new',
+            'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
+        ]));
+        try {
+            Mail::to($registration->student_email)->send(new IraqExhibitionWelcome(
+                $registration->student_name, $reference, app()->getLocale()
+            ));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return redirect()->route('crm.iraq.thank-you')->with('registration_reference', $reference);
+    }
+
+    public function thankYouIraq(): View
+    {
+        if (! session()->has('locale')) app()->setLocale('ar');
+        return view('crm.exhibition.iraq-thank-you');
+    }
     public function store(StoreExhibitionRegistrationRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -63,7 +104,7 @@ class ExhibitionRegistrationController extends Controller
     {
         $filters = $this->validatedFilters($request);
         $registrations = $this->filteredQuery($filters)->oldest()->get();
-        $filename = 'jordan-exhibition-registrations-'.now()->format('Y-m-d-His').'.xlsx';
+        $filename = 'exhibition-registrations-'.now()->format('Y-m-d-His').'.xlsx';
 
         return response()->streamDownload(function () use ($registrations): void {
             $spreadsheet = new Spreadsheet;
@@ -73,7 +114,7 @@ class ExhibitionRegistrationController extends Controller
                 'Reference', 'Submitted at', 'Status', 'Registrant', 'Student name', 'Student email',
                 'Student mobile', 'Parent email', 'Parent mobile', 'Certificate type', 'Current result',
                 'Interested faculties', 'Preferred contact', 'Relatives in Egypt', 'Accommodation in Egypt',
-                'Exhibition location',
+                'Exhibition location', 'Full tuition scholarship eligibility',
             ];
             $sheet->fromArray($headers, null, 'A1');
 
@@ -96,6 +137,7 @@ class ExhibitionRegistrationController extends Controller
                     is_null($registration->has_relatives_or_acquaintances_in_egypt) ? 'Not specified' : ($registration->has_relatives_or_acquaintances_in_egypt ? 'Yes' : 'No'),
                     is_null($registration->has_accommodation_in_egypt) ? 'Not specified' : ($registration->has_accommodation_in_egypt ? 'Yes' : 'No'),
                     $registration->exhibition_location,
+                    ucfirst($registration->full_scholarship_eligibility ?? ''),
                 ];
 
                 foreach ($values as $column => $value) {
@@ -110,21 +152,21 @@ class ExhibitionRegistrationController extends Controller
             }
 
             $lastRow = max(1, $row - 1);
-            $header = $sheet->getStyle('A1:P1');
+            $header = $sheet->getStyle('A1:Q1');
             $header->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
             $header->getFill()->setFillType('solid')->getStartColor()->setARGB('FF072841');
             $header->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
             $header->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF538F3F');
             $sheet->getRowDimension(1)->setRowHeight(28);
             $sheet->freezePane('A2');
-            $sheet->setAutoFilter("A1:P{$lastRow}");
+            $sheet->setAutoFilter("A1:Q{$lastRow}");
             $sheet->setShowGridlines(false);
-            $sheet->getStyle("A2:P{$lastRow}")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+            $sheet->getStyle("A2:Q{$lastRow}")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
             $sheet->getStyle("B2:B{$lastRow}")->getNumberFormat()->setFormatCode('yyyy-mm-dd hh:mm');
-            $sheet->getStyle("A2:P{$lastRow}")->getFont()->setName('Arial')->setSize(10);
-            $sheet->getStyle('A1:P1')->getFont()->setName('Arial')->setSize(10);
+            $sheet->getStyle("A2:Q{$lastRow}")->getFont()->setName('Arial')->setSize(10);
+            $sheet->getStyle('A1:Q1')->getFont()->setName('Arial')->setSize(10);
 
-            foreach (range('A', 'P') as $column) {
+            foreach (range('A', 'Q') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
             foreach (['E', 'J', 'K', 'L'] as $column) {
@@ -210,3 +252,8 @@ class ExhibitionRegistrationController extends Controller
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
     }
 }
+
+
+
+
+

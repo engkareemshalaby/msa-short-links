@@ -29,7 +29,7 @@
             <div class="card-body meta-grid">
                 <div class="meta-item"><span>{{ __('Certificate type') }}</span><strong>{{ __($registration->certificate_type) }}</strong></div>
                 @if($registration->certificate_type === 'Other')<div class="meta-item"><span>{{ __('Other certificate type') }}</span><strong>{{ $registration->certificate_type_other }}</strong></div>@endif
-                <div class="meta-item full"><span>{{ __('Current GPA / overall result') }}</span><strong>{{ $registration->current_result }}</strong></div>
+                <div class="meta-item full"><span>{{ __('Current GPA / overall result') }}</span><strong>{{ $registration->current_result ?: __('Not provided') }}</strong></div>
                 <div class="meta-item full"><span>{{ __('Interested faculties') }}</span><div class="faculty-tags">@foreach($registration->interested_faculties as $faculty)<span>{{ __($faculty) }}</span>@endforeach</div></div>
             </div>
         </section>
@@ -40,6 +40,7 @@
                 <div class="meta-item"><span>{{ __('Preferred contact method') }}</span><strong>{{ __(ucfirst($registration->preferred_contact_method)) }}</strong></div>
                 <div class="meta-item"><span>{{ __('Relatives or acquaintances in Egypt') }}</span><strong>{{ is_null($registration->has_relatives_or_acquaintances_in_egypt) ? __('Not specified') : ($registration->has_relatives_or_acquaintances_in_egypt ? __('Yes') : __('No')) }}</strong></div>
                 @if($registration->has_relatives_or_acquaintances_in_egypt)<div class="meta-item"><span>{{ __('Accommodation or a place to stay in Egypt') }}</span><strong>{{ is_null($registration->has_accommodation_in_egypt) ? __('Not specified') : ($registration->has_accommodation_in_egypt ? __('Yes') : __('No')) }}</strong></div>@endif
+                @if($registration->full_scholarship_eligibility)<div class="meta-item"><span>{{ __('Full tuition scholarship eligibility') }}</span><strong>{{ __(['yes' => 'Yes', 'no' => 'No', 'unsure' => 'I am not sure'][$registration->full_scholarship_eligibility]) }}</strong></div>@endif
                 <div class="meta-item"><span>{{ __('Exhibition location') }}</span><strong>{{ __($registration->exhibition_location) }}</strong></div>
                 <div class="meta-item"><span>{{ __('Submitted') }}</span><strong>{{ $registration->created_at->format('M d, Y · H:i') }}</strong></div>
                 <div class="meta-item"><span>{{ __('Last updated') }}</span><strong>{{ $registration->updated_at->format('M d, Y · H:i') }}</strong></div>

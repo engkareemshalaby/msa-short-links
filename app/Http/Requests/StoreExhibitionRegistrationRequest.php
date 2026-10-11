@@ -12,6 +12,7 @@ class StoreExhibitionRegistrationRequest extends FormRequest
 
     public function rules(): array
     {
+        $iraq = $this->routeIs('crm.iraq.store');
         return [
             'registrant_role' => ['required', Rule::in(['parent', 'student'])],
             'student_email' => ['required', 'email', 'max:255'],
@@ -20,13 +21,14 @@ class StoreExhibitionRegistrationRequest extends FormRequest
             'student_mobile' => ['required', 'string', 'max:50', 'regex:/^[0-9+()\-\s]{7,50}$/'],
             'parent_mobile' => ['nullable', 'string', 'max:50', 'regex:/^[0-9+()\-\s]{7,50}$/'],
             'certificate_type' => ['required', Rule::in(ExhibitionRegistration::CERTIFICATES)],
-            'certificate_type_other' => ['nullable', 'required_if:certificate_type,Other', 'string', 'max:255'],
-            'current_result' => ['required', 'string', 'max:255'],
+            'certificate_type_other' => [$iraq ? 'nullable' : 'required_if:certificate_type,Other', 'string', 'max:255'],
+            'current_result' => [$iraq ? 'nullable' : 'required', 'string', 'max:255'],
             'interested_faculties' => ['required', 'array', 'min:1', 'max:4'],
             'interested_faculties.*' => ['required', 'distinct', Rule::in(ExhibitionRegistration::FACULTIES)],
-            'preferred_contact_method' => ['required', Rule::in(['email', 'whatsapp'])],
-            'has_relatives_or_acquaintances_in_egypt' => ['required', 'boolean'],
-            'has_accommodation_in_egypt' => ['nullable', 'required_if:has_relatives_or_acquaintances_in_egypt,1', 'boolean'],
+            'preferred_contact_method' => [$iraq ? 'prohibited' : 'required', Rule::in(['email', 'whatsapp'])],
+            'has_relatives_or_acquaintances_in_egypt' => [$iraq ? 'prohibited' : 'required', 'boolean'],
+            'has_accommodation_in_egypt' => [$iraq ? 'prohibited' : 'nullable', 'boolean', ...($iraq ? [] : ['required_if:has_relatives_or_acquaintances_in_egypt,1'])],
+            'full_scholarship_eligibility' => [$iraq ? 'required' : 'prohibited', Rule::in(['yes', 'no', 'unsure'])],
             'consent' => ['accepted'],
             'company_fax' => ['nullable', 'max:0'],
         ];
@@ -43,3 +45,5 @@ class StoreExhibitionRegistrationRequest extends FormRequest
         ]);
     }
 }
+
+

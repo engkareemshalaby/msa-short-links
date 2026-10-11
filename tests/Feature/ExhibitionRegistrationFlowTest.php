@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ExhibitionRegistrationFlowTest extends TestCase
@@ -101,6 +103,36 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertGreaterThan(2000, strlen($content));
     }
 
+    public function test_iraq_form_defaults_to_arabic_and_saves_optional_result_and_scholarship_answer(): void
+    {
+        Mail::fake();
+
+        $this->get('/crm/iraq-exhibition')->assertOk()
+            ->assertSee('lang="ar"', false)
+            ->assertSee('العراق (بغداد)')
+            ->assertDontSee('هل لديك أقارب أو معارف في مصر؟');
+
+        $payload = $this->payload();
+        unset($payload['current_result'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt'], $payload['preferred_contact_method']);
+        $payload['student_mobile'] = '+964 770 123 4567';
+        $payload['full_scholarship_eligibility'] = 'unsure';
+        $this->post('/crm/iraq-exhibition', $payload)->assertRedirect('/crm/iraq-exhibition/thank-you');
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame('Iraq (Baghdad)', $registration->exhibition_location);
+        $this->assertSame('email', $registration->preferred_contact_method);
+        $this->assertSame('unsure', $registration->full_scholarship_eligibility);
+        $this->assertNull($registration->current_result);
+        $this->assertMatchesRegularExpression('/^IRQ-\d{6}$/', $registration->reference_code);
+        Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) =>
+            $mail->hasTo('student@example.com')
+            && $mail->referenceCode === $registration->reference_code
+            && $mail->messageLocale === 'ar'
+            && str_contains($mail->render(), 'https://admission.study-in-egypt.gov.eg/signup')
+        );
+        $this->get('/crm/iraq-exhibition/thank-you')->assertOk()->assertSee('admission.study-in-egypt.gov.eg/signup');
+    }
+
     private function payload(): array
     {
         return [
@@ -114,3 +146,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         ];
     }
 }
+
+
+
+

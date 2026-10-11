@@ -13,7 +13,7 @@ class ExhibitionRegistration extends Model
 
     public const CERTIFICATES = [
         'WAEC / WASSCE', 'NECO / SSCE', 'NABTEB', 'Cambridge IGCSE',
-        'International Baccalaureate (IB Diploma)', 'French Baccalauréat',
+        'International Baccalaureate (IB Diploma)', 'French BaccalaurÃ©at',
         'Pearson Edexcel International (GCSE or A Level)', 'Other',
     ];
 
@@ -31,6 +31,7 @@ class ExhibitionRegistration extends Model
         'certificate_type_other', 'current_result', 'interested_faculties',
         'preferred_contact_method', 'exhibition_location', 'status', 'ip_hash',
         'has_relatives_or_acquaintances_in_egypt', 'has_accommodation_in_egypt',
+        'full_scholarship_eligibility',
     ];
 
     protected function casts(): array
@@ -42,3 +43,4 @@ class ExhibitionRegistration extends Model
         ];
     }
 }
+

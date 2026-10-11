@@ -47,6 +47,9 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/jordan-exhibition', [ExhibitionRegistrationController::class, 'create'])->name('jordan.create');
     Route::post('/jordan-exhibition', [ExhibitionRegistrationController::class, 'store'])->middleware('throttle:10,1')->name('jordan.store');
     Route::get('/jordan-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYou'])->name('jordan.thank-you');
+    Route::get('/iraq-exhibition', [ExhibitionRegistrationController::class, 'createIraq'])->name('iraq.create');
+    Route::post('/iraq-exhibition', [ExhibitionRegistrationController::class, 'storeIraq'])->middleware('throttle:10,1')->name('iraq.store');
+    Route::get('/iraq-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYouIraq'])->name('iraq.thank-you');
 });
 
 Route::get('/crm/event-contacts/public/20269', [EventContactController::class, 'publicIndex'])
@@ -172,3 +175,4 @@ Route::post('/{code}/unlock', [RedirectController::class, 'unlock'])->middleware
 Route::get('/{code}', RedirectController::class)
     ->where('code', '[A-Za-z0-9][A-Za-z0-9_-]{1,49}')
     ->name('redirect');
+
