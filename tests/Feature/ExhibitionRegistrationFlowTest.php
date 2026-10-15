@@ -137,13 +137,13 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertGreaterThan(2000, strlen($content));
     }
 
-    public function test_iraq_form_defaults_to_arabic_and_saves_without_scholarship_answer(): void
+    public function test_iraq_form_defaults_to_english_and_saves_without_scholarship_answer(): void
     {
         Mail::fake();
 
         $this->get('/crm/iraq-exhibition')->assertOk()
-            ->assertSee('lang="ar"', false)
-            ->assertSee('العراق (بغداد)')
+            ->assertSee('lang="en"', false)
+            ->assertSee('Iraq (Baghdad)')
             ->assertDontSee('هل لديك أقارب أو معارف في مصر؟');
 
         $payload = $this->payload();
@@ -160,11 +160,11 @@ class ExhibitionRegistrationFlowTest extends TestCase
         Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) =>
             $mail->hasTo('student@example.com')
             && $mail->referenceCode === $registration->reference_code
-            && $mail->messageLocale === 'ar'
+            && $mail->messageLocale === 'en'
             && str_contains($mail->render(), 'https://go.msa.edu.eg/iraq-study-in-egypt')
             && str_contains($mail->render(), 'https://go.msa.edu.eg/iraq-email')
         );
-        $this->get('/crm/iraq-exhibition/thank-you')->assertOk()->assertSee('تم التسجيل بنجاح');
+        $this->get('/crm/iraq-exhibition/thank-you')->assertOk()->assertSee('Registration Successfully Received');
     }
 
     private function payload(): array

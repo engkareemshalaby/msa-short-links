@@ -31,8 +31,8 @@ class ExhibitionRegistrationController extends Controller
     public function createIraq(): View
     {
         if (! session()->has('iraq_locale_initialized')) {
-            session(['iraq_locale_initialized' => true, 'locale' => 'ar']);
-            app()->setLocale('ar');
+            session(['iraq_locale_initialized' => true, 'locale' => 'en']);
+            app()->setLocale('en');
         }
         return view('crm.exhibition.iraq-create');
     }
@@ -64,7 +64,7 @@ class ExhibitionRegistrationController extends Controller
 
     public function thankYouIraq(): View
     {
-        if (! session()->has('locale')) app()->setLocale('ar');
+        if (! session()->has('locale')) app()->setLocale('en');
         return view('crm.exhibition.iraq-thank-you');
     }
     public function store(StoreExhibitionRegistrationRequest $request): RedirectResponse

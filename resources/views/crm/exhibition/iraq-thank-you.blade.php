@@ -3,13 +3,13 @@
 @section('content')
 <main class="crm-form"><section class="form-section thank-card"><div class="thank-icon">✓</div>
 @if(app()->getLocale() === 'ar')
-    <h1>تم التسجيل بنجاح ✓</h1>
+    <h1>تم التسجيل بنجاح </h1>
     <p class="welcome">مرحبًا بكم في جامعة أكتوبر للعلوم الحديثة والآداب (MSA)! 🎓</p>
     <p>يسعدنا تسجيلكم واهتمامكم بالانضمام إلى جامعة MSA، أعلى توثيق وشراكة بريطانية في مصر.</p>
     <div class="next-step"><strong>📩 الخطوة التالية:</strong><p>يرجى التوجه إلى البريد الإلكتروني الذي تم تسجيله في الاستمارة، حيث تم إرسال رسالة رسمية من جامعة MSA تتضمن الخطوات التالية لاستكمال عملية التسجيل والتقديم.</p><p>كما يمكنكم مراجعة صندوق الوارد وSpam / Junk للتأكد من وصول الرسالة، ثم اتباع التعليمات الواردة بها.</p></div>
     <p class="closing">نتطلع إلى الترحيب بكم في مجتمع MSA! 💙</p>
 @else
-    <h1>Registration Successfully Received ✓</h1>
+    <h1>Registration Successfully Received </h1>
     <p class="welcome">Welcome to October University for Modern Sciences and Arts (MSA)! 🎓</p>
     <p>We are delighted to have you register with MSA University — Egypt’s highest level of accreditation and British partnership.</p>
     <div class="next-step"><strong>📩 What’s next?</strong><p>Please check the email address you provided in the form, as an official email from MSA University has been sent to you with the next steps to complete your registration and application.</p><p>Please check your Inbox and Spam/Junk folder, then follow the instructions provided in the email.</p></div>

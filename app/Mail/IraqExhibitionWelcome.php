@@ -20,7 +20,7 @@ class IraqExhibitionWelcome extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'تم استلام تسجيلك في معرض العراق 2026 | MSA University – Registration Received');
+        return new Envelope(subject: 'Registration Received | MSA University – تم استلام تسجيلك في معرض العراق 2026');
     }
 
     public function content(): Content
