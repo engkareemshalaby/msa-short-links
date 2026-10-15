@@ -98,7 +98,6 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $iraq['student_name'] = 'Iraq Student';
         $iraq['student_email'] = 'iraq@example.com';
         $iraq['student_mobile'] = '+964 770 123 4567';
-        $iraq['full_scholarship_eligibility'] = 'unsure';
         unset($iraq['current_result'], $iraq['preferred_contact_method'], $iraq['has_relatives_or_acquaintances_in_egypt'], $iraq['has_accommodation_in_egypt']);
         $this->post('/crm/iraq-exhibition', $iraq)->assertRedirect('/crm/iraq-exhibition/thank-you');
 
@@ -138,7 +137,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertGreaterThan(2000, strlen($content));
     }
 
-    public function test_iraq_form_defaults_to_arabic_and_saves_optional_result_and_scholarship_answer(): void
+    public function test_iraq_form_defaults_to_arabic_and_saves_without_scholarship_answer(): void
     {
         Mail::fake();
 
@@ -150,13 +149,12 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $payload = $this->payload();
         unset($payload['current_result'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt'], $payload['preferred_contact_method']);
         $payload['student_mobile'] = '+964 770 123 4567';
-        $payload['full_scholarship_eligibility'] = 'unsure';
         $this->post('/crm/iraq-exhibition', $payload)->assertRedirect('/crm/iraq-exhibition/thank-you');
 
         $registration = ExhibitionRegistration::firstOrFail();
         $this->assertSame('Iraq (Baghdad)', $registration->exhibition_location);
         $this->assertSame('email', $registration->preferred_contact_method);
-        $this->assertSame('unsure', $registration->full_scholarship_eligibility);
+        $this->assertNull($registration->full_scholarship_eligibility);
         $this->assertNull($registration->current_result);
         $this->assertMatchesRegularExpression('/^IRQ-\d{6}$/', $registration->reference_code);
         Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) =>

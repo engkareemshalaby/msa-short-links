@@ -28,7 +28,7 @@ class StoreExhibitionRegistrationRequest extends FormRequest
             'preferred_contact_method' => [$iraq ? 'prohibited' : 'required', Rule::in(['email', 'whatsapp'])],
             'has_relatives_or_acquaintances_in_egypt' => [$iraq ? 'prohibited' : 'required', 'boolean'],
             'has_accommodation_in_egypt' => [$iraq ? 'prohibited' : 'nullable', 'boolean', ...($iraq ? [] : ['required_if:has_relatives_or_acquaintances_in_egypt,1'])],
-            'full_scholarship_eligibility' => [$iraq ? 'required' : 'prohibited', Rule::in(['yes', 'no', 'unsure'])],
+            'full_scholarship_eligibility' => ['prohibited'],
             'consent' => ['accepted'],
             'company_fax' => ['nullable', 'max:0'],
         ];
