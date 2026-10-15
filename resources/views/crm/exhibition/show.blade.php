@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', __('Registration details'))
-@section('subtitle', __('Review the complete Jordan exhibition registration form.'))
+@section('subtitle', __('Review the complete exhibition registration form.'))
 
 @section('content')
 <div class="detail-grid exhibition-detail">

@@ -94,10 +94,11 @@ class ExhibitionRegistrationController extends Controller
     public function index(Request $request): View
     {
         $filters = $this->validatedFilters($request);
+        $exhibitionLocations = ExhibitionRegistration::query()->distinct()->orderBy('exhibition_location')->pluck('exhibition_location');
         $registrations = $this->filteredQuery($filters)
             ->latest()->paginate(20)->withQueryString();
 
-        return view('crm.exhibition.index', compact('registrations'));
+        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations'));
     }
 
     public function export(Request $request): StreamedResponse
@@ -230,6 +231,7 @@ class ExhibitionRegistrationController extends Controller
             'certificate_type' => ['nullable', Rule::in(ExhibitionRegistration::CERTIFICATES)],
             'faculty' => ['nullable', Rule::in(ExhibitionRegistration::FACULTIES)],
             'preferred_contact_method' => ['nullable', Rule::in(['email', 'whatsapp'])],
+            'exhibition_location' => ['nullable', 'string', 'max:255'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
@@ -248,6 +250,7 @@ class ExhibitionRegistrationController extends Controller
             ->when($filters['certificate_type'] ?? null, fn ($query, $certificate) => $query->where('certificate_type', $certificate))
             ->when($filters['faculty'] ?? null, fn ($query, $faculty) => $query->whereJsonContains('interested_faculties', $faculty))
             ->when($filters['preferred_contact_method'] ?? null, fn ($query, $method) => $query->where('preferred_contact_method', $method))
+            ->when($filters['exhibition_location'] ?? null, fn ($query, $location) => $query->where('exhibition_location', $location))
             ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
     }

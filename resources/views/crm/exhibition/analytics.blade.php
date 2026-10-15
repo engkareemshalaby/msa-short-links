@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', __('Jordan exhibition analytics'))
+@section('title', __('Exhibition analytics'))
 @section('subtitle', __('Understand registration volume, student interests, and admissions progress.'))
 @section('content')
 <div class="card analytics-filter"><div class="card-body"><form class="filter-row"><label class="field"><span>{{ __('Date range') }}</span><select name="days"><option value="7" @selected($days===7)>{{ __('Last 7 days') }}</option><option value="30" @selected($days===30)>{{ __('Last 30 days') }}</option><option value="90" @selected($days===90)>{{ __('Last 90 days') }}</option><option value="365" @selected($days===365)>{{ __('Last 12 months') }}</option></select></label><button class="button primary">{{ __('Apply filters') }}</button><a class="button" href="{{ route('crm.exhibition.index') }}">← {{ __('Back to registrations') }}</a></form></div></div>

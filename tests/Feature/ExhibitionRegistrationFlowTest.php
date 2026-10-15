@@ -88,6 +88,41 @@ class ExhibitionRegistrationFlowTest extends TestCase
             ->assertOk()->assertSee('Registrations over time')->assertSee('Top interested faculties');
     }
 
+    public function test_exhibition_location_filter_separates_iraq_and_jordan_and_applies_to_export(): void
+    {
+        Mail::fake();
+        $this->seed(DatabaseSeeder::class);
+        $this->post('/crm/jordan-exhibition', $this->payload());
+        $this->get('/crm/iraq-exhibition');
+        $iraq = $this->payload();
+        $iraq['student_name'] = 'Iraq Student';
+        $iraq['student_email'] = 'iraq@example.com';
+        $iraq['student_mobile'] = '+964 770 123 4567';
+        $iraq['full_scholarship_eligibility'] = 'unsure';
+        unset($iraq['current_result'], $iraq['preferred_contact_method'], $iraq['has_relatives_or_acquaintances_in_egypt'], $iraq['has_accommodation_in_egypt']);
+        $this->post('/crm/iraq-exhibition', $iraq)->assertRedirect('/crm/iraq-exhibition/thank-you');
+
+        $admin = User::firstOrFail();
+        $this->actingAs($admin)->get(route('crm.exhibition.index'))
+            ->assertOk()->assertSee('Jordan Student')->assertSee('Iraq Student');
+        $this->get(route('crm.exhibition.index', ['exhibition_location' => 'Iraq (Baghdad)']))
+            ->assertOk()->assertSee('Iraq Student')->assertDontSee('Jordan Student');
+        $this->get(route('crm.exhibition.index', ['exhibition_location' => 'Jordan']))
+            ->assertOk()->assertSee('Jordan Student')->assertDontSee('Iraq Student');
+
+        $export = $this->get(route('crm.exhibition.export', ['exhibition_location' => 'Iraq (Baghdad)']));
+        $export->assertOk();
+        $file = tempnam(sys_get_temp_dir(), 'exhibition-export-');
+        file_put_contents($file, $export->streamedContent());
+        try {
+            $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+        } finally {
+            unlink($file);
+        }
+        $rows = $sheet->getActiveSheet()->toArray();
+        $this->assertCount(2, $rows);
+        $this->assertSame('Iraq Student', $rows[1][4]);
+    }
     public function test_authorized_user_can_export_filtered_registrations_as_excel(): void
     {
         $this->seed(DatabaseSeeder::class);
@@ -128,9 +163,10 @@ class ExhibitionRegistrationFlowTest extends TestCase
             $mail->hasTo('student@example.com')
             && $mail->referenceCode === $registration->reference_code
             && $mail->messageLocale === 'ar'
-            && str_contains($mail->render(), 'https://admission.study-in-egypt.gov.eg/signup')
+            && str_contains($mail->render(), 'https://go.msa.edu.eg/iraq-study-in-egypt')
+            && str_contains($mail->render(), 'https://go.msa.edu.eg/iraq-email')
         );
-        $this->get('/crm/iraq-exhibition/thank-you')->assertOk()->assertSee('admission.study-in-egypt.gov.eg/signup');
+        $this->get('/crm/iraq-exhibition/thank-you')->assertOk()->assertSee('تم التسجيل بنجاح');
     }
 
     private function payload(): array

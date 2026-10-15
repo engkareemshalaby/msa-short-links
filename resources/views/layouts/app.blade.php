@@ -65,7 +65,7 @@
                 <a href="{{ route('crm.student-referrals.index') }}" class="nav-item {{ request()->routeIs('crm.student-referrals.*') ? 'active' : '' }}" title="{{ __('Student referrals') }}"><span>♙</span><span class="nav-text">{{ __('Student referrals') }}</span></a>
                 @endcan
                 @can('crm.exhibitions.view')
-                <a href="{{ route('crm.exhibition.index') }}" class="nav-item {{ request()->routeIs('crm.exhibition.*') ? 'active' : '' }}" title="{{ __('Jordan exhibition') }}"><span>✦</span><span class="nav-text">{{ __('Jordan exhibition') }}</span></a>
+                <a href="{{ route('crm.exhibition.index') }}" class="nav-item {{ request()->routeIs('crm.exhibition.*') ? 'active' : '' }}" title="{{ __('Exhibition registrations') }}"><span>✦</span><span class="nav-text">{{ __('Exhibition registrations') }}</span></a>
                 @endcan
                 @can('crm.event_contacts.view')
                 <a href="{{ route('crm.event-contacts.index') }}" class="nav-item {{ request()->routeIs('crm.event-contacts.*') ? 'active' : '' }}" title="{{ __('Exhibition contacts') }}"><span>✉</span><span class="nav-text">{{ __('Exhibition contacts') }}</span></a>
