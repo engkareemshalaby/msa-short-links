@@ -144,7 +144,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
 
         $this->get('/crm/iraq-exhibition')->assertOk()
             ->assertSee('lang="en"', false)
-            ->assertSee('Iraq (Baghdad)')
+            ->assertDontSee('Additional information')
             ->assertDontSee('هل لديك أقارب أو معارف في مصر؟');
 
         $payload = $this->payload();
