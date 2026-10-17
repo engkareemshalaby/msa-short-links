@@ -145,6 +145,11 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->get('/crm/iraq-exhibition')->assertOk()
             ->assertSee('lang="en"', false)
             ->assertDontSee('Additional information')
+            ->assertSee('property="og:title"', false)
+            ->assertSee('property="og:description"', false)
+            ->assertSee('property="og:image"', false)
+            ->assertSee('images/iraq-exhibition-en.jpeg', false)
+            ->assertSee('images/iraq-exhibition-en.jpeg', false)
             ->assertDontSee('هل لديك أقارب أو معارف في مصر؟');
 
         $payload = $this->payload();
@@ -191,6 +196,13 @@ class ExhibitionRegistrationFlowTest extends TestCase
             'certificate_type_other' => 'Another secondary certificate',
             'exhibition_location' => 'Iraq (Baghdad)',
         ]);
+    }
+    public function test_iraq_banner_uses_arabic_image_for_arabic_locale(): void
+    {
+        $this->withSession(['iraq_locale_initialized' => true, 'locale' => 'ar'])
+            ->get('/crm/iraq-exhibition')
+            ->assertOk()
+            ->assertSee('images/iraq-exhibition-ar.jpeg', false);
     }
     private function payload(): array
     {
