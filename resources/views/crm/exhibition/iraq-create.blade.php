@@ -25,7 +25,7 @@
     </div></div></section>
 
     <section class="form-section"><div class="form-section-head"><span class="section-number">3</span><div><h2>{{ __('Academic background') }}</h2><p>{{ __('Share your current qualification and result.') }}</p></div></div><div class="form-section-body"><div class="form-grid two">
-        <label class="field"><span>{{ __('Certificate type') }} <b class="required">*</b></span><select name="certificate_type" id="certificate-type" required><option value="">{{ __('Select a certificate') }}</option>@foreach(\App\Models\ExhibitionRegistration::CERTIFICATES as $certificate)<option value="{{ $certificate }}" @selected(old('certificate_type') === $certificate)>{{ __($certificate) }}</option>@endforeach</select></label>
+        <label class="field"><span>{{ __('Certificate type') }} <b class="required">*</b></span><select name="certificate_type" id="certificate-type" required><option value="">{{ __('Select a certificate') }}</option>@foreach(\App\Models\ExhibitionRegistration::IRAQ_CERTIFICATES as $certificate)<option value="{{ $certificate }}" @selected(old('certificate_type') === $certificate)>{{ __($certificate) }}</option>@endforeach</select><small id="certificate-description" aria-live="polite"></small></label>
         <label class="field other-certificate" @if(old('certificate_type') !== 'Other') hidden @endif><span>{{ __('Other certificate type') }}</span><input name="certificate_type_other" value="{{ old('certificate_type_other') }}"></label>
         <label class="field full"><span>{{ __('Current GPA / overall result') }} ({{ __('Optional') }})</span><input name="current_result" value="{{ old('current_result') }}" placeholder="{{ __('GPA, percentage, grades, or predicted result') }}"><small>{{ __('Enter the result according to your educational system.') }}</small></label>
     </div></div></section>
@@ -43,7 +43,18 @@
 .hero-mark{padding:28px}.hero-mark img{display:block;width:100%;max-width:150px;height:auto;margin:0 auto}.hero-mark span{font-size:14px;margin-top:8px}.other-certificate[hidden]{display:none!important}.jordan-form{font-size:16px}.jordan-form .form-section-head h2{font-size:21px}.jordan-form .form-section-head p,.jordan-form .field span,.jordan-form .egypt-question>span,.jordan-form .contact-block>strong{font-size:16px}.jordan-form .choice,.jordan-form .role-card strong,.jordan-form .location-pill strong{font-size:16px}.jordan-form input:not([type=radio]):not([type=checkbox]),.jordan-form select{font-size:16px;min-height:48px}.jordan-form .role-card,.jordan-form .choice{min-height:52px}.jordan-form .field small,.jordan-form .contact-block>small,.jordan-form .submit-panel p{font-size:13px}@media(max-width:800px){.jordan-hero{display:flex;flex-direction:column;gap:24px}.hero-mark{display:grid;width:160px;flex:none;margin:0 auto;order:-1}.hero-copy{width:100%;min-width:0}}@media(max-width:560px){.jordan-form{padding-inline:16px}.jordan-form .form-section-body,.jordan-form .form-section-head{padding:20px}.jordan-form .inline-options{display:grid;grid-template-columns:1fr}.jordan-form .role-card{padding:16px}} </style>@endpush
 
 @push('scripts')<script>
-const certificate=document.getElementById('certificate-type');const other=document.querySelector('.other-certificate');const otherInput=other.querySelector('input');function toggleOther(){const visible=certificate.value==='Other';other.hidden=!visible;otherInput.required=false}certificate.addEventListener('change',toggleOther);toggleOther();
+@php $certificateDescriptions = [
+    'Iraqi Secondary School Certificate (Sixth Preparatory)' => __('The official Iraqi secondary school certificate.'),
+    'Cambridge IGCSE / A Level' => __('International British qualification. Equivalency and subject requirements may apply, including A Levels for your chosen program.'),
+    'Pearson Edexcel International GCSE / A Level' => __('International British qualification. Equivalency and subject requirements may apply, including A Levels for your chosen program.'),
+    'American High School Diploma' => __('Equivalency, transcripts, or SAT results may be requested where applicable.'),
+    'International Baccalaureate (IB Diploma)' => __('International Baccalaureate diploma from an international school.'),
+    'French Baccalaureate' => __('Foreign secondary qualification subject to equivalency review.'),
+    'German Abitur' => __('Foreign secondary qualification subject to equivalency review.'),
+    'Other' => __('Enter your certificate name. The admissions team will review its equivalency and requirements.'),
+]; @endphp
+const certificateDescriptions = @json($certificateDescriptions);
+const certificate=document.getElementById('certificate-type');const other=document.querySelector('.other-certificate');const otherInput=other.querySelector('input');function toggleOther(){const visible=certificate.value==='Other';other.hidden=!visible;otherInput.required=visible;document.getElementById('certificate-description').textContent=certificateDescriptions[certificate.value]||''}certificate.addEventListener('change',toggleOther);toggleOther();
 const faculties=[...document.querySelectorAll('input[name="interested_faculties[]"]')];const count=document.querySelector('.selection-count');function updateFaculties(){const selected=faculties.filter(i=>i.checked);count.textContent=`${selected.length} / 4`;faculties.forEach(i=>i.disabled=!i.checked&&selected.length>=4)}faculties.forEach(i=>i.addEventListener('change',updateFaculties));updateFaculties();
 
 </script>@endpush

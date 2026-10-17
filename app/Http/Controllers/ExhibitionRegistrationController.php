@@ -228,7 +228,7 @@ class ExhibitionRegistrationController extends Controller
             'search' => ['nullable', 'string', 'max:200'],
             'status' => ['nullable', Rule::in(ExhibitionRegistration::STATUSES)],
             'registrant_role' => ['nullable', Rule::in(['student', 'parent'])],
-            'certificate_type' => ['nullable', Rule::in(ExhibitionRegistration::CERTIFICATES)],
+            'certificate_type' => ['nullable', Rule::in(array_unique(array_merge(ExhibitionRegistration::CERTIFICATES, ExhibitionRegistration::IRAQ_CERTIFICATES)))],
             'faculty' => ['nullable', Rule::in(ExhibitionRegistration::FACULTIES)],
             'preferred_contact_method' => ['nullable', Rule::in(['email', 'whatsapp'])],
             'exhibition_location' => ['nullable', 'string', 'max:255'],

@@ -98,6 +98,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $iraq['student_name'] = 'Iraq Student';
         $iraq['student_email'] = 'iraq@example.com';
         $iraq['student_mobile'] = '+964 770 123 4567';
+        $iraq['certificate_type'] = 'Iraqi Secondary School Certificate (Sixth Preparatory)';
         unset($iraq['current_result'], $iraq['preferred_contact_method'], $iraq['has_relatives_or_acquaintances_in_egypt'], $iraq['has_accommodation_in_egypt']);
         $this->post('/crm/iraq-exhibition', $iraq)->assertRedirect('/crm/iraq-exhibition/thank-you');
 
@@ -149,6 +150,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $payload = $this->payload();
         unset($payload['current_result'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt'], $payload['preferred_contact_method']);
         $payload['student_mobile'] = '+964 770 123 4567';
+        $payload['certificate_type'] = 'Iraqi Secondary School Certificate (Sixth Preparatory)';
         $this->post('/crm/iraq-exhibition', $payload)->assertRedirect('/crm/iraq-exhibition/thank-you');
 
         $registration = ExhibitionRegistration::firstOrFail();
@@ -167,6 +169,29 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->get('/crm/iraq-exhibition/thank-you')->assertOk()->assertSee('Registration Successfully Received');
     }
 
+    public function test_iraq_certificate_options_are_specific_to_iraq_and_other_requires_a_name(): void
+    {
+        Mail::fake();
+        $page = $this->get('/crm/iraq-exhibition')->assertOk();
+        foreach (ExhibitionRegistration::IRAQ_CERTIFICATES as $certificate) {
+            $page->assertSee('value="'.$certificate.'"', false);
+        }
+        $page->assertDontSee('value="WAEC / WASSCE"', false);
+
+        $payload = $this->payload();
+        unset($payload['current_result'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt'], $payload['preferred_contact_method']);
+        $this->post('/crm/iraq-exhibition', $payload)->assertSessionHasErrors('certificate_type');
+
+        $payload['certificate_type'] = 'Other';
+        $this->post('/crm/iraq-exhibition', $payload)->assertSessionHasErrors('certificate_type_other');
+        $payload['certificate_type_other'] = 'Another secondary certificate';
+        $this->post('/crm/iraq-exhibition', $payload)->assertRedirect('/crm/iraq-exhibition/thank-you');
+        $this->assertDatabaseHas('exhibition_registrations', [
+            'certificate_type' => 'Other',
+            'certificate_type_other' => 'Another secondary certificate',
+            'exhibition_location' => 'Iraq (Baghdad)',
+        ]);
+    }
     private function payload(): array
     {
         return [

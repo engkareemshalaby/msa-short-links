@@ -17,6 +17,16 @@ class ExhibitionRegistration extends Model
         'Pearson Edexcel International (GCSE or A Level)', 'Other',
     ];
 
+    public const IRAQ_CERTIFICATES = [
+        'Iraqi Secondary School Certificate (Sixth Preparatory)',
+        'Cambridge IGCSE / A Level',
+        'Pearson Edexcel International GCSE / A Level',
+        'American High School Diploma',
+        'International Baccalaureate (IB Diploma)',
+        'French Baccalaureate',
+        'German Abitur',
+        'Other',
+    ];
     public const FACULTIES = [
         'Faculty of Dentistry', 'Faculty of Pharmacy', 'Faculty of Physical Therapy',
         'Faculty of Biotechnology', 'Faculty of Nutrition and Food Technology',
