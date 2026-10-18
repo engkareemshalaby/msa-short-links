@@ -44,21 +44,25 @@ class ExhibitionRegistrationController extends Controller
         do {
             $reference = 'IRQ-'.random_int(100000, 999999);
         } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
-        $registration = ExhibitionRegistration::create(array_replace($data, [
+        try {
+            Mail::to($data['student_email'])->send(new IraqExhibitionWelcome(
+                $data['student_name'], $reference, app()->getLocale()
+            ));
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors([
+                'student_email' => __('We could not send the email right now. Please try again.'),
+            ])->withInput();
+        }
+
+        ExhibitionRegistration::create(array_replace($data, [
             'reference_code' => $reference,
             'exhibition_location' => 'Iraq (Baghdad)',
             'preferred_contact_method' => 'email',
             'status' => 'new',
             'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
-        try {
-            Mail::to($registration->student_email)->send(new IraqExhibitionWelcome(
-                $registration->student_name, $reference, app()->getLocale()
-            ));
-        } catch (\Throwable $exception) {
-            report($exception);
-        }
-
         return redirect()->route('crm.iraq.thank-you')->with('registration_reference', $reference);
     }
 
