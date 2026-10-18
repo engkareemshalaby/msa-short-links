@@ -52,7 +52,7 @@ class ExhibitionRegistrationController extends Controller
             report($exception);
 
             return back()->withErrors([
-                'student_email' => __('We could not send the email right now. Please try again.'),
+                'student_email' => __('Email sending failed:').' '.$exception->getMessage(),
             ])->withInput();
         }
 
