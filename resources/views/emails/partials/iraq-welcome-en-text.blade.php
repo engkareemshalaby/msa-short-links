@@ -1,19 +1,23 @@
 Dear {{ $studentName }},
 
-It was a pleasure meeting you at the Iraq Student Exhibition & Higher Education Conference 2026 in Baghdad, and we are delighted to welcome you to October University for Modern Sciences and Arts (MSA).
+It was a pleasure meeting you at the Iraq Student Exhibition & Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA) The Highest British Accreditation And Partnership In Egypt— we look forward to welcoming you to our campus.
 
-Thank you for your interest in joining the MSA community. Your initial registration has been successfully received, and we are pleased to support you throughout the next steps of your application.
+Your initial registration has been received. Please follow the steps below to complete your application.
 
-What’s next?
-To complete your official application as an international student, please register through the official Study in Egypt platform:
-https://go.msa.edu.eg/iraq-study-in-egypt
+1. Complete your registration on the Study in Egypt platform
+Register as an international student through the official platform and select MSA University as your preferred institution:
+👉 https://go.msa.edu.eg/iraq-study-in-egypt
 
-For admission requirements, tuition fees for international students, and required documents, please visit the MSA University International Students Admission Guide:
-https://go.msa.edu.eg/iraq-email
+2. Contact the official Iraqi authorities regarding the full scholarship
+After completing your registration on the Study in Egypt platform and selecting MSA University, please submit your required documents to the relevant authorities in Iraq to pursue the full scholarship offered by the Iraqi Ministry of Higher Education and the Iraqi Government.
 
-We encourage you to complete the required procedures at your earliest convenience and carefully follow the instructions on the Study in Egypt platform.
+3. Your 10% tuition fee discount
+As a student who registered at the Iraq Student Exhibition, you are eligible for a 10% tuition fee discount offered directly by MSA University — regardless of your scholarship status.
 
-We look forward to welcoming you to MSA University and being part of your academic journey.
+For full details on admission requirements, tuition fees for international students, and required documents, please visit the MSA International Students Admission Guide:
+👉 https://go.msa.edu.eg/iraq-email
 
-Best regards,
-MSA University Admissions Office
+We look forward to welcoming you to MSA University.
+
+Warm regards,
+MSA University Admissions Team

@@ -20,7 +20,9 @@ class IraqExhibitionWelcome extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Registration Received | MSA University – تم استلام تسجيلك في معرض العراق 2026');
+        return new Envelope(subject: $this->messageLocale === 'ar'
+            ? 'خطواتك القادمة بعد لقاءنا في معرض العراق للطلاب 2026 | جامعة MSA'
+            : 'Your Next Steps After Meeting MSA University in Baghdad | Iraq Exhibition 2026');
     }
 
     public function content(): Content
