@@ -6,6 +6,7 @@ use App\Http\Requests\StoreExhibitionRegistrationRequest;
 use App\Mail\IraqExhibitionWelcome;
 use App\Mail\IraqExhibitionParentWelcome;
 use App\Models\ExhibitionRegistration;
+use App\Services\AuditLogger;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -227,6 +228,18 @@ class ExhibitionRegistrationController extends Controller
     {
         $registration->update($request->validate(['status' => ['required', Rule::in(ExhibitionRegistration::STATUSES)]]));
         return back()->with('success', __('Registration status updated.'));
+    }
+
+    public function destroy(Request $request, ExhibitionRegistration $registration): RedirectResponse
+    {
+        AuditLogger::log('deleted', $registration, 'Deleted exhibition registration', [
+            'reference_code' => $registration->reference_code,
+            'student_name' => $registration->student_name,
+            'student_email' => $registration->student_email,
+        ], [], $request);
+        $registration->delete();
+
+        return back()->with('success', __('Registration deleted successfully.'));
     }
 
     public function show(ExhibitionRegistration $registration): View

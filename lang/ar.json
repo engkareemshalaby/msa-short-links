@@ -783,5 +783,8 @@
   "Please check the following fields:": "يرجى مراجعة الحقول التالية:",
   "Iraq Exhibition Registration Received": "تم استلام تسجيلك لمعرض العراق",
   "Thank you for sharing your details at the Iraq Exhibition. Our team will contact you if follow-up is needed.": "شكرًا لمشاركة بياناتك في معرض العراق. سيتواصل معك فريقنا إذا لزم الأمر.",
-  "Register another contact": "تسجيل جهة اتصال أخرى"
+  "Register another contact": "تسجيل جهة اتصال أخرى",
+  "Delete form": "حذف الاستمارة",
+  "Are you sure you want to delete this registration?": "هل أنت متأكد من حذف هذه الاستمارة؟",
+  "Registration deleted successfully.": "تم حذف الاستمارة بنجاح."
 }

@@ -144,6 +144,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/crm/exhibition-registrations-analytics', [ExhibitionRegistrationController::class, 'analytics'])->name('crm.exhibition.analytics');
             Route::get('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'show'])->name('crm.exhibition.show');
             Route::patch('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'update'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.update');
+            Route::delete('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'destroy'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.destroy');
         });
         Route::middleware('permission:crm.event_contacts.view')->group(function () {
             Route::get('/crm/event-contact-stages', [EventContactStageController::class, 'index'])->name('crm.event-contact-stages.index');

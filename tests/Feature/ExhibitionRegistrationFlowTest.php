@@ -232,6 +232,39 @@ class ExhibitionRegistrationFlowTest extends TestCase
         }
     }
 
+    public function test_only_crm_managers_can_delete_a_single_exhibition_registration(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->post('/crm/jordan-exhibition', $this->payload());
+        $first = ExhibitionRegistration::firstOrFail();
+        $secondPayload = $this->payload();
+        $secondPayload['student_email'] = 'second@example.com';
+        $this->post('/crm/jordan-exhibition', $secondPayload);
+        $second = ExhibitionRegistration::where('student_email', 'second@example.com')->firstOrFail();
+        $deleteUrl = route('crm.exhibition.destroy', $first);
+
+        $staff = User::factory()->create();
+        $staff->assignRole('CRM Staff');
+        $this->actingAs($staff)->get(route('crm.exhibition.index'))
+            ->assertOk()->assertDontSee('Delete form');
+        $this->actingAs($staff)->delete($deleteUrl)->assertForbidden();
+        $this->assertDatabaseHas('exhibition_registrations', ['id' => $first->id]);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('CRM Admin');
+        $this->actingAs($admin)->get(route('crm.exhibition.index'))
+            ->assertOk()->assertSee('Delete form');
+        $this->from(route('crm.exhibition.index'))->delete($deleteUrl)
+            ->assertRedirect(route('crm.exhibition.index'));
+        $this->assertDatabaseMissing('exhibition_registrations', ['id' => $first->id]);
+        $this->assertDatabaseHas('exhibition_registrations', ['id' => $second->id]);
+        $this->assertDatabaseHas('audit_logs', [
+            'subject_type' => ExhibitionRegistration::class,
+            'subject_id' => $first->id,
+            'action' => 'deleted',
+        ]);
+    }
+
     private function payload(): array
     {
         return [
