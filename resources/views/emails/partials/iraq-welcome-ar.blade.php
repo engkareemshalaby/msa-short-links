@@ -8,6 +8,7 @@
 <p style="margin:0 0 16px;font-size:15px">بعد استكمال تسجيلك عبر منصة «ادرس في مصر» واختيار جامعة MSA، يرجى تقديم الأوراق والمستندات المطلوبة إلى الجهات الرسمية المختصة في العراق للتقدم للحصول على المنحة الدراسية الكاملة المقدمة من وزارة التعليم العالي والبحث العلمي العراقية والحكومة العراقية.</p>
 <h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline"><strong><u>٣. خصمك الدراسي البالغ 10%</u></strong></h2>
 <p style="margin:0 0 16px;font-size:15px">بتسجيلك في معرض الطلاب العراقيين، أصبحت مؤهلًا للحصول على خصم بنسبة 10% على المصروفات الدراسية تُقدمه جامعة MSA مباشرةً لجميع المسجّلين عبر المعرض.</p>
+<p style="margin:0 0 16px;font-size:15px"><strong>بعد إتمام تسجيلك في منصة «ادرس في مصر» واختيار جامعة MSA، يرجى التقاط Screenshot يوضح إتمام التسجيل بالجامعة، ثم الرد على هذا البريد الإلكتروني وإرفاق صورة الـScreenshot لتأكيد اختيارك للجامعة والاستفادة من الخصم.</strong></p>
 <p style="margin:0 0 16px;font-size:15px">للاطلاع على تفاصيل شروط القبول والمصروفات الدراسية للطلاب الوافدين والأوراق المطلوبة، يرجى زيارة دليل القبول للطلاب الوافدين:<br>👉 <a dir="ltr" href="https://go.msa.edu.eg/iraq-email" style="color:#2e6431;text-decoration:underline;word-break:break-all">https://go.msa.edu.eg/iraq-email</a></p>
 <p style="margin:0 0 16px;font-size:15px">نتطلع إلى الترحيب بك في جامعة MSA.</p>
 <p style="margin:0 0 16px;font-size:15px">مع خالص التحية والتقدير،<br>مكتب التقديم والقبول – جامعة MSA</p>

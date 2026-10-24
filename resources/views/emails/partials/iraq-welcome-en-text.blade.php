@@ -14,6 +14,8 @@ After completing your registration on the Study in Egypt platform and selecting 
 3. Your 10% tuition fee discount
 As a student who registered at the Iraq Student Exhibition, you are eligible for a 10% tuition fee discount offered directly by MSA University — regardless of your scholarship status.
 
+After completing your registration on the “Study in Egypt” platform and selecting MSA University, please take a screenshot showing your completed registration at MSA University and reply to this email with the screenshot attached. This will allow us to confirm your registration and process your 10% tuition discount.
+
 For full details on admission requirements, tuition fees for international students, and required documents, please visit the MSA International Students Admission Guide:
 👉 https://go.msa.edu.eg/iraq-email
 
