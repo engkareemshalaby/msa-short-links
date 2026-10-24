@@ -1,0 +1,14 @@
+<tr><td dir="ltr" style="padding:22px 30px 30px;text-align:left">
+<p style="margin:0 0 16px;font-size:15px">Dear Parent / Guardian,</p>
+<p style="margin:0 0 16px;font-size:15px">It was a pleasure meeting you and your child at the Iraq Student Exhibition &amp; Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA), The Highest British Accreditation and Partnership in Egypt.</p>
+<p style="margin:0 0 16px;font-size:15px">We are pleased to confirm that your child’s initial registration has been received. Please follow the steps below to complete the application process.</p>
+<h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline">1. Complete the registration on the Study in Egypt platform</h2>
+<p style="margin:0 0 16px;font-size:15px">Please complete your child’s registration as an international student through the official Study in Egypt platform and select MSA University as the preferred institution:<br>👉 <a dir="ltr" href="https://go.msa.edu.eg/iraq-study-in-egypt" style="color:#2e6431;text-decoration:underline;word-break:break-all">https://go.msa.edu.eg/iraq-study-in-egypt</a></p>
+<h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline">2. Submit the required documents to the official Iraqi authorities for the full scholarship</h2>
+<p style="margin:0 0 16px;font-size:15px">After completing the registration on the Study in Egypt platform and selecting MSA University, please submit the required documents to the relevant authorities in Iraq to pursue the full scholarship offered by the Iraqi Ministry of Higher Education and the Iraqi Government.</p>
+<h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline">3. Your child’s 10% tuition fee discount</h2>
+<p style="margin:0 0 16px;font-size:15px">As a student registered at the Iraq Student Exhibition, your child is eligible for a 10% tuition fee discount offered directly by MSA University — regardless of scholarship status.</p>
+<p style="margin:0 0 16px;font-size:15px">For full details on admission requirements, tuition fees for international students, and required documents, please visit the MSA International Students Admission Guide:<br>👉 <a dir="ltr" href="https://go.msa.edu.eg/iraq-email" style="color:#2e6431;text-decoration:underline;word-break:break-all">https://go.msa.edu.eg/iraq-email</a></p>
+<p style="margin:0 0 16px;font-size:15px">We look forward to welcoming your child to MSA University and supporting them throughout their academic journey.</p>
+<p style="margin:0 0 16px;font-size:15px">Warm regards,<br>MSA University Admissions Team</p>
+</td></tr>

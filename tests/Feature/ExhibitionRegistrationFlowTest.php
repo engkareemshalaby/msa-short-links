@@ -204,6 +204,34 @@ class ExhibitionRegistrationFlowTest extends TestCase
             ->assertOk()
             ->assertSee('images/iraq-exhibition-ar.jpeg', false);
     }
+    public function test_iraq_sends_both_emails_in_the_form_language(): void
+    {
+        foreach (['en', 'ar'] as $locale) {
+            Mail::fake();
+            $payload = $this->payload();
+            unset($payload['current_result'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt'], $payload['preferred_contact_method']);
+            $payload['certificate_type'] = 'Iraqi Secondary School Certificate (Sixth Preparatory)';
+            $payload['parent_email'] = 'parent@example.com';
+            $this->withSession(['iraq_locale_initialized' => true, 'locale' => $locale])
+                ->post('/crm/iraq-exhibition', $payload)
+                ->assertRedirect('/crm/iraq-exhibition/thank-you');
+            Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) =>
+                $mail->hasTo('student@example.com') && $mail->messageLocale === $locale
+            );
+            Mail::assertSent(\App\Mail\IraqExhibitionParentWelcome::class, function ($mail) use ($locale) {
+                $mail->assertSeeInHtml('dir="'.($locale === 'ar' ? 'rtl' : 'ltr').'"', false);
+                $mail->assertSeeInHtml('https://go.msa.edu.eg/iraq-study-in-egypt');
+                $mail->assertSeeInText('https://go.msa.edu.eg/iraq-email');
+                if ($locale === 'en') {
+                    $mail->assertSeeInHtml('Dear Parent / Guardian,');
+                    $mail->assertSeeInText('Dear Parent / Guardian,');
+                }
+                return $mail->hasTo('parent@example.com') && $mail->messageLocale === $locale;
+            });
+            Mail::assertSentCount(2);
+        }
+    }
+
     private function payload(): array
     {
         return [
