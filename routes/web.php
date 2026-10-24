@@ -20,6 +20,7 @@ use App\Http\Controllers\PartnerStudentReferralController;
 use App\Http\Controllers\PixelController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCrmSubmissionController;
+use App\Http\Controllers\PublicEventContactController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\RecruitmentPartnerController;
 use App\Http\Controllers\RedirectController;
@@ -52,8 +53,19 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/iraq-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYouIraq'])->name('iraq.thank-you');
 });
 
-Route::get('/crm/event-contacts/public/20269', [EventContactController::class, 'publicIndex'])
-    ->name('crm.event-contacts.public');
+Route::get('/crm/event-contacts/public', [EventContactController::class, 'publicIndex'])
+    ->middleware('cache.headers:no_store;private')->name('crm.event-contacts.public');
+Route::post('/crm/event-contacts/public/20269', [EventContactController::class, 'unlockPublicIndex'])
+    ->middleware(['throttle:5,1', 'cache.headers:no_store;private'])->name('crm.event-contacts.public.unlock');
+
+Route::redirect('/crm/event-contacts/register', '/crm/iraq-exhibition-agency/register');
+Route::redirect('/crm/iraq-event-contacts/register', '/crm/iraq-exhibition-agency/register');
+Route::get('/crm/iraq-exhibition-agency/register', [PublicEventContactController::class, 'create'])
+    ->name('crm.event-contacts.register');
+Route::post('/crm/iraq-exhibition-agency/register', [PublicEventContactController::class, 'store'])
+    ->middleware('throttle:10,1')->name('crm.event-contacts.register.store');
+Route::get('/crm/iraq-exhibition-agency/register/thank-you', [PublicEventContactController::class, 'thankYou'])
+    ->name('crm.event-contacts.register.thank-you');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');

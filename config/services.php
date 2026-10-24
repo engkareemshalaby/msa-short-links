@@ -39,4 +39,8 @@ return [
         'crm_pixel_id' => env('META_CRM_PIXEL_ID'),
     ],
 
+    'event_contacts' => [
+        'viewer_password' => env('EVENT_CONTACTS_VIEWER_PASSWORD'),
+    ],
+
 ];

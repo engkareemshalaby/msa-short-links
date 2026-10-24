@@ -255,17 +255,25 @@ class EventContactFlowTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_public_read_only_contacts_page_is_available_to_guests_and_supports_filters(): void
+    public function test_public_contacts_page_requires_a_separate_viewing_password(): void
     {
-        $visible = EventContact::where('name', 'Richard Morgan')->firstOrFail();
-        $hidden = EventContact::whereKeyNot($visible->id)->firstOrFail();
+        $url = route('crm.event-contacts.public');
+        config()->set('services.event_contacts.viewer_password', null);
+        $this->get($url)->assertNotFound();
 
-        $this->get(route('crm.event-contacts.public', ['search' => 'morganoxford']))
-            ->assertOk()
-            ->assertSee($visible->name)
-            ->assertDontSee($hidden->name)
-            ->assertDontSee(__('Actions'))
-            ->assertDontSee(route('crm.event-contacts.edit', $visible), false)
-            ->assertDontSee(route('crm.event-contacts.destroy', $visible), false);
+        config()->set('services.event_contacts.viewer_password', 'viewer-secret-123');
+        $this->get($url)->assertOk()->assertSee('View contacts')->assertDontSee('Richard Morgan');
+        $this->post(route('crm.event-contacts.public.unlock'), ['password' => 'wrong'])
+            ->assertSessionHasErrors('password');
+        $this->get($url)->assertOk()->assertDontSee('Richard Morgan');
+
+        $this->post(route('crm.event-contacts.public.unlock'), ['password' => 'viewer-secret-123'])
+            ->assertRedirect($url);
+        $this->get($url)->assertOk()->assertSee('Richard Morgan')->assertDontSee(__('Actions'));
+
+        config()->set('services.event_contacts.viewer_password', 'changed-secret-123');
+        $this->get($url)->assertOk()->assertDontSee('Richard Morgan');
+        config()->set('services.event_contacts.viewer_password', null);
+        $this->get($url)->assertNotFound();
     }
 }

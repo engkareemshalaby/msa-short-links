@@ -22,7 +22,30 @@ class EventContactController extends Controller
 
     public function publicIndex(Request $request): View
     {
+        $password = config('services.event_contacts.viewer_password');
+        abort_unless(is_string($password) && $password !== '', 404);
+
+        if (! hash_equals(hash('sha256', $password), (string) $request->session()->get('event_contacts_viewer_key', ''))) {
+            return view('crm.event-contacts.public-password');
+        }
+
         return view('crm.event-contacts.public-index', $this->indexData($request));
+    }
+
+    public function unlockPublicIndex(Request $request): RedirectResponse
+    {
+        $password = config('services.event_contacts.viewer_password');
+        abort_unless(is_string($password) && $password !== '', 404);
+
+        $data = $request->validate(['password' => ['required', 'string']]);
+        if (! hash_equals($password, $data['password'])) {
+            return back()->withErrors(['password' => __('Incorrect password.')]);
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put('event_contacts_viewer_key', hash('sha256', $password));
+
+        return redirect()->route('crm.event-contacts.public');
     }
 
     private function indexData(Request $request): array
