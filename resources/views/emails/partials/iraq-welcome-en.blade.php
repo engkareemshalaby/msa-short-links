@@ -1,6 +1,6 @@
 <tr><td dir="ltr" style="padding:22px 30px 30px;text-align:left">
 <p style="margin:0 0 16px;font-size:15px">Dear <strong>{{ $studentName }}</strong>,</p>
-<p style="margin:0 0 16px;font-size:15px">It was a pleasure meeting you at the Iraq Student Exhibition &amp; Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA) The Highest British Accreditation And Partnership In Egypt— we look forward to welcoming you to our campus.</p>
+<p style="margin:0 0 16px;font-size:15px">It will be a pleasure meeting you at the Iraq Student Exhibition &amp; Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA) The Highest British Accreditation And Partnership In Egypt— we look forward to welcoming you to our campus.</p>
 <p style="margin:0 0 16px;font-size:15px">Your initial registration has been received. Please follow the steps below to complete your application.</p>
 <h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline"><strong><u>1. Complete your registration on the Study in Egypt platform</u></strong></h2>
 <p style="margin:0 0 16px;font-size:15px">Register as an international student through the official platform and select MSA University as your preferred institution:<br>👉 <a dir="ltr" href="https://go.msa.edu.eg/iraq-study-in-egypt" style="color:#2e6431;text-decoration:underline;word-break:break-all">https://go.msa.edu.eg/iraq-study-in-egypt</a></p>

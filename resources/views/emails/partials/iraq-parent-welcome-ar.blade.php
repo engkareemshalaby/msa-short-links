@@ -1,6 +1,6 @@
 <tr><td dir="rtl" style="padding:22px 30px 30px;text-align:right">
 <p style="margin:0 0 16px;font-size:15px">عزيزي وليّ الأمر،</p>
-<p style="margin:0 0 16px;font-size:15px">سعدنا بلقائكم ونجلكم/نجلتكم خلال معرض العراق للطلاب ومؤتمر التعليم العالي 2026 في بغداد، ونشكركم على اهتمامكم بالانضمام إلى جامعة أكتوبر للعلوم الحديثة والآداب – MSA (أعلى توثيق وشراكة بريطانية في مصر).</p>
+<p style="margin:0 0 16px;font-size:15px">يسعدنا أن نلتقي بكم وبنجلكم/نجلتكم في معرض العراق للطلاب ومؤتمر التعليم العالي 2026 في بغداد، ونشكركم على اهتمامكم بالانضمام إلى جامعة أكتوبر للعلوم الحديثة والآداب – MSA (أعلى توثيق وشراكة بريطانية في مصر).</p>
 <p style="margin:0 0 16px;font-size:15px">يسعدنا تأكيد استلام التسجيل المبدئي لنجلكم/نجلتكم، ونرجو اتباع الخطوات التالية لاستكمال إجراءات التقديم:</p>
 <h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline">١. استكمال التسجيل عبر منصة «ادرس في مصر»</h2>
 <p style="margin:0 0 16px;font-size:15px">يرجى استكمال تسجيل نجلكم/نجلتكم كطالب وافد عبر المنصة الرسمية «ادرس في مصر»، مع اختيار جامعة MSA:<br>👉 <a dir="ltr" href="https://go.msa.edu.eg/iraq-study-in-egypt" style="color:#2e6431;text-decoration:underline;word-break:break-all">https://go.msa.edu.eg/iraq-study-in-egypt</a></p>

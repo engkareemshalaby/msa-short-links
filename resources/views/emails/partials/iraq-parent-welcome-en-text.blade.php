@@ -1,6 +1,6 @@
 Dear Parent / Guardian,
 
-It was a pleasure meeting you and your child at the Iraq Student Exhibition & Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA), The Highest British Accreditation and Partnership in Egypt.
+It will be a pleasure meeting you and your child at the Iraq Student Exhibition & Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA), The Highest British Accreditation and Partnership in Egypt.
 
 We are pleased to confirm that your child’s initial registration has been received. Please follow the steps below to complete the application process.
 

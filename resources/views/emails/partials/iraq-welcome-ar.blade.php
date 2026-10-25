@@ -1,6 +1,6 @@
 <tr><td dir="rtl" style="padding:22px 30px 30px;text-align:right">
 <p style="margin:0 0 16px;font-size:15px">عزيزي الطالب،</p>
-<p style="margin:0 0 16px;font-size:15px">يسعدنا أنه جمعنا بك لقاء في معرض العراق للطلاب ومؤتمر التعليم العالي 2026 في بغداد، ونشكر لك اهتمامك بالانضمام إلى جامعة أكتوبر للعلوم الحديثة والآداب – MSA (أعلى توثيق وشراكة بريطانية في مصر).</p>
+<p style="margin:0 0 16px;font-size:15px">يسعدنا أن نلتقي بك في معرض العراق للطلاب ومؤتمر التعليم العالي 2026 في بغداد، ونشكر لك اهتمامك بالانضمام إلى جامعة أكتوبر للعلوم الحديثة والآداب – MSA (أعلى توثيق وشراكة بريطانية في مصر).</p>
 <p style="margin:0 0 16px;font-size:15px">يسعدنا إعلامك بأن تسجيلك المبدئي قد وصلنا بنجاح. يرجى اتباع الخطوات التالية لاستكمال إجراءات التقديم.</p>
 <h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline"><strong><u>١. أكمِل تسجيلك عبر منصة «ادرس في مصر»</u></strong></h2>
 <p style="margin:0 0 16px;font-size:15px">سجّل بوصفك طالبًا وافدًا من خلال المنصة الرسمية، واختر جامعة MSA:<br>👉 <a dir="ltr" href="https://go.msa.edu.eg/iraq-study-in-egypt" style="color:#2e6431;text-decoration:underline;word-break:break-all">https://go.msa.edu.eg/iraq-study-in-egypt</a></p>

@@ -1,6 +1,6 @@
 <tr><td dir="ltr" style="padding:22px 30px 30px;text-align:left">
 <p style="margin:0 0 16px;font-size:15px">Dear Parent / Guardian,</p>
-<p style="margin:0 0 16px;font-size:15px">It was a pleasure meeting you and your child at the Iraq Student Exhibition &amp; Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA), The Highest British Accreditation and Partnership in Egypt.</p>
+<p style="margin:0 0 16px;font-size:15px">It will be a pleasure meeting you and your child at the Iraq Student Exhibition &amp; Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA), The Highest British Accreditation and Partnership in Egypt.</p>
 <p style="margin:0 0 16px;font-size:15px">We are pleased to confirm that your child’s initial registration has been received. Please follow the steps below to complete the application process.</p>
 <h2 style="margin:22px 0 8px;font-size:17px;color:#2e6431;font-weight:bold;text-decoration:underline">1. Complete the registration on the Study in Egypt platform</h2>
 <p style="margin:0 0 16px;font-size:15px">Please complete your child’s registration as an international student through the official Study in Egypt platform and select MSA University as the preferred institution:<br>👉 <a dir="ltr" href="https://go.msa.edu.eg/iraq-study-in-egypt" style="color:#2e6431;text-decoration:underline;word-break:break-all">https://go.msa.edu.eg/iraq-study-in-egypt</a></p>
