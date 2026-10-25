@@ -1,4 +1,11 @@
 {
+  "Form language": "لغة الاستمارة",
+  "Source link name": "اسم الرابط المصدر",
+  "Arabic": "العربية",
+  "English": "الإنجليزية",
+  "Source short code": "الرابط المختصر للمصدر",
+  "Source landing URL": "رابط الوصول",
+  "Source referrer": "الموقع المُحيل",
   "Search and choose a country": "ابحث واختر دولة",
   "Choose a country from the list": "اختر دولة من القائمة",
   "Search countries": "ابحث عن الدولة",

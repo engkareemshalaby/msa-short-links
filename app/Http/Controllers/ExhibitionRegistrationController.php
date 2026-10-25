@@ -7,6 +7,7 @@ use App\Mail\IraqExhibitionParentWelcome;
 use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
 use App\Services\AuditLogger;
+use App\Services\ExhibitionAttribution;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,17 +20,21 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExhibitionRegistrationController extends Controller
 {
-    public function create(): View
+    public function create(Request $request, ExhibitionAttribution $attribution): View
     {
+        $attribution->rememberLanding($request);
+
         return view('crm.exhibition.create');
     }
 
-    public function createGeneral(): View
+    public function createGeneral(Request $request, ExhibitionAttribution $attribution): View
     {
+        $attribution->rememberLanding($request);
+
         return view('crm.exhibition.create', ['general' => true]);
     }
 
-    public function storeGeneral(StoreExhibitionRegistrationRequest $request): RedirectResponse
+    public function storeGeneral(StoreExhibitionRegistrationRequest $request, ExhibitionAttribution $attribution): RedirectResponse
     {
         $data = $request->validated();
         if ($data['registration_country'] === 'Other') {
@@ -41,13 +46,15 @@ class ExhibitionRegistrationController extends Controller
             $reference = 'GEN-'.random_int(100000, 999999);
         } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
 
-        ExhibitionRegistration::create(array_replace($data, [
+        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), [
             'reference_code' => $reference,
             'exhibition_location' => 'General',
             'preferred_contact_method' => 'email',
             'status' => 'new',
             'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
+
+        $attribution->forgetRegistration($request);
 
         return redirect()->route('crm.general.thank-you')->with('registration_reference', $reference);
     }
@@ -57,8 +64,9 @@ class ExhibitionRegistrationController extends Controller
         return view('crm.exhibition.thank-you', ['general' => true]);
     }
 
-    public function createIraq(): View
+    public function createIraq(Request $request, ExhibitionAttribution $attribution): View
     {
+        $attribution->rememberLanding($request);
         if (! session()->has('iraq_locale_initialized')) {
             session(['iraq_locale_initialized' => true, 'locale' => 'en']);
             app()->setLocale('en');
@@ -67,7 +75,7 @@ class ExhibitionRegistrationController extends Controller
         return view('crm.exhibition.iraq-create');
     }
 
-    public function storeIraq(StoreExhibitionRegistrationRequest $request): RedirectResponse
+    public function storeIraq(StoreExhibitionRegistrationRequest $request, ExhibitionAttribution $attribution): RedirectResponse
     {
         $data = $request->validated();
         unset($data['consent'], $data['company_fax']);
@@ -93,13 +101,15 @@ class ExhibitionRegistrationController extends Controller
             ])->withInput();
         }
 
-        ExhibitionRegistration::create(array_replace($data, [
+        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), [
             'reference_code' => $reference,
             'exhibition_location' => 'Iraq (Baghdad)',
             'preferred_contact_method' => 'email',
             'status' => 'new',
             'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
+
+        $attribution->forgetRegistration($request);
 
         return redirect()->route('crm.iraq.thank-you')->with('registration_reference', $reference);
     }
@@ -113,7 +123,7 @@ class ExhibitionRegistrationController extends Controller
         return view('crm.exhibition.iraq-thank-you');
     }
 
-    public function store(StoreExhibitionRegistrationRequest $request): RedirectResponse
+    public function store(StoreExhibitionRegistrationRequest $request, ExhibitionAttribution $attribution): RedirectResponse
     {
         $data = $request->validated();
         unset($data['consent'], $data['company_fax']);
@@ -122,12 +132,14 @@ class ExhibitionRegistrationController extends Controller
             $reference = 'JOR-'.random_int(100000, 999999);
         } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
 
-        ExhibitionRegistration::create(array_replace($data, [
+        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), [
             'reference_code' => $reference,
             'exhibition_location' => 'Jordan',
             'status' => 'new',
             'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
+
+        $attribution->forgetRegistration($request);
 
         return redirect()->route('crm.jordan.thank-you')->with('registration_reference', $reference);
     }
@@ -166,6 +178,8 @@ class ExhibitionRegistrationController extends Controller
                 'Student mobile', 'Parent email', 'Parent mobile', 'Certificate type', 'Current result',
                 'Interested faculties', 'Preferred contact', 'Relatives in Egypt', 'Accommodation in Egypt',
                 'Exhibition location', 'Registration country', 'Full tuition scholarship eligibility',
+                'Source short code', 'Source landing URL', 'Source referrer', 'Form language', 'Source ref',
+                'Source bref', 'Source sem', 'UTM source', 'UTM medium', 'UTM campaign', 'UTM content',
             ], escape: '');
 
             $this->filteredQuery($filters)->chunkById(500, function ($registrations) use ($output): void {
@@ -189,6 +203,17 @@ class ExhibitionRegistrationController extends Controller
                         $registration->exhibition_location,
                         $registration->registration_country,
                         ucfirst($registration->full_scholarship_eligibility ?? ''),
+                        $registration->source_short_code,
+                        $registration->source_landing_url,
+                        $registration->source_referrer,
+                        $registration->source_form_locale,
+                        $registration->source_ref,
+                        $registration->source_bref,
+                        $registration->source_sem,
+                        $registration->source_utm_source,
+                        $registration->source_utm_medium,
+                        $registration->source_utm_campaign,
+                        $registration->source_utm_content,
                     ];
 
                     fputcsv($output, array_map(self::excelSafeCell(...), $cells), escape: '');
@@ -261,6 +286,8 @@ class ExhibitionRegistrationController extends Controller
 
     public function show(ExhibitionRegistration $registration): View
     {
+        $registration->load('sourceShortLink');
+
         return view('crm.exhibition.show', compact('registration'));
     }
 

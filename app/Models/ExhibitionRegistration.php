@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExhibitionRegistration extends Model
 {
@@ -43,6 +44,9 @@ class ExhibitionRegistration extends Model
         'preferred_contact_method', 'exhibition_location', 'registration_country', 'status', 'ip_hash',
         'has_relatives_or_acquaintances_in_egypt', 'has_accommodation_in_egypt',
         'full_scholarship_eligibility',
+        'source_short_link_id', 'source_visit_id', 'source_short_code', 'source_landing_url',
+        'source_referrer', 'source_form_locale', 'source_ref', 'source_bref', 'source_sem', 'source_utm_source',
+        'source_utm_medium', 'source_utm_campaign', 'source_utm_content',
     ];
 
     protected function casts(): array
@@ -52,5 +56,10 @@ class ExhibitionRegistration extends Model
             'has_relatives_or_acquaintances_in_egypt' => 'boolean',
             'has_accommodation_in_egypt' => 'boolean',
         ];
+    }
+
+    public function sourceShortLink(): BelongsTo
+    {
+        return $this->belongsTo(ShortLink::class, 'source_short_link_id')->withTrashed();
     }
 }

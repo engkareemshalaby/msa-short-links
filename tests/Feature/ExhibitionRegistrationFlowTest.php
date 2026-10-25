@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\IraqExhibitionParentWelcome;
 use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
+use App\Models\ShortLink;
 use App\Models\User;
 use App\Support\GeneralRegistrationCertificates;
 use Database\Seeders\DatabaseSeeder;
@@ -32,6 +33,85 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $registration = ExhibitionRegistration::firstOrFail();
         $this->assertSame(['Faculty of Dentistry', 'Faculty of Engineering'], $registration->interested_faculties);
         $this->assertMatchesRegularExpression('/^JOR-\d{6}$/', $registration->reference_code);
+    }
+
+    public function test_short_link_click_is_attributed_to_new_registration_without_updating_old_rows(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->post(route('crm.jordan.store'), $this->payload())->assertRedirect();
+        $old = ExhibitionRegistration::firstOrFail();
+        $original = $old->getAttributes();
+
+        $destination = route('crm.iraq.create').'?ref=Facebook-Leads-IraqExpo-AR-CTA&utm_campaign=Leads-IraqExpo&utm_medium=Facebook-Leads-IraqExpo-AR-CTA&utm_source=Facebook';
+        $link = ShortLink::create([
+            'title' => 'Iraq Expo CTA', 'code' => 'iraq-expo-cta', 'code_type' => 'custom',
+            'destination_url' => $destination, 'is_active' => true, 'created_by' => User::firstOrFail()->id,
+        ]);
+        $this->get('/iraq-expo-cta')->assertRedirect($destination);
+        $this->get($destination)->assertOk();
+
+        Mail::fake();
+        $payload = $this->payload();
+        $payload['student_email'] = 'iraq@example.com';
+        $payload['certificate_type'] = 'Iraqi Secondary School Certificate (Sixth Preparatory)';
+        unset($payload['current_result'], $payload['preferred_contact_method'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt']);
+        $this->post(route('crm.iraq.store'), $payload)->assertRedirect(route('crm.iraq.thank-you'));
+
+        $new = ExhibitionRegistration::where('student_email', 'iraq@example.com')->firstOrFail();
+        $this->assertSame($link->id, $new->source_short_link_id);
+        $this->assertNotNull($new->source_visit_id);
+        $this->assertSame('iraq-expo-cta', $new->source_short_code);
+        $this->assertSame($destination, $new->source_landing_url);
+        $this->assertSame('Facebook', $new->source_utm_source);
+        $this->assertSame('en', $new->source_form_locale);
+        $this->assertSame('Leads-IraqExpo', $new->source_utm_campaign);
+        $this->assertSame($original, $old->fresh()->getAttributes());
+
+        $this->actingAs(User::firstOrFail())->get(route('crm.exhibition.show', $new))
+            ->assertOk()->assertSee('iraq-expo-cta')->assertSee('Leads-IraqExpo');
+    }
+
+    public function test_direct_tracked_url_records_parameters_without_claiming_a_short_link(): void
+    {
+        $this->get(route('crm.jordan.create').'?ref=direct-campaign&utm_source=Facebook')->assertOk();
+        $this->post(route('crm.jordan.store'), $this->payload())->assertRedirect();
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame('direct-campaign', $registration->source_ref);
+        $this->assertSame('Facebook', $registration->source_utm_source);
+        $this->assertNull($registration->source_short_link_id);
+    }
+
+    public function test_registration_records_the_form_language_used_on_submission(): void
+    {
+        $this->withSession(['locale' => 'ar'])->get(route('crm.general.create'))->assertOk();
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'Egypt';
+        $this->post(route('crm.general.store'), $payload)->assertRedirect();
+
+        $this->assertSame('ar', ExhibitionRegistration::firstOrFail()->source_form_locale);
+    }
+
+    public function test_general_registration_retains_its_short_link_source(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $destination = route('crm.general.create').'?utm_source=Facebook&ref=general-ad';
+        $link = ShortLink::create([
+            'title' => 'General campaign', 'code' => 'general-campaign', 'code_type' => 'custom',
+            'destination_url' => $destination, 'is_active' => true, 'created_by' => User::firstOrFail()->id,
+        ]);
+        $this->get('/general-campaign')->assertRedirect($destination);
+        $this->get($destination)->assertOk();
+
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'Egypt';
+        $this->post(route('crm.general.store'), $payload)->assertRedirect();
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame($link->id, $registration->source_short_link_id);
+        $this->assertSame('general-campaign', $registration->source_short_code);
+        $this->assertSame('general-ad', $registration->source_ref);
+        $this->assertSame('en', $registration->source_form_locale);
     }
 
     public function test_jordan_form_uses_the_crm_meta_pixel_and_thank_you_shows_the_next_step(): void
@@ -134,7 +214,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
         $rows = $this->csvRows($content);
         $this->assertCount(2, $rows);
-        $this->assertCount(18, $rows[1]);
+        $this->assertCount(29, $rows[1]);
         $this->assertSame('Jordan Student', $rows[1][4]);
     }
 

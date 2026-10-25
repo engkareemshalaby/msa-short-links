@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ShortLink;
+use App\Services\ExhibitionAttribution;
 use App\Services\SmartTargetResolver;
 use App\Services\VisitTracker;
 use Illuminate\Http\RedirectResponse;
@@ -12,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectController extends Controller
 {
-    public function __invoke(Request $request, string $code, VisitTracker $tracker, SmartTargetResolver $targets): Response
+    public function __invoke(Request $request, string $code, VisitTracker $tracker, SmartTargetResolver $targets, ExhibitionAttribution $attribution): Response
     {
         $link = ShortLink::available()->where('code', strtolower($code))->firstOrFail();
         if ($link->max_visits && $link->visits()->where('is_bot', false)->count() >= $link->max_visits) {
@@ -21,8 +22,9 @@ class RedirectController extends Controller
         if ($link->access_password && ! $request->session()->get($this->sessionKey($link))) {
             return response()->view('public.password', compact('link'));
         }
-        $tracker->record($link, $request);
+        $visit = $tracker->record($link, $request);
         $destination = $targets->destination($link, $request);
+        $attribution->rememberClick($request, $link, $visit, $destination);
 
         if ($link->retargeting_enabled && $link->pixels()->where('is_active', true)->exists()) {
             return response()->view('redirect.pixel', ['destination' => $destination, 'pixels' => $link->pixels()->where('is_active', true)->get()]);

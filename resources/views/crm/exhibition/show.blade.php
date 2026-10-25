@@ -43,6 +43,15 @@
                 @if($registration->full_scholarship_eligibility)<div class="meta-item"><span>{{ __('Full tuition scholarship eligibility') }}</span><strong>{{ __(['yes' => 'Yes', 'no' => 'No', 'unsure' => 'I am not sure'][$registration->full_scholarship_eligibility]) }}</strong></div>@endif
                 <div class="meta-item"><span>{{ __('Exhibition location') }}</span><strong>{{ __($registration->exhibition_location) }}</strong></div>
                 <div class="meta-item"><span>{{ __('Registration country') }}</span><strong>{{ $registration->registration_country ? __($registration->registration_country) : '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Source short code') }}</span><strong dir="ltr">{{ $registration->source_short_code ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Source link name') }}</span><strong>{{ $registration->sourceShortLink?->display_title ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Form language') }}</span><strong>{{ $registration->source_form_locale === 'ar' ? __('Arabic') : ($registration->source_form_locale === 'en' ? __('English') : '—') }}</strong></div>
+                <div class="meta-item full"><span>{{ __('Source landing URL') }}</span><strong dir="ltr" style="overflow-wrap:anywhere">{{ $registration->source_landing_url ?: '—' }}</strong></div>
+                <div class="meta-item full"><span>{{ __('Source referrer') }}</span><strong dir="ltr" style="overflow-wrap:anywhere">{{ $registration->source_referrer ?: '—' }}</strong></div>
+                <div class="meta-item"><span>ref</span><strong dir="ltr">{{ $registration->source_ref ?: '—' }}</strong></div>
+                <div class="meta-item"><span>utm_source</span><strong dir="ltr">{{ $registration->source_utm_source ?: '—' }}</strong></div>
+                <div class="meta-item"><span>utm_medium</span><strong dir="ltr">{{ $registration->source_utm_medium ?: '—' }}</strong></div>
+                <div class="meta-item"><span>utm_campaign</span><strong dir="ltr">{{ $registration->source_utm_campaign ?: '—' }}</strong></div>
                 <div class="meta-item"><span>{{ __('Submitted') }}</span><strong>{{ $registration->created_at->format('M d, Y · H:i') }}</strong></div>
                 <div class="meta-item"><span>{{ __('Last updated') }}</span><strong>{{ $registration->updated_at->format('M d, Y · H:i') }}</strong></div>
             </div>
