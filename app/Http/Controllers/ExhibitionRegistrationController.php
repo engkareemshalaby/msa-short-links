@@ -8,6 +8,7 @@ use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
 use App\Services\AuditLogger;
 use App\Services\ExhibitionAttribution;
+use App\Services\RegistrationClientContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExhibitionRegistrationController extends Controller
 {
+    public function __construct(private readonly RegistrationClientContext $clientContext) {}
+
     public function create(Request $request, ExhibitionAttribution $attribution): View
     {
         $attribution->rememberLanding($request);
@@ -52,12 +55,11 @@ class ExhibitionRegistrationController extends Controller
             $reference = 'GEN-'.random_int(100000, 999999);
         } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
 
-        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), [
+        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), $this->clientContext->capture($request), [
             'reference_code' => $reference,
             'exhibition_location' => 'General',
             'preferred_contact_method' => 'email',
             'status' => 'new',
-            'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
 
         $attribution->forgetRegistration($request);
@@ -112,12 +114,11 @@ class ExhibitionRegistrationController extends Controller
             ])->withInput();
         }
 
-        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), [
+        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), $this->clientContext->capture($request), [
             'reference_code' => $reference,
             'exhibition_location' => 'Iraq (Baghdad)',
             'preferred_contact_method' => 'email',
             'status' => 'new',
-            'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
 
         $attribution->forgetRegistration($request);
@@ -143,11 +144,10 @@ class ExhibitionRegistrationController extends Controller
             $reference = 'JOR-'.random_int(100000, 999999);
         } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
 
-        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), [
+        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), $this->clientContext->capture($request), [
             'reference_code' => $reference,
             'exhibition_location' => 'Jordan',
             'status' => 'new',
-            'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
 
         $attribution->forgetRegistration($request);
@@ -168,7 +168,9 @@ class ExhibitionRegistrationController extends Controller
         $registrations = $this->filteredQuery($filters)
             ->latest()->paginate(20)->withQueryString();
 
-        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'registrationCountries'));
+        $connectionCountries = ExhibitionRegistration::query()->whereNotNull('connection_country')->distinct()->orderBy('connection_country')->pluck('connection_country');
+
+        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'registrationCountries', 'connectionCountries'));
     }
 
     public function export(Request $request): StreamedResponse
@@ -191,6 +193,9 @@ class ExhibitionRegistrationController extends Controller
                 'Exhibition location', 'Registration country', 'Full tuition scholarship eligibility',
                 'Source short code', 'Source landing URL', 'Source referrer', 'Form language', 'Source ref',
                 'Source bref', 'Source sem', 'UTM source', 'UTM medium', 'UTM campaign', 'UTM content',
+                'Connection country', 'Connection region', 'Connection city', 'IP address', 'Device type',
+                'Platform', 'Browser', 'Browser language', 'Timezone', 'Screen', 'Viewport', 'Pixel ratio',
+                'CPU threads', 'Device memory (GB)', 'Touch points', 'User agent', 'Client hints',
             ], escape: '');
 
             $this->filteredQuery($filters)->chunkById(500, function ($registrations) use ($output): void {
@@ -225,6 +230,23 @@ class ExhibitionRegistrationController extends Controller
                         $registration->source_utm_medium,
                         $registration->source_utm_campaign,
                         $registration->source_utm_content,
+                        $registration->connection_country,
+                        $registration->connection_region,
+                        $registration->connection_city,
+                        $registration->ip_address,
+                        $registration->device_type,
+                        $registration->platform,
+                        $registration->browser,
+                        $registration->browser_language,
+                        $registration->client_timezone,
+                        $registration->screen_width && $registration->screen_height ? $registration->screen_width.'x'.$registration->screen_height : null,
+                        $registration->viewport_width && $registration->viewport_height ? $registration->viewport_width.'x'.$registration->viewport_height : null,
+                        $registration->pixel_ratio,
+                        $registration->hardware_concurrency,
+                        $registration->device_memory,
+                        $registration->touch_points,
+                        $registration->user_agent,
+                        $registration->client_hints ? json_encode($registration->client_hints, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null,
                     ];
 
                     fputcsv($output, array_map(self::excelSafeCell(...), $cells), escape: '');
@@ -313,6 +335,10 @@ class ExhibitionRegistrationController extends Controller
             'preferred_contact_method' => ['nullable', Rule::in(['email', 'whatsapp'])],
             'exhibition_location' => ['nullable', 'string', 'max:255'],
             'registration_country' => ['nullable', 'string', 'max:120'],
+            'connection_country' => ['nullable', 'string', 'size:2'],
+            'device_type' => ['nullable', Rule::in(['Desktop', 'Mobile', 'Tablet', 'Bot'])],
+            'platform' => ['nullable', 'string', 'max:50'],
+            'browser' => ['nullable', 'string', 'max:50'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
@@ -333,6 +359,10 @@ class ExhibitionRegistrationController extends Controller
             ->when($filters['preferred_contact_method'] ?? null, fn ($query, $method) => $query->where('preferred_contact_method', $method))
             ->when($filters['exhibition_location'] ?? null, fn ($query, $location) => $query->where('exhibition_location', $location))
             ->when($filters['registration_country'] ?? null, fn ($query, $country) => $query->where('registration_country', $country))
+            ->when($filters['connection_country'] ?? null, fn ($query, $country) => $query->where('connection_country', strtoupper($country)))
+            ->when($filters['device_type'] ?? null, fn ($query, $device) => $query->where('device_type', $device))
+            ->when($filters['platform'] ?? null, fn ($query, $platform) => $query->where('platform', $platform))
+            ->when($filters['browser'] ?? null, fn ($query, $browser) => $query->where('browser', $browser))
             ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
     }

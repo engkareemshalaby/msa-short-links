@@ -56,6 +56,25 @@
                 <div class="meta-item"><span>{{ __('Last updated') }}</span><strong>{{ $registration->updated_at->format('M d, Y · H:i') }}</strong></div>
             </div>
         </section>
+
+        <section class="card detail-section">
+            <div class="card-header"><div><h2>{{ __('Device and connection') }}</h2><p>{{ __('Approximate technical details captured when the form was submitted.') }}</p></div></div>
+            <div class="card-body meta-grid">
+                <div class="meta-item"><span>{{ __('Connection location') }}</span><strong>{{ collect([$registration->connection_city, $registration->connection_region, $registration->connection_country])->filter()->join(', ') ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('IP address') }}</span><strong dir="ltr">{{ $registration->ip_address ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Device type') }}</span><strong>{{ $registration->device_type ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Operating system') }}</span><strong>{{ $registration->platform ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Browser') }}</span><strong>{{ $registration->browser ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Browser language') }}</span><strong dir="ltr">{{ $registration->browser_language ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Timezone') }}</span><strong dir="ltr">{{ $registration->client_timezone ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Screen / viewport') }}</span><strong dir="ltr">{{ $registration->screen_width && $registration->screen_height ? $registration->screen_width.' × '.$registration->screen_height : '—' }} / {{ $registration->viewport_width && $registration->viewport_height ? $registration->viewport_width.' × '.$registration->viewport_height : '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Pixel ratio') }}</span><strong>{{ $registration->pixel_ratio ?: '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('CPU threads / memory') }}</span><strong>{{ $registration->hardware_concurrency ?: '—' }} / {{ $registration->device_memory ? $registration->device_memory.' GB' : '—' }}</strong></div>
+                <div class="meta-item"><span>{{ __('Touch points') }}</span><strong>{{ $registration->touch_points ?? '—' }}</strong></div>
+                <div class="meta-item full"><span>User-Agent</span><strong dir="ltr" style="overflow-wrap:anywhere">{{ $registration->user_agent ?: '—' }}</strong></div>
+                @if($registration->client_hints)<div class="meta-item full"><span>Client Hints</span><strong dir="ltr" style="overflow-wrap:anywhere">{{ json_encode($registration->client_hints, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</strong></div>@endif
+            </div>
+        </section>
     </main>
 
     <aside><section class="card sticky-panel"><div class="card-header"><div><h2>{{ __('Registration status') }}</h2><p>{{ __('Update the admissions follow-up stage.') }}</p></div></div><div class="card-body"><form method="POST" action="{{ route('crm.exhibition.update', $registration) }}">@csrf @method('PATCH')<label class="field"><span>{{ __('Status') }}</span><select name="status">@foreach(\App\Models\ExhibitionRegistration::STATUSES as $status)<option value="{{ $status }}" @selected($registration->status === $status)>{{ __(ucfirst($status)) }}</option>@endforeach</select></label><div class="form-footer"><button class="button primary full">{{ __('Save status') }}</button></div></form><div class="side-meta"><span>{{ __('Reference') }}</span><strong dir="ltr">{{ $registration->reference_code }}</strong></div><a class="button full" href="{{ route('crm.exhibition.index') }}">← {{ __('Back to registrations') }}</a></div></section></aside>

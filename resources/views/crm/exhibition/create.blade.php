@@ -14,6 +14,7 @@
 
 <form class="crm-form jordan-form" method="POST" action="{{ $general ? route('crm.general.store') : route('crm.jordan.store') }}">@csrf
     <input class="honeypot" name="company_fax" tabindex="-1" autocomplete="off">
+    @include('crm.exhibition.partials.client-context-fields')
     <section class="form-section"><div class="form-section-head"><span class="section-number">1</span><div><h2>{{ __('Who is registering?') }}</h2><p>{{ __('Tell us how you are connected to the student.') }}</p></div></div><div class="form-section-body">
         <div class="role-grid">@foreach(['student' => __('Student'), 'parent' => __('Parent / Guardian')] as $value => $label)<label class="role-card"><input type="radio" name="registrant_role" value="{{ $value }}" @checked(old('registrant_role', 'student') === $value) required><span class="role-icon">{{ $value === 'student' ? '♙' : '♡' }}</span><strong>{{ $label }}</strong><small>{{ $value === 'student' ? __('I am registering myself') : __('I am registering a student') }}</small></label>@endforeach</div>
     </div></section>
@@ -129,3 +130,4 @@ const country=document.getElementById('registration-country');if(country){
     updateOtherCountry();updateCertificates(true);
 }
 </script>@endpush
+@push('scripts')@include('crm.exhibition.partials.client-context-script')@endpush

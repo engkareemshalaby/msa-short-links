@@ -47,6 +47,10 @@ class ExhibitionRegistration extends Model
         'source_short_link_id', 'source_visit_id', 'source_short_code', 'source_landing_url',
         'source_referrer', 'source_form_locale', 'source_ref', 'source_bref', 'source_sem', 'source_utm_source',
         'source_utm_medium', 'source_utm_campaign', 'source_utm_content',
+        'ip_address', 'user_agent', 'device_type', 'browser', 'platform', 'browser_language',
+        'connection_country', 'connection_region', 'connection_city', 'client_timezone',
+        'screen_width', 'screen_height', 'viewport_width', 'viewport_height', 'pixel_ratio',
+        'hardware_concurrency', 'device_memory', 'touch_points', 'client_hints',
     ];
 
     protected function casts(): array
@@ -55,6 +59,9 @@ class ExhibitionRegistration extends Model
             'interested_faculties' => 'array',
             'has_relatives_or_acquaintances_in_egypt' => 'boolean',
             'has_accommodation_in_egypt' => 'boolean',
+            'client_hints' => 'array',
+            'pixel_ratio' => 'decimal:2',
+            'device_memory' => 'decimal:2',
         ];
     }
 

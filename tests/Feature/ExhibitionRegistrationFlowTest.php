@@ -35,6 +35,42 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertMatchesRegularExpression('/^JOR-\d{6}$/', $registration->reference_code);
     }
 
+    public function test_registration_captures_server_and_browser_context_for_targeting(): void
+    {
+        $payload = $this->payload() + [
+            'client_timezone' => 'Asia/Baghdad',
+            'screen_width' => 390,
+            'screen_height' => 844,
+            'viewport_width' => 390,
+            'viewport_height' => 760,
+            'pixel_ratio' => 3,
+            'hardware_concurrency' => 8,
+            'device_memory' => 4,
+            'touch_points' => 5,
+        ];
+
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])
+            ->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36',
+                'CF-IPCountry' => 'IQ',
+                'CF-Region' => 'Baghdad',
+                'CF-IPCity' => 'Baghdad',
+                'Sec-CH-UA-Mobile' => '?1',
+                'Sec-CH-UA-Platform' => '"Android"',
+            ])->post(route('crm.jordan.store'), $payload)->assertRedirect();
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame('203.0.113.10', $registration->ip_address);
+        $this->assertSame('IQ', $registration->connection_country);
+        $this->assertSame('Baghdad', $registration->connection_city);
+        $this->assertSame('Mobile', $registration->device_type);
+        $this->assertSame('Android', $registration->platform);
+        $this->assertSame('Chrome', $registration->browser);
+        $this->assertSame('Asia/Baghdad', $registration->client_timezone);
+        $this->assertSame(390, $registration->screen_width);
+        $this->assertSame('"Android"', $registration->client_hints['platform']);
+    }
+
     public function test_short_link_click_is_attributed_to_new_registration_without_updating_old_rows(): void
     {
         $this->seed(DatabaseSeeder::class);
@@ -287,7 +323,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
         $rows = $this->csvRows($content);
         $this->assertCount(2, $rows);
-        $this->assertCount(29, $rows[1]);
+        $this->assertCount(46, $rows[1]);
         $this->assertSame('Jordan Student', $rows[1][4]);
     }
 

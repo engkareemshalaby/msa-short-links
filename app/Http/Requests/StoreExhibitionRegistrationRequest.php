@@ -44,6 +44,15 @@ class StoreExhibitionRegistrationRequest extends FormRequest
             'registration_country_other' => $general ? ['required_if:registration_country,Other', 'nullable', 'string', 'max:120'] : ['prohibited'],
             'consent' => ['accepted'],
             'company_fax' => ['nullable', 'max:0'],
+            'client_timezone' => ['nullable', 'string', 'max:100'],
+            'screen_width' => ['nullable', 'integer', 'between:1,65535'],
+            'screen_height' => ['nullable', 'integer', 'between:1,65535'],
+            'viewport_width' => ['nullable', 'integer', 'between:1,65535'],
+            'viewport_height' => ['nullable', 'integer', 'between:1,65535'],
+            'pixel_ratio' => ['nullable', 'numeric', 'between:0.1,999.99'],
+            'hardware_concurrency' => ['nullable', 'integer', 'between:1,65535'],
+            'device_memory' => ['nullable', 'numeric', 'between:0.1,999.99'],
+            'touch_points' => ['nullable', 'integer', 'between:0,65535'],
         ];
     }
 
