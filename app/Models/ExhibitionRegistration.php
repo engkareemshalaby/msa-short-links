@@ -27,6 +27,7 @@ class ExhibitionRegistration extends Model
         'German Abitur',
         'Other',
     ];
+
     public const FACULTIES = [
         'Faculty of Dentistry', 'Faculty of Pharmacy', 'Faculty of Physical Therapy',
         'Faculty of Biotechnology', 'Faculty of Nutrition and Food Technology',
@@ -39,7 +40,7 @@ class ExhibitionRegistration extends Model
         'reference_code', 'registrant_role', 'student_email', 'parent_email',
         'student_name', 'student_mobile', 'parent_mobile', 'certificate_type',
         'certificate_type_other', 'current_result', 'interested_faculties',
-        'preferred_contact_method', 'exhibition_location', 'status', 'ip_hash',
+        'preferred_contact_method', 'exhibition_location', 'registration_country', 'status', 'ip_hash',
         'has_relatives_or_acquaintances_in_egypt', 'has_accommodation_in_egypt',
         'full_scholarship_eligibility',
     ];
@@ -53,4 +54,3 @@ class ExhibitionRegistration extends Model
         ];
     }
 }
-

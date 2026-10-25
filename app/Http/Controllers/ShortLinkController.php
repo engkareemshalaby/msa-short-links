@@ -67,11 +67,33 @@ class ShortLinkController extends Controller
         if ($request->filled('duplicate')) {
             abort_unless($request->user()->can('links.view'), 403);
             $source = ShortLink::with('tags')->findOrFail($request->integer('duplicate'));
-            $defaults = $source->only(['title', 'destination_url', 'campaign_id', 'code_type']);
+            $defaults = $source->only(['destination_url', 'campaign_id']);
+            $defaults['title'] = mb_substr($source->display_title, 0, 250).' copy';
+            $defaults['code_type'] = 'custom';
+            $defaults['custom_code'] = $this->duplicateCode($source->code);
             $defaults['tag_ids'] = $source->tags->modelKeys();
         }
 
         return view('links.create', array_merge($this->growthData($defaults['campaign_id'] ?? null), compact('defaults', 'source')));
+    }
+
+    private function duplicateCode(string $code): string
+    {
+        $candidate = substr($code, 0, 45).'-copy';
+        if (! ShortLink::withTrashed()->where('code', $candidate)->exists()) {
+            return $candidate;
+        }
+
+        $numbers = range(10, 99);
+        shuffle($numbers);
+        foreach ($numbers as $number) {
+            $candidate = substr($code, 0, 43).'-copy'.$number;
+            if (! ShortLink::withTrashed()->where('code', $candidate)->exists()) {
+                return $candidate;
+            }
+        }
+
+        abort(503, 'Unable to generate a unique duplicate slug.');
     }
 
     public function store(Request $request): RedirectResponse

@@ -6,6 +6,7 @@ use App\Mail\IraqExhibitionParentWelcome;
 use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
 use App\Models\User;
+use App\Support\GeneralRegistrationCertificates;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -133,8 +134,150 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
         $rows = $this->csvRows($content);
         $this->assertCount(2, $rows);
-        $this->assertCount(17, $rows[1]);
+        $this->assertCount(18, $rows[1]);
         $this->assertSame('Jordan Student', $rows[1][4]);
+    }
+
+    public function test_general_form_requires_country_and_saves_source_and_country_separately(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->get(route('crm.general.create'))->assertOk()
+            ->assertSee('General registration')
+            ->assertSee('name="registration_country"', false)
+            ->assertSee('role="combobox"', false)
+            ->assertSee('id="country-options"', false)
+            ->assertSee('id="country-search"', false)
+            ->assertSee('Arab High School Certificates')
+            ->assertSee('Asian National Certificates')
+            ->assertSee('International Systems')
+            ->assertDontSee('Additional information')
+            ->assertDontSee('name="preferred_contact_method" value=', false)
+            ->assertDontSee('name="has_relatives_or_acquaintances_in_egypt" value=', false)
+            ->assertSee('name="registration_country_other"', false)
+            ->assertSee('name="certificate_category"', false)
+            ->assertDontSee('MSA University · Jordan');
+
+        $this->post(route('crm.general.store'), $this->generalPayload())
+            ->assertSessionHasErrors('registration_country');
+        $this->assertDatabaseEmpty('exhibition_registrations');
+
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'Saudi Arabia';
+        $this->post(route('crm.general.store'), $payload)
+            ->assertRedirect(route('crm.general.thank-you'));
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame('General', $registration->exhibition_location);
+        $this->assertSame('Saudi Arabia', $registration->registration_country);
+        $this->assertSame('email', $registration->preferred_contact_method);
+        $this->assertNull($registration->has_relatives_or_acquaintances_in_egypt);
+        $this->assertNull($registration->has_accommodation_in_egypt);
+        $this->assertMatchesRegularExpression('/^GEN-\d{6}$/', $registration->reference_code);
+        $this->get(route('crm.general.thank-you'))->assertOk()
+            ->assertSee(route('crm.general.create'), false);
+
+        $this->actingAs(User::firstOrFail())->get(route('crm.exhibition.index', [
+            'exhibition_location' => 'General', 'registration_country' => 'Saudi Arabia',
+        ]))->assertOk()->assertSee('Jordan Student')->assertSee('Saudi Arabia');
+
+        $rows = $this->csvRows($this->get(route('crm.exhibition.export', [
+            'exhibition_location' => 'General', 'registration_country' => 'Saudi Arabia',
+        ]))->assertOk()->streamedContent());
+        $this->assertCount(2, $rows);
+        $this->assertSame('General', $rows[1][15]);
+        $this->assertSame('Saudi Arabia', $rows[1][16]);
+    }
+
+    public function test_general_form_uses_certificate_categories_independently_of_country(): void
+    {
+        $countries = GeneralRegistrationCertificates::countries();
+        $this->assertSame('Other', end($countries));
+        $this->assertContains('Egypt', $countries);
+        $this->assertContains('Somalia', $countries);
+        $this->assertContains('Nigeria', $countries);
+        $this->assertContains('Iran', $countries);
+
+        $payload = $this->generalPayload();
+        unset($payload['certificate_category']);
+        $payload['registration_country'] = 'Egypt';
+        $this->post(route('crm.general.store'), $payload)
+            ->assertSessionHasErrors('certificate_category');
+
+        $payload['certificate_category'] = 'International Systems';
+        $payload['registration_country'] = 'Other';
+        $this->post(route('crm.general.store'), $payload)
+            ->assertSessionHasErrors('registration_country_other');
+        $this->assertDatabaseEmpty('exhibition_registrations');
+
+        $payload['registration_country'] = 'Saudi Arabia';
+        $payload['certificate_type'] = 'Iraq - Sixth Preparatory Certificate';
+        $this->post(route('crm.general.store'), $payload)
+            ->assertSessionHasErrors('certificate_type');
+        $this->assertDatabaseEmpty('exhibition_registrations');
+
+        $payload['certificate_category'] = 'Arab High School Certificates';
+        $this->post(route('crm.general.store'), $payload)
+            ->assertRedirect(route('crm.general.thank-you'));
+        $this->assertDatabaseHas('exhibition_registrations', [
+            'exhibition_location' => 'General', 'registration_country' => 'Saudi Arabia',
+            'certificate_type' => 'Iraq - Sixth Preparatory Certificate',
+        ]);
+
+        $payload['registration_country'] = 'Other';
+        $payload['registration_country_other'] = 'Kenya';
+        $payload['certificate_category'] = 'Asian National Certificates';
+        $payload['certificate_type'] = 'India - CBSE / ICSE / State Board 12th Standard';
+        $this->post(route('crm.general.store'), $payload)
+            ->assertRedirect(route('crm.general.thank-you'));
+        $this->assertDatabaseHas('exhibition_registrations', [
+            'registration_country' => 'Kenya',
+            'certificate_type' => 'India - CBSE / ICSE / State Board 12th Standard',
+        ]);
+    }
+
+    public function test_general_form_accepts_international_certificates_for_listed_countries(): void
+    {
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'India';
+        $this->post(route('crm.general.store'), $payload)
+            ->assertRedirect(route('crm.general.thank-you'));
+        $this->assertDatabaseHas('exhibition_registrations', [
+            'registration_country' => 'India',
+            'certificate_type' => 'British System (IGCSE / GCSE / GCE A-Levels)',
+        ]);
+    }
+
+    public function test_existing_country_specific_forms_do_not_accept_a_spoofed_country(): void
+    {
+        $payload = $this->payload();
+        $payload['registration_country'] = 'Iraq';
+        $this->post(route('crm.jordan.store'), $payload)
+            ->assertSessionHasErrors('registration_country');
+        $this->assertDatabaseEmpty('exhibition_registrations');
+    }
+
+    public function test_general_registration_does_not_change_an_existing_registration(): void
+    {
+        $this->post(route('crm.jordan.store'), $this->payload())
+            ->assertRedirect(route('crm.jordan.thank-you'));
+        $existing = ExhibitionRegistration::firstOrFail();
+        $before = $existing->getAttributes();
+        $this->assertNull($existing->registration_country);
+
+        $new = $this->generalPayload();
+        $new['student_name'] = 'New general student';
+        $new['student_email'] = 'general@example.com';
+        $new['registration_country'] = 'Iraq';
+        $this->post(route('crm.general.store'), $new)
+            ->assertRedirect(route('crm.general.thank-you'));
+
+        $this->assertSame($before, $existing->fresh()->getAttributes());
+        $this->assertDatabaseCount('exhibition_registrations', 2);
+        $this->assertDatabaseHas('exhibition_registrations', [
+            'student_email' => 'general@example.com',
+            'exhibition_location' => 'General',
+            'registration_country' => 'Iraq',
+        ]);
     }
 
     public function test_export_handles_multiple_batches_and_keeps_arabic_and_formulas_safe(): void
@@ -325,5 +468,15 @@ class ExhibitionRegistrationFlowTest extends TestCase
             'has_relatives_or_acquaintances_in_egypt' => '1',
             'has_accommodation_in_egypt' => '1',
         ];
+    }
+
+    private function generalPayload(): array
+    {
+        $payload = $this->payload();
+        unset($payload['preferred_contact_method'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt']);
+        $payload['certificate_type'] = 'British System (IGCSE / GCSE / GCE A-Levels)';
+        $payload['certificate_category'] = 'International Systems';
+
+        return $payload;
     }
 }

@@ -24,6 +24,39 @@ class ExhibitionRegistrationController extends Controller
         return view('crm.exhibition.create');
     }
 
+    public function createGeneral(): View
+    {
+        return view('crm.exhibition.create', ['general' => true]);
+    }
+
+    public function storeGeneral(StoreExhibitionRegistrationRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        if ($data['registration_country'] === 'Other') {
+            $data['registration_country'] = $data['registration_country_other'];
+        }
+        unset($data['consent'], $data['company_fax'], $data['certificate_category'], $data['registration_country_other']);
+
+        do {
+            $reference = 'GEN-'.random_int(100000, 999999);
+        } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
+
+        ExhibitionRegistration::create(array_replace($data, [
+            'reference_code' => $reference,
+            'exhibition_location' => 'General',
+            'preferred_contact_method' => 'email',
+            'status' => 'new',
+            'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
+        ]));
+
+        return redirect()->route('crm.general.thank-you')->with('registration_reference', $reference);
+    }
+
+    public function thankYouGeneral(): View
+    {
+        return view('crm.exhibition.thank-you', ['general' => true]);
+    }
+
     public function createIraq(): View
     {
         if (! session()->has('iraq_locale_initialized')) {
@@ -108,10 +141,11 @@ class ExhibitionRegistrationController extends Controller
     {
         $filters = $this->validatedFilters($request);
         $exhibitionLocations = ExhibitionRegistration::query()->distinct()->orderBy('exhibition_location')->pluck('exhibition_location');
+        $registrationCountries = ExhibitionRegistration::query()->whereNotNull('registration_country')->distinct()->orderBy('registration_country')->pluck('registration_country');
         $registrations = $this->filteredQuery($filters)
             ->latest()->paginate(20)->withQueryString();
 
-        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations'));
+        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'registrationCountries'));
     }
 
     public function export(Request $request): StreamedResponse
@@ -131,7 +165,7 @@ class ExhibitionRegistrationController extends Controller
                 'Reference', 'Submitted at', 'Status', 'Registrant', 'Student name', 'Student email',
                 'Student mobile', 'Parent email', 'Parent mobile', 'Certificate type', 'Current result',
                 'Interested faculties', 'Preferred contact', 'Relatives in Egypt', 'Accommodation in Egypt',
-                'Exhibition location', 'Full tuition scholarship eligibility',
+                'Exhibition location', 'Registration country', 'Full tuition scholarship eligibility',
             ], escape: '');
 
             $this->filteredQuery($filters)->chunkById(500, function ($registrations) use ($output): void {
@@ -153,6 +187,7 @@ class ExhibitionRegistrationController extends Controller
                         is_null($registration->has_relatives_or_acquaintances_in_egypt) ? 'Not specified' : ($registration->has_relatives_or_acquaintances_in_egypt ? 'Yes' : 'No'),
                         is_null($registration->has_accommodation_in_egypt) ? 'Not specified' : ($registration->has_accommodation_in_egypt ? 'Yes' : 'No'),
                         $registration->exhibition_location,
+                        $registration->registration_country,
                         ucfirst($registration->full_scholarship_eligibility ?? ''),
                     ];
 
@@ -239,6 +274,7 @@ class ExhibitionRegistrationController extends Controller
             'faculty' => ['nullable', Rule::in(ExhibitionRegistration::FACULTIES)],
             'preferred_contact_method' => ['nullable', Rule::in(['email', 'whatsapp'])],
             'exhibition_location' => ['nullable', 'string', 'max:255'],
+            'registration_country' => ['nullable', 'string', 'max:120'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
@@ -258,6 +294,7 @@ class ExhibitionRegistrationController extends Controller
             ->when($filters['faculty'] ?? null, fn ($query, $faculty) => $query->whereJsonContains('interested_faculties', $faculty))
             ->when($filters['preferred_contact_method'] ?? null, fn ($query, $method) => $query->where('preferred_contact_method', $method))
             ->when($filters['exhibition_location'] ?? null, fn ($query, $location) => $query->where('exhibition_location', $location))
+            ->when($filters['registration_country'] ?? null, fn ($query, $country) => $query->where('registration_country', $country))
             ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
     }

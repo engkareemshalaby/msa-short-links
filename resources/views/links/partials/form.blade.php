@@ -23,11 +23,11 @@
             <span>{{ __('Short code type') }}</span>
             <div class="radio-cards">
                 <label class="radio-card">
-                    <input type="radio" name="code_type" value="random" {{ old('code_type', $defaults['code_type'] ?? 'random') === 'random' ? 'checked' : '' }} onchange="toggleCustom()">
+                    <input type="radio" name="code_type" value="random" {{ old('code_type', $defaults['code_type'] ?? 'custom') === 'random' ? 'checked' : '' }} onchange="toggleCustom()">
                     <span><strong>{{ __('Random 6-digit code') }}</strong><small>{{ __('Example: 482913. Generated securely and guaranteed unique.') }}</small></span>
                 </label>
                 <label class="radio-card">
-                    <input type="radio" name="code_type" value="custom" {{ old('code_type', $defaults['code_type'] ?? 'random') === 'custom' ? 'checked' : '' }} onchange="toggleCustom()">
+                    <input type="radio" name="code_type" value="custom" {{ old('code_type', $defaults['code_type'] ?? 'custom') === 'custom' ? 'checked' : '' }} onchange="toggleCustom()">
                     <span><strong>{{ __('Custom slug') }}</strong><small>{{ __('Example: apply-now or open-day.') }}</small></span>
                 </label>
             </div>
@@ -36,7 +36,7 @@
 
         <label class="field full" id="customCode">
             <span>{{ __('Custom slug') }}</span>
-            <input name="custom_code" value="{{ old('custom_code') }}" placeholder="apply-now" pattern="[A-Za-z0-9][A-Za-z0-9_-]{1,49}">
+            <input name="custom_code" value="{{ old('custom_code', $defaults['custom_code'] ?? null) }}" placeholder="apply-now" pattern="[A-Za-z0-9][A-Za-z0-9_-]{1,49}">
             <small>{{ __('Use letters, numbers, hyphens or underscores. At least 2 characters.') }}</small>
         </label>
     @else

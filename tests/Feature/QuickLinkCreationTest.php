@@ -42,7 +42,7 @@ class QuickLinkCreationTest extends TestCase
         $this->assertSame('123456', (new ShortLink(['code' => '123456', 'title' => '  ']))->display_title);
     }
 
-    public function test_duplicate_prefills_only_reusable_fields_without_creating_a_link(): void
+    public function test_duplicate_prefills_copy_name_and_unique_slug_without_creating_a_link(): void
     {
         $campaign = Campaign::create(['name' => 'Iraq', 'created_by' => User::first()->id, 'is_active' => false]);
         $tag = Tag::create(['name' => 'Expo', 'color' => '#538f3f']);
@@ -52,11 +52,26 @@ class QuickLinkCreationTest extends TestCase
             ->assertViewHas('campaigns', fn ($campaigns) => $campaigns->contains($campaign))
             ->assertViewHas('defaults', fn ($defaults) => $defaults['destination_url'] === $link->destination_url
                 && $defaults['campaign_id'] === $campaign->id && $defaults['tag_ids'] === [$tag->id]
-                && ! isset($defaults['custom_code'], $defaults['access_password'], $defaults['max_visits']))
-            ->assertSee('name="custom_code" value=""', false);
+                && $defaults['title'] === 'Original copy' && $defaults['custom_code'] === 'source-link-copy'
+                && $defaults['code_type'] === 'custom'
+                && ! isset($defaults['access_password'], $defaults['max_visits']))
+            ->assertSee('name="title" value="Original copy"', false)
+            ->assertSee('name="custom_code" value="source-link-copy"', false);
         $this->assertDatabaseCount('short_links', 1);
         $this->post(route('links.store'), ['destination_url' => $link->destination_url, 'code_type' => 'custom', 'custom_code' => $link->code])->assertSessionHasErrors('custom_code');
         $this->assertDatabaseCount('short_links', 1);
+    }
+
+    public function test_duplicate_uses_two_digits_when_copy_slug_is_taken_including_archived_links(): void
+    {
+        $source = $this->link();
+        $this->link(['code' => 'source-link-copy'])->delete();
+
+        $response = $this->get(route('links.create', ['duplicate' => $source->id]))->assertOk();
+        $slug = $response->viewData('defaults')['custom_code'];
+        $this->assertMatchesRegularExpression('/^source-link-copy\d{2}$/', $slug);
+        $response->assertSee('name="custom_code" value="'.$slug.'"', false);
+        $this->assertDatabaseCount('short_links', 2);
     }
 
     public function test_save_and_add_another_preserves_new_campaign_and_tags_but_clears_link_fields(): void
