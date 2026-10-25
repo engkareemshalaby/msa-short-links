@@ -271,9 +271,12 @@ class ExhibitionRegistrationFlowTest extends TestCase
     public function test_general_form_accepts_missing_result_and_labels_nationality(): void
     {
         $this->get(route('crm.general.create'))->assertOk()
+            ->assertSee('images/general-exhibition-en.jpeg', false)
             ->assertSee("What is the student's nationality?")
             ->assertDontSee('Which country are you registering from?')
             ->assertSee('Current GPA / overall result');
+        $this->get(route('crm.jordan.create'))->assertOk()
+            ->assertDontSee('images/general-exhibition-en.jpeg', false);
 
         $payload = $this->generalPayload();
         $payload['registration_country'] = 'Egypt';
