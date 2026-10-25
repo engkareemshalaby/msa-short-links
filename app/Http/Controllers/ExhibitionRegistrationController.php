@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExhibitionRegistrationRequest;
-use App\Mail\IraqExhibitionWelcome;
 use App\Mail\IraqExhibitionParentWelcome;
+use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
 use App\Services\AuditLogger;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,13 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExhibitionRegistrationController extends Controller
@@ -36,6 +30,7 @@ class ExhibitionRegistrationController extends Controller
             session(['iraq_locale_initialized' => true, 'locale' => 'en']);
             app()->setLocale('en');
         }
+
         return view('crm.exhibition.iraq-create');
     }
 
@@ -72,14 +67,19 @@ class ExhibitionRegistrationController extends Controller
             'status' => 'new',
             'ip_hash' => $request->ip() ? hash('sha256', $request->ip().config('app.key')) : null,
         ]));
+
         return redirect()->route('crm.iraq.thank-you')->with('registration_reference', $reference);
     }
 
     public function thankYouIraq(): View
     {
-        if (! session()->has('locale')) app()->setLocale('en');
+        if (! session()->has('locale')) {
+            app()->setLocale('en');
+        }
+
         return view('crm.exhibition.iraq-thank-you');
     }
+
     public function store(StoreExhibitionRegistrationRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -117,80 +117,60 @@ class ExhibitionRegistrationController extends Controller
     public function export(Request $request): StreamedResponse
     {
         $filters = $this->validatedFilters($request);
-        $registrations = $this->filteredQuery($filters)->oldest()->get();
-        $filename = 'exhibition-registrations-'.now()->format('Y-m-d-His').'.xlsx';
+        $filename = 'exhibition-registrations-'.now()->format('Y-m-d-His').'.csv';
 
-        return response()->streamDownload(function () use ($registrations): void {
-            $spreadsheet = new Spreadsheet;
-            $sheet = $spreadsheet->getActiveSheet();
-            $sheet->setTitle('Registrations');
-            $headers = [
+        return response()->streamDownload(function () use ($filters): void {
+            $output = fopen('php://output', 'w');
+            if ($output === false) {
+                throw new \RuntimeException('Unable to open the export stream.');
+            }
+
+            // Excel recognizes the UTF-8 BOM, including Arabic names and locations.
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, [
                 'Reference', 'Submitted at', 'Status', 'Registrant', 'Student name', 'Student email',
                 'Student mobile', 'Parent email', 'Parent mobile', 'Certificate type', 'Current result',
                 'Interested faculties', 'Preferred contact', 'Relatives in Egypt', 'Accommodation in Egypt',
                 'Exhibition location', 'Full tuition scholarship eligibility',
-            ];
-            $sheet->fromArray($headers, null, 'A1');
+            ], escape: '');
 
-            $row = 2;
-            foreach ($registrations as $registration) {
-                $values = [
-                    $registration->reference_code,
-                    Date::dateTimeToExcel($registration->created_at),
-                    ucfirst($registration->status),
-                    ucfirst($registration->registrant_role),
-                    $registration->student_name,
-                    $registration->student_email,
-                    $registration->student_mobile,
-                    $registration->parent_email,
-                    $registration->parent_mobile,
-                    $registration->certificate_type === 'Other' ? $registration->certificate_type_other : $registration->certificate_type,
-                    $registration->current_result,
-                    implode(', ', $registration->interested_faculties ?? []),
-                    ucfirst($registration->preferred_contact_method),
-                    is_null($registration->has_relatives_or_acquaintances_in_egypt) ? 'Not specified' : ($registration->has_relatives_or_acquaintances_in_egypt ? 'Yes' : 'No'),
-                    is_null($registration->has_accommodation_in_egypt) ? 'Not specified' : ($registration->has_accommodation_in_egypt ? 'Yes' : 'No'),
-                    $registration->exhibition_location,
-                    ucfirst($registration->full_scholarship_eligibility ?? ''),
-                ];
+            $this->filteredQuery($filters)->chunkById(500, function ($registrations) use ($output): void {
+                foreach ($registrations as $registration) {
+                    $cells = [
+                        $registration->reference_code,
+                        $registration->created_at?->format('Y-m-d H:i:s'),
+                        ucfirst($registration->status),
+                        ucfirst($registration->registrant_role),
+                        $registration->student_name,
+                        $registration->student_email,
+                        $registration->student_mobile,
+                        $registration->parent_email,
+                        $registration->parent_mobile,
+                        $registration->certificate_type === 'Other' ? $registration->certificate_type_other : $registration->certificate_type,
+                        $registration->current_result,
+                        implode(', ', $registration->interested_faculties ?? []),
+                        ucfirst($registration->preferred_contact_method),
+                        is_null($registration->has_relatives_or_acquaintances_in_egypt) ? 'Not specified' : ($registration->has_relatives_or_acquaintances_in_egypt ? 'Yes' : 'No'),
+                        is_null($registration->has_accommodation_in_egypt) ? 'Not specified' : ($registration->has_accommodation_in_egypt ? 'Yes' : 'No'),
+                        $registration->exhibition_location,
+                        ucfirst($registration->full_scholarship_eligibility ?? ''),
+                    ];
 
-                foreach ($values as $column => $value) {
-                    $coordinate = Coordinate::stringFromColumnIndex($column + 1).$row;
-                    if ($column === 1) {
-                        $sheet->setCellValueExplicit($coordinate, $value, DataType::TYPE_NUMERIC);
-                    } else {
-                        $sheet->setCellValueExplicit($coordinate, (string) ($value ?? ''), DataType::TYPE_STRING);
-                    }
+                    fputcsv($output, array_map(self::excelSafeCell(...), $cells), escape: '');
                 }
-                $row++;
-            }
+                fflush($output);
+            });
 
-            $lastRow = max(1, $row - 1);
-            $header = $sheet->getStyle('A1:Q1');
-            $header->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
-            $header->getFill()->setFillType('solid')->getStartColor()->setARGB('FF072841');
-            $header->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-            $header->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF538F3F');
-            $sheet->getRowDimension(1)->setRowHeight(28);
-            $sheet->freezePane('A2');
-            $sheet->setAutoFilter("A1:Q{$lastRow}");
-            $sheet->setShowGridlines(false);
-            $sheet->getStyle("A2:Q{$lastRow}")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
-            $sheet->getStyle("B2:B{$lastRow}")->getNumberFormat()->setFormatCode('yyyy-mm-dd hh:mm');
-            $sheet->getStyle("A2:Q{$lastRow}")->getFont()->setName('Arial')->setSize(10);
-            $sheet->getStyle('A1:Q1')->getFont()->setName('Arial')->setSize(10);
+            fclose($output);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
 
-            foreach (range('A', 'Q') as $column) {
-                $sheet->getColumnDimension($column)->setAutoSize(true);
-            }
-            foreach (['E', 'J', 'K', 'L'] as $column) {
-                $sheet->getColumnDimension($column)->setAutoSize(false)->setWidth($column === 'L' ? 34 : 24);
-                $sheet->getStyle("{$column}2:{$column}{$lastRow}")->getAlignment()->setWrapText(true);
-            }
+    private static function excelSafeCell(mixed $value): string
+    {
+        $text = (string) ($value ?? '');
 
-            (new Xlsx($spreadsheet))->save('php://output');
-            $spreadsheet->disconnectWorksheets();
-        }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+        // Spreadsheet apps can execute CSV values starting with these characters as formulas.
+        return preg_match('/^[\s]*[=+\-@]/u', $text) ? "'".$text : $text;
     }
 
     public function analytics(Request $request): View
@@ -203,6 +183,7 @@ class ExhibitionRegistrationController extends Controller
             ->groupBy('day')->orderBy('day')->get()->keyBy('day');
         $daily = collect(range(0, $days - 1))->map(function ($offset) use ($start, $dailyRaw) {
             $date = $start->copy()->addDays($offset);
+
             return ['day' => $date->format('M d'), 'total' => (int) ($dailyRaw[$date->toDateString()]->total ?? 0)];
         });
         $breakdown = fn (string $column) => (clone $query)->select($column, DB::raw('COUNT(*) as total'))
@@ -227,6 +208,7 @@ class ExhibitionRegistrationController extends Controller
     public function update(Request $request, ExhibitionRegistration $registration): RedirectResponse
     {
         $registration->update($request->validate(['status' => ['required', Rule::in(ExhibitionRegistration::STATUSES)]]));
+
         return back()->with('success', __('Registration status updated.'));
     }
 
@@ -280,8 +262,3 @@ class ExhibitionRegistrationController extends Controller
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
     }
 }
-
-
-
-
-

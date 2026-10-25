@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Mail\IraqExhibitionParentWelcome;
 use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -112,17 +114,11 @@ class ExhibitionRegistrationFlowTest extends TestCase
 
         $export = $this->get(route('crm.exhibition.export', ['exhibition_location' => 'Iraq (Baghdad)']));
         $export->assertOk();
-        $file = tempnam(sys_get_temp_dir(), 'exhibition-export-');
-        file_put_contents($file, $export->streamedContent());
-        try {
-            $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
-        } finally {
-            unlink($file);
-        }
-        $rows = $sheet->getActiveSheet()->toArray();
+        $rows = $this->csvRows($export->streamedContent());
         $this->assertCount(2, $rows);
         $this->assertSame('Iraq Student', $rows[1][4]);
     }
+
     public function test_authorized_user_can_export_filtered_registrations_as_excel(): void
     {
         $this->seed(DatabaseSeeder::class);
@@ -131,11 +127,49 @@ class ExhibitionRegistrationFlowTest extends TestCase
 
         $response = $this->actingAs($admin)->get(route('crm.exhibition.export', ['status' => 'new']));
 
-        $response->assertOk()->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        $this->assertStringContainsString('.xlsx', (string) $response->headers->get('content-disposition'));
+        $response->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('.csv', (string) $response->headers->get('content-disposition'));
         $content = $response->streamedContent();
-        $this->assertStringStartsWith('PK', $content);
-        $this->assertGreaterThan(2000, strlen($content));
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
+        $rows = $this->csvRows($content);
+        $this->assertCount(2, $rows);
+        $this->assertCount(17, $rows[1]);
+        $this->assertSame('Jordan Student', $rows[1][4]);
+    }
+
+    public function test_export_handles_multiple_batches_and_keeps_arabic_and_formulas_safe(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $now = now();
+        foreach (range(0, 2) as $batch) {
+            $registrations = [];
+            for ($number = $batch * 500 + 1; $number <= min(($batch + 1) * 500, 1001); $number++) {
+                $registrations[] = [
+                    'reference_code' => 'EX-'.$number,
+                    'registrant_role' => 'student',
+                    'student_email' => "student{$number}@example.com",
+                    'student_name' => $number === 1 ? '=HYPERLINK("https://example.com")' : 'طالب '.$number,
+                    'student_mobile' => '+201234567890',
+                    'certificate_type' => 'Cambridge IGCSE',
+                    'interested_faculties' => '[]',
+                    'preferred_contact_method' => 'whatsapp',
+                    'exhibition_location' => 'Iraq (Baghdad)',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            DB::table('exhibition_registrations')->insert($registrations);
+        }
+
+        $rows = $this->csvRows($this->actingAs(User::firstOrFail())
+            ->get(route('crm.exhibition.export', ['exhibition_location' => 'Iraq (Baghdad)']))
+            ->assertOk()->streamedContent());
+
+        $this->assertCount(1002, $rows);
+        $this->assertSame("'=HYPERLINK(\"https://example.com\")", $rows[1][4]);
+        $this->assertSame("'+201234567890", $rows[1][6]);
+        $this->assertSame('طالب 1001', $rows[1001][4]);
+        $this->assertDatabaseCount('exhibition_registrations', 1001);
     }
 
     public function test_iraq_form_defaults_to_english_and_saves_without_scholarship_answer(): void
@@ -164,8 +198,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertNull($registration->full_scholarship_eligibility);
         $this->assertNull($registration->current_result);
         $this->assertMatchesRegularExpression('/^IRQ-\d{6}$/', $registration->reference_code);
-        Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) =>
-            $mail->hasTo('student@example.com')
+        Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) => $mail->hasTo('student@example.com')
             && $mail->referenceCode === $registration->reference_code
             && $mail->messageLocale === 'en'
             && str_contains($mail->render(), 'https://go.msa.edu.eg/iraq-study-in-egypt')
@@ -197,6 +230,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
             'exhibition_location' => 'Iraq (Baghdad)',
         ]);
     }
+
     public function test_iraq_banner_uses_arabic_image_for_arabic_locale(): void
     {
         $this->withSession(['iraq_locale_initialized' => true, 'locale' => 'ar'])
@@ -204,6 +238,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
             ->assertOk()
             ->assertSee('images/iraq-exhibition-ar.jpeg', false);
     }
+
     public function test_iraq_sends_both_emails_in_the_form_language(): void
     {
         foreach (['en', 'ar'] as $locale) {
@@ -215,10 +250,9 @@ class ExhibitionRegistrationFlowTest extends TestCase
             $this->withSession(['iraq_locale_initialized' => true, 'locale' => $locale])
                 ->post('/crm/iraq-exhibition', $payload)
                 ->assertRedirect('/crm/iraq-exhibition/thank-you');
-            Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) =>
-                $mail->hasTo('student@example.com') && $mail->messageLocale === $locale
+            Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) => $mail->hasTo('student@example.com') && $mail->messageLocale === $locale
             );
-            Mail::assertSent(\App\Mail\IraqExhibitionParentWelcome::class, function ($mail) use ($locale) {
+            Mail::assertSent(IraqExhibitionParentWelcome::class, function ($mail) use ($locale) {
                 $mail->assertSeeInHtml('dir="'.($locale === 'ar' ? 'rtl' : 'ltr').'"', false);
                 $mail->assertSeeInHtml('https://go.msa.edu.eg/iraq-study-in-egypt');
                 $mail->assertSeeInText('https://go.msa.edu.eg/iraq-email');
@@ -226,6 +260,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
                     $mail->assertSeeInHtml('Dear Parent / Guardian,');
                     $mail->assertSeeInText('Dear Parent / Guardian,');
                 }
+
                 return $mail->hasTo('parent@example.com') && $mail->messageLocale === $locale;
             });
             Mail::assertSentCount(2);
@@ -265,6 +300,20 @@ class ExhibitionRegistrationFlowTest extends TestCase
         ]);
     }
 
+    private function csvRows(string $content): array
+    {
+        $stream = fopen('php://temp', 'w+');
+        fwrite($stream, substr($content, 3));
+        rewind($stream);
+        $rows = [];
+        while (($row = fgetcsv($stream, escape: '')) !== false) {
+            $rows[] = $row;
+        }
+        fclose($stream);
+
+        return $rows;
+    }
+
     private function payload(): array
     {
         return [
@@ -278,7 +327,3 @@ class ExhibitionRegistrationFlowTest extends TestCase
         ];
     }
 }
-
-
-
-
