@@ -31,7 +31,7 @@ class StoreExhibitionRegistrationRequest extends FormRequest
                 : ($iraq ? ExhibitionRegistration::IRAQ_CERTIFICATES : ExhibitionRegistration::CERTIFICATES))],
             'certificate_category' => $general ? ['required', Rule::in(GeneralRegistrationCertificates::categories())] : ['prohibited'],
             'certificate_type_other' => [$general ? 'prohibited' : 'required_if:certificate_type,Other', 'nullable', 'string', 'max:255'],
-            'current_result' => [$iraq ? 'nullable' : 'required', 'string', 'max:255'],
+            'current_result' => [$iraq || $general ? 'nullable' : 'required', 'string', 'max:255'],
             'interested_faculties' => ['required', 'array', 'min:1', 'max:4'],
             'interested_faculties.*' => ['required', 'distinct', Rule::in(ExhibitionRegistration::FACULTIES)],
             'preferred_contact_method' => [$iraq || $general ? 'prohibited' : 'required', Rule::in(['email', 'whatsapp'])],

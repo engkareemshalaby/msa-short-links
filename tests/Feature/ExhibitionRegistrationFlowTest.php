@@ -268,6 +268,22 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertSame('Saudi Arabia', $rows[1][16]);
     }
 
+    public function test_general_form_accepts_missing_result_and_labels_nationality(): void
+    {
+        $this->get(route('crm.general.create'))->assertOk()
+            ->assertSee("What is the student's nationality?")
+            ->assertDontSee('Which country are you registering from?')
+            ->assertSee('Current GPA / overall result');
+
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'Egypt';
+        unset($payload['current_result']);
+
+        $this->post(route('crm.general.store'), $payload)
+            ->assertRedirect(route('crm.general.thank-you'));
+        $this->assertNull(ExhibitionRegistration::firstOrFail()->current_result);
+    }
+
     public function test_general_form_uses_certificate_categories_independently_of_country(): void
     {
         $countries = GeneralRegistrationCertificates::countries();
