@@ -177,6 +177,16 @@ class ShortLinkController extends Controller
         return redirect()->route('links.index')->with('success', __('Short link archived successfully.'));
     }
 
+    public function forceDestroy(ShortLink $link): RedirectResponse
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($link) {
+            AuditLogger::log('permanently_deleted', $link, 'Permanently deleted short link '.$link->code, $link->only(['title', 'code', 'destination_url']));
+            $link->forceDelete();
+        });
+
+        return redirect()->route('links.index')->with('success', __('Short link permanently deleted.'));
+    }
+
     public function restore(int $link): RedirectResponse
     {
         $link = ShortLink::onlyTrashed()->findOrFail($link);

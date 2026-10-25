@@ -146,6 +146,39 @@ class ShortLinkFlowTest extends TestCase
         ]))->assertOk()->assertSee('Matching link')->assertDontSee('Different link');
     }
 
+    public function test_permanent_deletion_removes_link_and_visits_and_keeps_audit_record(): void
+    {
+        $link = ShortLink::create([
+            'code' => 'delete-me', 'destination_url' => 'https://example.com',
+            'code_type' => 'custom', 'is_active' => true, 'created_by' => User::first()->id,
+        ]);
+        $link->visits()->create(['visited_at' => now(), 'visitor_hash' => 'test-visitor']);
+
+        $this->actingAs(User::first())->get(route('links.show', $link))
+            ->assertOk()->assertSee(__('Delete permanently'))->assertSee('return confirm(this.dataset.confirm)', false);
+        $this->delete(route('links.force-destroy', $link))->assertRedirect(route('links.index'));
+
+        $this->assertDatabaseMissing('short_links', ['id' => $link->id]);
+        $this->assertDatabaseMissing('visits', ['short_link_id' => $link->id]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'permanently_deleted', 'subject_id' => $link->id]);
+        $this->get('/delete-me')->assertNotFound();
+    }
+
+    public function test_analyst_cannot_permanently_delete_links(): void
+    {
+        $link = ShortLink::create([
+            'code' => 'keep-me', 'destination_url' => 'https://example.com',
+            'code_type' => 'custom', 'is_active' => true, 'created_by' => User::first()->id,
+        ]);
+        $analyst = User::factory()->create();
+        $analyst->assignRole('Analyst');
+
+        $this->actingAs($analyst)->get(route('links.show', $link))
+            ->assertOk()->assertDontSee(route('links.force-destroy', $link));
+        $this->delete(route('links.force-destroy', $link))->assertForbidden();
+        $this->assertNotSoftDeleted($link);
+    }
+
     public function test_admin_can_view_and_restore_an_archived_link(): void
     {
         $admin = User::first();

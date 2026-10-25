@@ -867,5 +867,8 @@
   "Register another contact": "تسجيل جهة اتصال أخرى",
   "Delete form": "حذف الاستمارة",
   "Are you sure you want to delete this registration?": "هل أنت متأكد من حذف هذه الاستمارة؟",
-  "Registration deleted successfully.": "تم حذف الاستمارة بنجاح."
+  "Registration deleted successfully.": "تم حذف الاستمارة بنجاح.",
+  "Delete permanently": "حذف نهائي",
+  "Short link permanently deleted.": "تم حذف الرابط نهائيًا.",
+  "Permanently delete link :code? This cannot be undone. The short URL and its QR codes will stop working. All visit history, analytics and smart redirects for this link will be permanently deleted. Existing exhibition registrations will remain, but their association with this link will be removed. Choose Cancel to keep the link.": "هل تريد حذف الرابط :code نهائيًا؟ لا يمكن التراجع عن هذا الإجراء. سيتوقف الرابط المختصر ورموز QR الخاصة به عن العمل. سيتم حذف سجل الزيارات والإحصائيات والتحويلات الذكية لهذا الرابط نهائيًا. ستبقى تسجيلات المعرض الموجودة، لكن سيتم إزالة ارتباطها بهذا الرابط. اختر إلغاء للاحتفاظ بالرابط."
 }

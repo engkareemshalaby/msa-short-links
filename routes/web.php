@@ -112,6 +112,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/links/{link}/edit', [ShortLinkController::class, 'edit'])->middleware('permission:links.update')->name('links.edit');
     Route::put('/links/{link}', [ShortLinkController::class, 'update'])->middleware('permission:links.update')->name('links.update');
     Route::delete('/links/{link}', [ShortLinkController::class, 'destroy'])->middleware('permission:links.delete')->name('links.destroy');
+    Route::delete('/links/{link}/permanent', [ShortLinkController::class, 'forceDestroy'])->middleware('permission:links.delete')->name('links.force-destroy');
     Route::patch('/links/{link}/toggle', [ShortLinkController::class, 'toggle'])->middleware('permission:links.update')->name('links.toggle');
 
     Route::get('/analytics', [AnalyticsController::class, 'index'])->middleware('permission:analytics.view')->name('analytics.index');
