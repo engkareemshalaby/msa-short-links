@@ -4,7 +4,7 @@
 @section('title', $general ? __('General registration') : __('Jordan Exhibition Registration'))
 
 @section('content')
-@if($general)<div class="general-exhibition-banner"><img src="{{ asset('images/general-exhibition-en.jpeg') }}" alt="{{ __('Study at MSA University — international students') }}" width="1600" height="400"></div>@endif
+@if($general)<div class="general-exhibition-banner"><img src="{{ asset(app()->getLocale() === 'ar' ? 'images/general-exhibition-ar.jpeg' : 'images/general-exhibition-en.jpeg') }}" alt="{{ __('Study at MSA University — international students') }}" width="1600" height="400"></div>@endif
 <section class="jordan-hero">
     <div class="hero-copy"><span class="crm-eyebrow">{{ $general ? __('MSA University') : __('MSA University · Jordan') }}</span><h1>{{ __('Start your journey at MSA University') }}</h1><p>{{ __('Register your interest and our Admissions Team will contact you with personalized guidance about programs, requirements, scholarships, tuition fees, and the application process.') }}</p><div class="hero-points"><span>✓ {{ __('No application fee') }}</span><span>✓ {{ __('Takes about 3 minutes') }}</span><span>✓ {{ __('Personal admissions guidance') }}</span></div></div>
     <div class="hero-mark"><strong>MSA</strong><span>{{ $general ? __('General registration') : __('Jordan Exhibition') }}</span></div>
