@@ -19,7 +19,7 @@
                         <header><div><i></i><h3>{{ $tag->name }}</h3></div><div class="tag-stats"><span><b>{{ number_format($tag->links_count) }}</b>{{ __('Links') }}</span><span><b>{{ number_format($tag->total_visits) }}</b>{{ __('Visits') }}</span></div></header>
                         <div class="tag-links">
                             @forelse ($tag->links as $link)
-                                <a href="{{ route('links.show', $link) }}"><span><b>{{ $link->title ?: __('Untitled link') }}</b><small>{{ $link->short_url }}</small></span><strong>{{ number_format($link->visits_count) }}<small>{{ __('visits') }}</small></strong><em>›</em></a>
+                                <a href="{{ route('links.show', $link) }}"><span><b>{{ $link->display_title }}</b><small>{{ $link->short_url }}</small></span><strong>{{ number_format($link->visits_count) }}<small>{{ __('visits') }}</small></strong><em>›</em></a>
                             @empty
                                 <div class="empty-tag">{{ __('No links use this tag yet.') }}</div>
                             @endforelse

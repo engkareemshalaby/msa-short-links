@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', $link->title ?: __('Untitled link'))
+@section('title', $link->display_title)
 @section('subtitle', __('Created :date by :name', ['date'=>$link->created_at->format('M d, Y · H:i'),'name'=>$link->creator?->name]))
 @section('content')
 <div class="detail-grid"><div class="card"><div class="card-header"><div><h2>{{ __('Short link') }}</h2><p>{{ __('Share this URL in campaigns, messages and printed materials.') }}</p></div><div class="actions">@can('links.update')<a class="button" href="{{ route('links.edit',$link) }}">{{ __('Edit') }}</a>@endcan</div></div><div class="card-body">

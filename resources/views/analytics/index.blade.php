@@ -13,7 +13,7 @@
                         <option value="">{{ __('All links') }}</option>
                         @foreach ($links as $link)
                             <option value="{{ $link->id }}" @selected((string) $selectedLink === (string) $link->id)>
-                                {{ $link->title ?: $link->code }} · /{{ $link->code }}</option>
+                                {{ $link->display_title }} · /{{ $link->code }}</option>
                         @endforeach
                     </select>
                 </label><button class="button primary" type="submit">{{ __('Apply filters') }}</button><a class="button"

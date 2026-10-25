@@ -44,10 +44,25 @@ class ShortLink extends Model
         return $this->hasMany(Visit::class);
     }
 
-    public function campaign(): BelongsTo { return $this->belongsTo(Campaign::class); }
-    public function tags(): BelongsToMany { return $this->belongsToMany(Tag::class); }
-    public function smartTargets(): HasMany { return $this->hasMany(SmartTarget::class)->orderBy('priority'); }
-    public function pixels(): BelongsToMany { return $this->belongsToMany(RetargetingPixel::class); }
+    public function campaign(): BelongsTo
+    {
+        return $this->belongsTo(Campaign::class);
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
+    public function smartTargets(): HasMany
+    {
+        return $this->hasMany(SmartTarget::class)->orderBy('priority');
+    }
+
+    public function pixels(): BelongsToMany
+    {
+        return $this->belongsToMany(RetargetingPixel::class);
+    }
 
     public function scopeAvailable(Builder $query): Builder
     {
@@ -60,5 +75,10 @@ class ShortLink extends Model
     public function getShortUrlAttribute(): string
     {
         return url($this->code);
+    }
+
+    public function getDisplayTitleAttribute(): string
+    {
+        return filled($this->title) ? $this->title : $this->code;
     }
 }

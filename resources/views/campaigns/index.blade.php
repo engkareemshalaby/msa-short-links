@@ -41,7 +41,7 @@
                         <div class="links-table-head"><span>{{ __('Link') }}</span><span>{{ __('Domain URL') }}</span><span>{{ __('Visits') }}</span><span></span></div>
                         @forelse ($campaign->links as $link)
                             <div class="links-table-row">
-                                <div><a href="{{ route('links.show', $link) }}">{{ $link->title ?: __('Untitled link') }}</a><small>{{ $link->short_url }}</small></div>
+                                <div><a href="{{ route('links.show', $link) }}">{{ $link->display_title }}</a><small>{{ $link->short_url }}</small></div>
                                 <span class="destination">{{ $link->destination_url }}</span>
                                 <strong>{{ number_format($link->visits_count) }}</strong>
                                 <a class="button small" href="{{ route('links.show', $link) }}">{{ __('View') }}</a>

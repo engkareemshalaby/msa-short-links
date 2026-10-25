@@ -1,5 +1,6 @@
 @php
-    $selectedTagIds = array_map('intval', old('tag_ids', $link ? $link->tags->pluck('id')->all() : []));
+    $defaults = $defaults ?? [];
+    $selectedTagIds = array_map('intval', old('tag_ids', $link ? $link->tags->pluck('id')->all() : ($defaults['tag_ids'] ?? [])));
     $advancedHasErrors = $errors->has('expires_at') || $errors->has('max_visits') || $errors->has('campaign_id')
         || $errors->has('new_campaign_name') || $errors->has('access_password') || $errors->has('pixel_ids');
 @endphp
@@ -7,13 +8,13 @@
 <div class="form-grid link-primary-fields">
     <label class="field full">
         <span>{{ __('Link name') }}</span>
-        <input name="title" value="{{ old('title', $link?->title) }}" placeholder="{{ __('e.g. Fall admission campaign') }}">
-        <small>{{ __('A clear internal name that helps your team identify this link. It is not shown to visitors.') }}</small>
+        <input name="title" value="{{ old('title', $link?->title ?? ($defaults['title'] ?? null)) }}" placeholder="{{ __('e.g. Fall admission campaign') }}">
+        <small>{{ __('Optional. Leave blank to use the custom slug or generated short code as the name.') }}</small>
     </label>
 
     <label class="field full">
         <span>{{ __('Domain URL') }}</span>
-        <textarea name="destination_url" required placeholder="https://www.msa.edu.eg/...">{{ old('destination_url', $link?->destination_url) }}</textarea>
+        <textarea name="destination_url" required placeholder="https://www.msa.edu.eg/...">{{ old('destination_url', $link?->destination_url ?? ($defaults['destination_url'] ?? null)) }}</textarea>
         <small>{{ __('Paste the complete page URL visitors should be redirected to, including https://.') }}</small>
     </label>
 
@@ -22,11 +23,11 @@
             <span>{{ __('Short code type') }}</span>
             <div class="radio-cards">
                 <label class="radio-card">
-                    <input type="radio" name="code_type" value="random" {{ old('code_type', 'random') === 'random' ? 'checked' : '' }} onchange="toggleCustom()">
+                    <input type="radio" name="code_type" value="random" {{ old('code_type', $defaults['code_type'] ?? 'random') === 'random' ? 'checked' : '' }} onchange="toggleCustom()">
                     <span><strong>{{ __('Random 6-digit code') }}</strong><small>{{ __('Example: 482913. Generated securely and guaranteed unique.') }}</small></span>
                 </label>
                 <label class="radio-card">
-                    <input type="radio" name="code_type" value="custom" {{ old('code_type') === 'custom' ? 'checked' : '' }} onchange="toggleCustom()">
+                    <input type="radio" name="code_type" value="custom" {{ old('code_type', $defaults['code_type'] ?? 'random') === 'custom' ? 'checked' : '' }} onchange="toggleCustom()">
                     <span><strong>{{ __('Custom slug') }}</strong><small>{{ __('Example: apply-now or open-day.') }}</small></span>
                 </label>
             </div>
@@ -98,7 +99,7 @@
             <select name="campaign_id">
                 <option value="">{{ __('No campaign') }}</option>
                 @foreach ($campaigns as $campaign)
-                    <option value="{{ $campaign->id }}" @selected(old('campaign_id', $link?->campaign_id) == $campaign->id)>{{ $campaign->name }}</option>
+                    <option value="{{ $campaign->id }}" @selected(old('campaign_id', $link?->campaign_id ?? ($defaults['campaign_id'] ?? null)) == $campaign->id)>{{ $campaign->name }}</option>
                 @endforeach
             </select>
             <small>{{ __('Campaign UTM values are added automatically to the destination URL.') }}</small>
@@ -136,6 +137,7 @@
         </label>
 
         <label class="checkbox field full">
+            <input type="hidden" name="is_active" value="0">
             <input type="checkbox" name="is_active" value="1" {{ old('is_active', $link?->is_active ?? true) ? 'checked' : '' }}>
             <span>{{ __('Active and ready to redirect') }}</span>
             <small>{{ __('Turn this off to save the link without allowing public redirects.') }}</small>
@@ -158,6 +160,7 @@
 
 <div class="form-footer">
     <a class="button" href="{{ $link ? route('links.show', $link) : route('links.index') }}">{{ __('Cancel') }}</a>
+    @if (! $link)<button class="button" type="submit" name="after_save" value="another">{{ __('Save and add another') }}</button>@endif
     <button class="button primary" type="submit">{{ $link ? __('Save changes') : __('Create short link') }}</button>
 </div>
 
