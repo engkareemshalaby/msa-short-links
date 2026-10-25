@@ -29,6 +29,12 @@ class ExhibitionRegistrationController extends Controller
 
     public function createGeneral(Request $request, ExhibitionAttribution $attribution): View
     {
+        $locale = $request->routeIs('crm.general.create.ar') ? 'ar' : $request->query('lang');
+        if (in_array($locale, ['ar', 'en'], true)) {
+            $request->session()->put('locale', $locale);
+            app()->setLocale($locale);
+        }
+
         $attribution->rememberLanding($request);
 
         return view('crm.exhibition.create', ['general' => true]);
@@ -66,11 +72,16 @@ class ExhibitionRegistrationController extends Controller
 
     public function createIraq(Request $request, ExhibitionAttribution $attribution): View
     {
-        $attribution->rememberLanding($request);
-        if (! session()->has('iraq_locale_initialized')) {
+        $locale = $request->routeIs('crm.iraq.create.ar') ? 'ar' : $request->query('lang');
+        if (in_array($locale, ['ar', 'en'], true)) {
+            session(['iraq_locale_initialized' => true, 'locale' => $locale]);
+            app()->setLocale($locale);
+        } elseif (! session()->has('iraq_locale_initialized')) {
             session(['iraq_locale_initialized' => true, 'locale' => 'en']);
             app()->setLocale('en');
         }
+
+        $attribution->rememberLanding($request);
 
         return view('crm.exhibition.iraq-create');
     }

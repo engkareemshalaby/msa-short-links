@@ -13,7 +13,9 @@ class ExhibitionAttribution
     private const FORM_PATHS = [
         '/crm/jordan-exhibition',
         '/crm/iraq-exhibition',
+        '/crm/iraq-exhibition/ar',
         '/crm/exhibition-registration',
+        '/crm/exhibition-registration/ar',
     ];
 
     public function rememberClick(Request $request, ShortLink $link, Visit $visit, string $destination): void
@@ -81,7 +83,13 @@ class ExhibitionAttribution
 
     private function formKey(Request $request): string
     {
-        return 'exhibition_source_'.str_replace('/', '_', trim($request->path(), '/'));
+        $path = match (true) {
+            $request->is('crm/exhibition-registration/ar') => 'crm/exhibition-registration',
+            $request->is('crm/iraq-exhibition/ar') => 'crm/iraq-exhibition',
+            default => trim($request->path(), '/'),
+        };
+
+        return 'exhibition_source_'.str_replace('/', '_', $path);
     }
 
     private function sameDestination(string $destination, string $landingUrl): bool

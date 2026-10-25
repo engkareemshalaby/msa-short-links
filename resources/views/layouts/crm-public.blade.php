@@ -34,7 +34,18 @@
     @stack('head')
 </head>
 <body>
-<header class="crm-public-header"><div class="crm-header-inner"><img src="{{ asset('images/msa-logo-wide.png') }}" alt="MSA University"><a class="crm-language" href="{{ route('locale', app()->getLocale() === 'ar' ? 'en' : 'ar') }}">{{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}</a></div></header>
+<?php
+    $languageUrl = match (true) {
+        request()->routeIs('crm.general.create', 'crm.general.create.ar') => app()->getLocale() === 'ar'
+            ? route('crm.general.create', array_merge(request()->except('lang'), ['lang' => 'en']))
+            : route('crm.general.create.ar', request()->except('lang')),
+        request()->routeIs('crm.iraq.create', 'crm.iraq.create.ar') => app()->getLocale() === 'ar'
+            ? route('crm.iraq.create', array_merge(request()->except('lang'), ['lang' => 'en']))
+            : route('crm.iraq.create.ar', request()->except('lang')),
+        default => route('locale', app()->getLocale() === 'ar' ? 'en' : 'ar'),
+    };
+?>
+<header class="crm-public-header"><div class="crm-header-inner"><img src="{{ asset('images/msa-logo-wide.png') }}" alt="MSA University"><a class="crm-language" href="{{ $languageUrl }}">{{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}</a></div></header>
 @yield('content')
 @stack('scripts')
 </body>

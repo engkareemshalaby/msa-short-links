@@ -49,9 +49,11 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::post('/jordan-exhibition', [ExhibitionRegistrationController::class, 'store'])->middleware('throttle:10,1')->name('jordan.store');
     Route::get('/jordan-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYou'])->name('jordan.thank-you');
     Route::get('/exhibition-registration', [ExhibitionRegistrationController::class, 'createGeneral'])->name('general.create');
+    Route::get('/exhibition-registration/ar', [ExhibitionRegistrationController::class, 'createGeneral'])->name('general.create.ar');
     Route::post('/exhibition-registration', [ExhibitionRegistrationController::class, 'storeGeneral'])->middleware('throttle:10,1')->name('general.store');
     Route::get('/exhibition-registration/thank-you', [ExhibitionRegistrationController::class, 'thankYouGeneral'])->name('general.thank-you');
     Route::get('/iraq-exhibition', [ExhibitionRegistrationController::class, 'createIraq'])->name('iraq.create');
+    Route::get('/iraq-exhibition/ar', [ExhibitionRegistrationController::class, 'createIraq'])->name('iraq.create.ar');
     Route::post('/iraq-exhibition', [ExhibitionRegistrationController::class, 'storeIraq'])->middleware('throttle:10,1')->name('iraq.store');
     Route::get('/iraq-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYouIraq'])->name('iraq.thank-you');
 });

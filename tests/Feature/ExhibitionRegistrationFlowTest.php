@@ -92,6 +92,79 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertSame('ar', ExhibitionRegistration::firstOrFail()->source_form_locale);
     }
 
+    public function test_general_form_has_a_shareable_arabic_url(): void
+    {
+        $arabicUrl = route('crm.general.create', ['lang' => 'ar']);
+        $this->get($arabicUrl)->assertOk()
+            ->assertSee('ما جنسية الطالب؟')
+            ->assertSee(route('crm.general.create', ['lang' => 'en']), false);
+
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'Egypt';
+        $this->post(route('crm.general.store'), $payload)->assertRedirect();
+        $this->assertSame('ar', ExhibitionRegistration::firstOrFail()->source_form_locale);
+    }
+
+    public function test_arabic_general_path_preserves_source_when_submitted(): void
+    {
+        $this->get(route('crm.general.create.ar', ['ref' => 'arabic-ad']))->assertOk()
+            ->assertSee('ما جنسية الطالب؟')
+            ->assertSee('ref=arabic-ad&amp;lang=en', false);
+
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'Egypt';
+        $this->post(route('crm.general.store'), $payload)->assertRedirect();
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame('ar', $registration->source_form_locale);
+        $this->assertSame('arabic-ad', $registration->source_ref);
+    }
+
+    public function test_short_link_to_arabic_general_path_keeps_link_attribution(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $destination = route('crm.general.create.ar', ['ref' => 'arabic-campaign']);
+        $link = ShortLink::create([
+            'title' => 'Arabic general form', 'code' => 'general-ar', 'code_type' => 'custom',
+            'destination_url' => $destination, 'is_active' => true, 'created_by' => User::firstOrFail()->id,
+        ]);
+        $this->get('/general-ar')->assertRedirect($destination);
+        $this->get($destination)->assertOk()->assertSee('ما جنسية الطالب؟');
+
+        $payload = $this->generalPayload();
+        $payload['registration_country'] = 'Egypt';
+        $this->post(route('crm.general.store'), $payload)->assertRedirect();
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame($link->id, $registration->source_short_link_id);
+        $this->assertSame('arabic-campaign', $registration->source_ref);
+        $this->assertSame('ar', $registration->source_form_locale);
+    }
+
+    public function test_arabic_iraq_path_keeps_language_and_short_link_attribution(): void
+    {
+        Mail::fake();
+        $this->seed(DatabaseSeeder::class);
+        $destination = route('crm.iraq.create.ar', ['ref' => 'iraq-ar-ad']);
+        $link = ShortLink::create([
+            'title' => 'Iraq Arabic form', 'code' => 'iraq-ar-form', 'code_type' => 'custom',
+            'destination_url' => $destination, 'is_active' => true, 'created_by' => User::firstOrFail()->id,
+        ]);
+        $this->get('/iraq-ar-form')->assertRedirect($destination);
+        $this->get($destination)->assertOk()->assertSee('lang="ar"', false)
+            ->assertSee('ref=iraq-ar-ad&amp;lang=en', false);
+
+        $payload = $this->payload();
+        $payload['certificate_type'] = 'Iraqi Secondary School Certificate (Sixth Preparatory)';
+        unset($payload['current_result'], $payload['preferred_contact_method'], $payload['has_relatives_or_acquaintances_in_egypt'], $payload['has_accommodation_in_egypt']);
+        $this->post(route('crm.iraq.store'), $payload)->assertRedirect();
+
+        $registration = ExhibitionRegistration::firstOrFail();
+        $this->assertSame($link->id, $registration->source_short_link_id);
+        $this->assertSame('iraq-ar-ad', $registration->source_ref);
+        $this->assertSame('ar', $registration->source_form_locale);
+    }
+
     public function test_general_registration_retains_its_short_link_source(): void
     {
         $this->seed(DatabaseSeeder::class);
