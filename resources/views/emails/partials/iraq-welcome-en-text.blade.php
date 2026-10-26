@@ -1,25 +1,32 @@
 Dear {{ $studentName }},
 
-It will be a pleasure meeting you at the Iraq Student Exhibition & Higher Education Conference 2026 in Baghdad. Thank you for your interest in joining October University for Modern Sciences and Arts (MSA) The Highest British Accreditation And Partnership In Egypt— we look forward to welcoming you to our campus.
+We look forward to meeting you at the Iraq Student Exhibition and Higher Education Conference 2026 in Baghdad, and we thank you for your interest in joining October University for Modern Sciences and Arts (MSA), the Highest British Accreditation and Partnership in Egypt.
 
-Your initial registration has been received. Please follow the steps below to complete your application.
+We are pleased to confirm that we have successfully received your initial registration details, and we would like to share the instructions regarding the next steps in your application:
 
-1. Complete your registration on the Study in Egypt platform
-Register as an international student through the official platform and select MSA University as your preferred institution:
-👉 https://go.msa.edu.eg/iraq-study-in-egypt
+Registration Through the “Study in Egypt” Platform
 
-2. Contact the official Iraqi authorities regarding the full scholarship
-After completing your registration on the Study in Egypt platform and selecting MSA University, please submit your required documents to the relevant authorities in Iraq to pursue the full scholarship offered by the Iraqi Ministry of Higher Education and the Iraqi Government.
+Please note that the application period for the first semester through the “Study in Egypt” platform has ended, while registration for the second semester (February 2027) has not yet opened.
 
-3. Your 10% tuition fee discount
-As a student who registered at the Iraq Student Exhibition, you are eligible for a 10% tuition fee discount offered directly by MSA University — regardless of your scholarship status.
+Therefore, no action is required from you through the platform at this time. Please continue to monitor your email, as we will send you a message as soon as registration opens, including the required steps to complete your application and select MSA University.
 
-After completing your registration on the “Study in Egypt” platform and selecting MSA University, please take a screenshot showing your completed registration at MSA University and reply to this email with the screenshot attached. This will allow us to confirm your registration and process your 10% tuition discount.
+10% Tuition Discount for Iraq Student Exhibition Registrants
 
-For full details on admission requirements, tuition fees for international students, and required documents, please visit the MSA International Students Admission Guide:
-👉 https://go.msa.edu.eg/iraq-email
+As a result of your registration through the Iraq Student Exhibition 2026, you are eligible for a 10% tuition fee discount offered directly by MSA University to students who registered through the exhibition.
 
-We look forward to welcoming you to MSA University.
+We will send you the details and steps required to benefit from the discount in a separate email once registration on the platform opens.
 
-Warm regards,
-MSA University Admissions Team
+Scholarship Opportunities
+
+If you are interested in applying for a full scholarship, please follow the official announcements issued by the Iraqi Ministry of Higher Education and Scientific Research and the relevant authorities to learn about the scholarship requirements, application deadlines, and required documents on your part.
+
+In the meantime, you can review the admission requirements, tuition fees, and required documents through the International Students Admission Guide:
+https://go.msa.edu.eg/iraq-email
+
+Please continue to monitor your email — we are staying in touch with you.
+
+We look forward to welcoming you soon to October University for Modern Sciences and Arts (MSA).
+
+Kind regards,
+Admissions Office – MSA University
+Hotline: 16672

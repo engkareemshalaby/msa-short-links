@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExhibitionRegistrationRequest;
+use App\Mail\GeneralExhibitionParentWelcome;
+use App\Mail\GeneralExhibitionWelcome;
 use App\Mail\IraqExhibitionParentWelcome;
 use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
@@ -54,6 +56,25 @@ class ExhibitionRegistrationController extends Controller
         do {
             $reference = 'GEN-'.random_int(100000, 999999);
         } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
+
+        $emailField = 'student_email';
+        try {
+            Mail::to($data['student_email'])->send(new GeneralExhibitionWelcome(
+                $data['student_name'], $reference, app()->getLocale()
+            ));
+            if (! empty($data['parent_email'])) {
+                $emailField = 'parent_email';
+                Mail::to($data['parent_email'])->send(new GeneralExhibitionParentWelcome(
+                    $data['student_name'], $reference, app()->getLocale()
+                ));
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors([
+                $emailField => __('Email sending failed:').' '.$exception->getMessage(),
+            ])->withInput();
+        }
 
         ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), $this->clientContext->capture($request), [
             'reference_code' => $reference,

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Mail\GeneralExhibitionParentWelcome;
+use App\Mail\GeneralExhibitionWelcome;
 use App\Mail\IraqExhibitionParentWelcome;
 use App\Mail\IraqExhibitionWelcome;
 use App\Models\ExhibitionRegistration;
@@ -17,6 +19,53 @@ use Tests\TestCase;
 class ExhibitionRegistrationFlowTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_general_sends_localized_student_and_optional_parent_emails(): void
+    {
+        foreach (['ar', 'en'] as $locale) {
+            foreach ([null, 'parent@example.com'] as $parentEmail) {
+                Mail::fake();
+                $payload = $this->generalPayload();
+                $payload['registration_country'] = 'Saudi Arabia';
+                $payload['parent_email'] = $parentEmail;
+                $this->withSession(['locale' => $locale])->post(route('crm.general.store'), $payload)
+                    ->assertRedirect(route('crm.general.thank-you'));
+                $reference = session('registration_reference');
+                $this->assertDatabaseHas('exhibition_registrations', ['reference_code' => $reference]);
+                foreach ([GeneralExhibitionWelcome::class => 'student@example.com',
+                    GeneralExhibitionParentWelcome::class => $parentEmail] as $class => $recipient) {
+                    if (! $recipient) {
+                        Mail::assertNotSent($class);
+
+                        continue;
+                    }
+                    Mail::assertSent($class, function ($mail) use ($recipient, $locale, $reference) {
+                        $mail->assertSeeInHtml('10%');
+                        $mail->assertSeeInText('10%');
+                        $mail->assertSeeInHtml('dir="'.($locale === 'ar' ? 'rtl' : 'ltr').'"', false);
+                        $mail->assertSeeInText('https://admission.study-in-egypt.gov.eg/signup');
+                        foreach (['Iraq', 'iraq', 'Baghdad', 'العراق', 'بغداد'] as $text) {
+                            $mail->assertDontSeeInHtml($text);
+                            $mail->assertDontSeeInText($text);
+                            $this->assertStringNotContainsString($text, $mail->envelope()->subject);
+                        }
+
+                        return $mail->hasTo($recipient) && $mail->messageLocale === $locale
+                            && $mail->referenceCode === $reference;
+                    });
+                }
+                Mail::assertSentCount($parentEmail ? 2 : 1);
+            }
+        }
+    }
+
+    public function test_general_mail_failure_returns_form_error_without_saving_registration(): void
+    {
+        Mail::shouldReceive('to')->once()->with('student@example.com')->andThrow(new \RuntimeException('Mail unavailable'));
+        $this->from(route('crm.general.create'))->post(route('crm.general.store'), array_merge($this->generalPayload(), ['registration_country' => 'Saudi Arabia']))
+            ->assertRedirect(route('crm.general.create'))->assertSessionHasErrors('student_email');
+        $this->assertDatabaseEmpty('exhibition_registrations');
+    }
 
     public function test_guest_can_open_and_submit_jordan_exhibition_form(): void
     {
