@@ -1,22 +1,23 @@
-Dear Parent / Guardian,
+Dear Parent,
 
-Thank you for your interest in joining October University for Modern Sciences and Arts (MSA), The Highest British Accreditation and Partnership in Egypt.
+Thank you for your interest in having your son/daughter join October University for Modern Sciences and Arts (MSA), the Highest British Accreditation and Partnership in Egypt.
 
-We are pleased to confirm that your child’s initial registration has been received. Please follow the steps below to complete the application process.
+We are pleased to confirm that we have successfully received your son/daughter’s initial registration, and we would like to share the instructions regarding the next steps in the application process:
 
-1. Complete the registration on the Study in Egypt platform
-Please complete your child’s registration as an international student through the official Study in Egypt platform and select MSA University as the preferred institution:
-👉 https://admission.study-in-egypt.gov.eg/signup
+Registration Through the “Study in Egypt” Platform
 
-2. Your child’s 10% tuition fee discount
-As a student registered through our registration form, your child is eligible for a 10% tuition fee discount offered directly by MSA University.
+Please note that the application period for the first semester through the “Study in Egypt” platform has ended, while registration for the second semester (February 2027) has not yet opened.
 
-After completing your registration on the “Study in Egypt” platform and selecting MSA University, please take a screenshot showing your completed registration at MSA University and reply to this email with the screenshot attached. This will allow us to confirm your registration and process your 10% tuition discount.
+Therefore, your son/daughter is not required to take any action through the platform at this time. Please continue to monitor your email, as we will send you a message as soon as registration opens, including the required steps to complete the application and select MSA University.
 
-For full details on admission requirements, tuition fees for international students, and required documents, please visit the MSA International Students Admission Guide:
-👉 https://msa.edu.eg/msauniversity/admission-guide/admission-for-international-students/
+In the meantime, you can review the admission requirements, tuition fees, and required documents through the International Students Admission Guide:
 
-We look forward to welcoming your child to MSA University and supporting them throughout their academic journey.
+https://go.msa.edu.eg/iraq-email
 
-Warm regards,
-MSA University Admissions Team
+Please continue to monitor your email, as we will keep you updated.
+
+We look forward to welcoming your son/daughter soon to (MSA).
+
+Kind regards,
+Admissions Office – MSA University
+Hotline: 16672

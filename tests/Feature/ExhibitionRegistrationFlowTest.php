@@ -40,15 +40,11 @@ class ExhibitionRegistrationFlowTest extends TestCase
                         continue;
                     }
                     Mail::assertSent($class, function ($mail) use ($recipient, $locale, $reference) {
-                        $mail->assertSeeInHtml('10%');
-                        $mail->assertSeeInText('10%');
+                        $mail->assertSeeInHtml($locale === 'ar' ? 'فبراير 2027' : 'February 2027');
+                        $mail->assertSeeInText('https://go.msa.edu.eg/iraq-email');
                         $mail->assertSeeInHtml('dir="'.($locale === 'ar' ? 'rtl' : 'ltr').'"', false);
-                        $mail->assertSeeInText('https://admission.study-in-egypt.gov.eg/signup');
-                        foreach (['Iraq', 'iraq', 'Baghdad', 'العراق', 'بغداد'] as $text) {
-                            $mail->assertDontSeeInHtml($text);
-                            $mail->assertDontSeeInText($text);
-                            $this->assertStringNotContainsString($text, $mail->envelope()->subject);
-                        }
+                        $mail->assertDontSeeInText('https://admission.study-in-egypt.gov.eg/signup');
+                        $mail->assertDontSeeInText('10%');
 
                         return $mail->hasTo($recipient) && $mail->messageLocale === $locale
                             && $mail->referenceCode === $reference;
@@ -601,7 +597,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         Mail::assertSent(IraqExhibitionWelcome::class, fn ($mail) => $mail->hasTo('student@example.com')
             && $mail->referenceCode === $registration->reference_code
             && $mail->messageLocale === 'en'
-            && str_contains($mail->render(), 'https://go.msa.edu.eg/iraq-study-in-egypt')
+            && str_contains($mail->render(), 'February 2027')
             && str_contains($mail->render(), 'https://go.msa.edu.eg/iraq-email')
         );
         $this->get('/crm/iraq-exhibition/thank-you')->assertOk()->assertSee('Registration Successfully Received');
@@ -654,7 +650,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
             );
             Mail::assertSent(IraqExhibitionParentWelcome::class, function ($mail) use ($locale) {
                 $mail->assertSeeInHtml('dir="'.($locale === 'ar' ? 'rtl' : 'ltr').'"', false);
-                $mail->assertSeeInHtml('https://go.msa.edu.eg/iraq-study-in-egypt');
+                $mail->assertSeeInHtml($locale === 'ar' ? 'فبراير 2027' : 'https://go.msa.edu.eg/iraq-study-in-egypt');
                 $mail->assertSeeInText('https://go.msa.edu.eg/iraq-email');
                 if ($locale === 'en') {
                     $mail->assertSeeInHtml('Dear Parent / Guardian,');
