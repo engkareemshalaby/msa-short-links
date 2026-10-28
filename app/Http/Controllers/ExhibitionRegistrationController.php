@@ -185,13 +185,16 @@ class ExhibitionRegistrationController extends Controller
     {
         $filters = $this->validatedFilters($request);
         $exhibitionLocations = ExhibitionRegistration::query()->distinct()->orderBy('exhibition_location')->pluck('exhibition_location');
-        $registrationCountries = ExhibitionRegistration::query()->whereNotNull('registration_country')->distinct()->orderBy('registration_country')->pluck('registration_country');
+        $statusCounts = $this->filteredQuery($filters)
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
         $registrations = $this->filteredQuery($filters)
             ->latest()->paginate(20)->withQueryString();
 
         $connectionCountries = ExhibitionRegistration::query()->whereNotNull('connection_country')->distinct()->orderBy('connection_country')->pluck('connection_country');
 
-        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'registrationCountries', 'connectionCountries'));
+        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'connectionCountries', 'statusCounts'));
     }
 
     public function export(Request $request): StreamedResponse
