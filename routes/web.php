@@ -147,6 +147,10 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:crm.exhibitions.view')->group(function () {
             Route::get('/crm/exhibition-registrations', [ExhibitionRegistrationController::class, 'index'])->name('crm.exhibition.index');
             Route::get('/crm/exhibition-registrations/export', [ExhibitionRegistrationController::class, 'export'])->name('crm.exhibition.export');
+            Route::get('/crm/exhibition-registrations/mail', [ExhibitionRegistrationController::class, 'composeMail'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.mail.compose');
+            Route::post('/crm/exhibition-registrations/mail/preview', [ExhibitionRegistrationController::class, 'previewMail'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.mail.preview');
+            Route::post('/crm/exhibition-registrations/mail/send', [ExhibitionRegistrationController::class, 'sendMail'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.mail.send');
+            Route::get('/crm/exhibition-registrations/mail/{campaign}', [ExhibitionRegistrationController::class, 'mailStatus'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.mail.status');
             Route::get('/crm/exhibition-registrations-analytics', [ExhibitionRegistrationController::class, 'analytics'])->name('crm.exhibition.analytics');
             Route::get('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'show'])->name('crm.exhibition.show');
             Route::patch('/crm/exhibition-registrations/{registration}', [ExhibitionRegistrationController::class, 'update'])->middleware('permission:crm.exhibitions.manage')->name('crm.exhibition.update');

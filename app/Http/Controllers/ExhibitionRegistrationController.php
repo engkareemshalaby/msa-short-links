@@ -11,6 +11,8 @@ use App\Models\ExhibitionRegistration;
 use App\Services\AuditLogger;
 use App\Services\ExhibitionAttribution;
 use App\Services\RegistrationClientContext;
+use App\Services\ExhibitionMailContent;
+use App\Jobs\SendExhibitionCampaignMail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -195,6 +197,117 @@ class ExhibitionRegistrationController extends Controller
         $connectionCountries = ExhibitionRegistration::query()->whereNotNull('connection_country')->distinct()->orderBy('connection_country')->pluck('connection_country');
 
         return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'connectionCountries', 'statusCounts'));
+    }
+
+    public function composeMail(Request $request): View
+    {
+        $filters = $this->validatedFilters($request);
+        if ($request->session()->get('exhibition_mail_draft.filters') !== $filters) {
+            $request->session()->forget('exhibition_mail_draft');
+        }
+
+        return view('crm.exhibition.mail-compose', [
+            'filters' => $filters,
+            'registrationCount' => $this->filteredQuery($filters)->count(),
+        ]);
+    }
+
+    public function previewMail(Request $request, ExhibitionMailContent $content): View
+    {
+        $data = $request->validate([
+            'filters' => ['required', 'array'],
+            'subject' => ['required', 'string', 'max:255'],
+            'body_html' => ['required', 'string', 'max:100000'],
+            'include_parents' => ['nullable', 'boolean'],
+        ]);
+        $filters = $this->validatedFilters(new Request($data['filters']));
+        $body = $content->clean($data['body_html']);
+        if (trim(strip_tags($body)) === '' && ! str_contains($body, '<img')) {
+            return back()->withErrors(['body_html' => __('Please write the email content.')])->withInput();
+        }
+        $draft = [
+            'filters' => $filters,
+            'subject' => $data['subject'],
+            'body_html' => $body,
+            'include_parents' => (bool) ($data['include_parents'] ?? false),
+            'token' => bin2hex(random_bytes(16)),
+        ];
+        $request->session()->put('exhibition_mail_draft', $draft);
+        $recipients = $this->mailRecipients($filters, $draft['include_parents']);
+
+        return view('crm.exhibition.mail-preview', [
+            'draft' => $draft,
+            'recipientCount' => count($recipients),
+            'registrationCount' => $this->filteredQuery($filters)->count(),
+        ]);
+    }
+
+    public function sendMail(Request $request): RedirectResponse
+    {
+        $request->validate(['token' => ['required', 'string']]);
+        $draft = $request->session()->get('exhibition_mail_draft');
+        if (! $draft || ! hash_equals($draft['token'], $request->input('token'))) {
+            return redirect()->route('crm.exhibition.index')->withErrors(['mail' => __('Email preview expired. Please start again.')]);
+        }
+        $recipients = $this->mailRecipients($draft['filters'], $draft['include_parents']);
+        if (! $recipients) {
+            return back()->withErrors(['mail' => __('No email recipients match these filters.')]);
+        }
+
+        $campaignId = DB::transaction(function () use ($draft, $recipients, $request) {
+            $id = DB::table('exhibition_mail_campaigns')->insertGetId([
+                'user_id' => $request->user()->id,
+                'subject' => $draft['subject'],
+                'body_html' => $draft['body_html'],
+                'filters' => json_encode($draft['filters']),
+                'include_parents' => $draft['include_parents'],
+                'recipient_count' => count($recipients),
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            foreach ($recipients as $email) {
+                DB::table('exhibition_mail_recipients')->insert([
+                    'campaign_id' => $id, 'email' => $email, 'status' => 'pending',
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+
+            return $id;
+        });
+        $request->session()->forget('exhibition_mail_draft');
+        DB::table('exhibition_mail_recipients')->where('campaign_id', $campaignId)->orderBy('id')
+            ->pluck('id')->each(function ($id, $index) {
+                SendExhibitionCampaignMail::dispatch($id)->onConnection('database')->onQueue('exhibition-mail')->delay(now()->addSeconds($index * 10));
+            });
+
+        return redirect()->route('crm.exhibition.mail.status', $campaignId);
+    }
+
+    public function mailStatus(int $campaign): View
+    {
+        $campaignRow = DB::table('exhibition_mail_campaigns')->find($campaign);
+        abort_unless($campaignRow, 404);
+        $counts = DB::table('exhibition_mail_recipients')->where('campaign_id', $campaign)
+            ->select('status', DB::raw('COUNT(*) as total'))->groupBy('status')->pluck('total', 'status');
+
+        return view('crm.exhibition.mail-status', ['campaign' => $campaignRow, 'counts' => $counts]);
+    }
+
+    private function mailRecipients(array $filters, bool $includeParents): array
+    {
+        $emails = [];
+        $this->filteredQuery($filters)->select(['id', 'student_email', 'parent_email'])
+            ->chunkById(500, function ($registrations) use (&$emails, $includeParents) {
+                foreach ($registrations as $registration) {
+                    foreach ([$registration->student_email, $includeParents ? $registration->parent_email : null] as $email) {
+                        $email = strtolower(trim((string) $email));
+                        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $emails[$email] = $email;
+                        }
+                    }
+                }
+            });
+
+        return array_values($emails);
     }
 
     public function export(Request $request): StreamedResponse
