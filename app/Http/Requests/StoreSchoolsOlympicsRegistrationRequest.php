@@ -43,6 +43,7 @@ class StoreSchoolsOlympicsRegistrationRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        app()->setLocale($this->routeIs('crm.schools-olympics.store.ar') ? 'ar' : 'en');
         $this->merge([
             'student_email' => mb_strtolower(trim((string) $this->input('student_email'))),
             'student_name' => trim((string) $this->input('student_name')),

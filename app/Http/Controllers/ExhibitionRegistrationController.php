@@ -161,6 +161,7 @@ class ExhibitionRegistrationController extends Controller
 
     public function createSchoolsOlympics(Request $request, ExhibitionAttribution $attribution): View
     {
+        app()->setLocale($request->routeIs('crm.schools-olympics.create.ar') ? 'ar' : 'en');
         $attribution->rememberLanding($request);
 
         return view('crm.exhibition.schools-olympics-create');
@@ -168,6 +169,8 @@ class ExhibitionRegistrationController extends Controller
 
     public function storeSchoolsOlympics(StoreSchoolsOlympicsRegistrationRequest $request, ExhibitionAttribution $attribution): RedirectResponse
     {
+        $arabic = $request->routeIs('crm.schools-olympics.store.ar');
+        app()->setLocale($arabic ? 'ar' : 'en');
         $data = $request->validated();
         unset($data['company_fax']);
 
@@ -184,11 +187,12 @@ class ExhibitionRegistrationController extends Controller
 
         $attribution->forgetRegistration($request);
 
-        return redirect()->route('crm.schools-olympics.thank-you')->with('registration_reference', $reference);
+        return redirect()->route($arabic ? 'crm.schools-olympics.thank-you.ar' : 'crm.schools-olympics.thank-you')->with('registration_reference', $reference);
     }
 
     public function thankYouSchoolsOlympics(): View
     {
+        app()->setLocale(request()->routeIs('crm.schools-olympics.thank-you.ar') ? 'ar' : 'en');
         return view('crm.exhibition.schools-olympics-thank-you');
     }
 

@@ -42,6 +42,9 @@
         request()->routeIs('crm.iraq.create', 'crm.iraq.create.ar') => app()->getLocale() === 'ar'
             ? route('crm.iraq.create', array_merge(request()->except('lang'), ['lang' => 'en']))
             : route('crm.iraq.create.ar', request()->except('lang')),
+        request()->routeIs('crm.schools-olympics.create', 'crm.schools-olympics.create.ar') => app()->getLocale() === 'ar'
+            ? route('crm.schools-olympics.create', request()->query())
+            : route('crm.schools-olympics.create.ar', request()->query()),
         default => route('locale', app()->getLocale() === 'ar' ? 'en' : 'ar'),
     };
 ?>

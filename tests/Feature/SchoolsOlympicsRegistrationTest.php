@@ -14,7 +14,7 @@ class SchoolsOlympicsRegistrationTest extends TestCase
     {
         $this->get(route('crm.schools-olympics.create'))->assertOk()
             ->assertSee('MSA Schools Olympics Registration')
-            ->assertSee('Parent/Guardian’s Mobile Number')
+            ->assertSee('Parent / guardian mobile number')
             ->assertSee('Faculty of Languages');
 
         $this->post(route('crm.schools-olympics.store'), $this->payload())
@@ -27,6 +27,23 @@ class SchoolsOlympicsRegistrationTest extends TestCase
         $this->assertSame(['Faculty of Dentistry', 'Faculty of Languages'], $registration->interested_faculties);
         $this->assertMatchesRegularExpression('/^MSO-\d{6}$/', $registration->reference_code);
         $this->get(route('crm.schools-olympics.thank-you'))->assertOk()->assertSee('Registration received');
+    }
+
+    public function test_arabic_form_is_separate_and_keeps_language_through_submission(): void
+    {
+        $this->get(route('crm.schools-olympics.create.ar', ['utm_source' => 'school']))
+            ->assertOk()->assertSee('<html lang="ar" dir="rtl">', false)
+            ->assertSee('التسجيل في أولمبياد مدارس MSA')
+            ->assertSee('كلية اللغات')
+            ->assertDontSee('Role of the registrant')
+            ->assertSee(route('crm.schools-olympics.create', ['utm_source' => 'school']), false);
+
+        $this->post(route('crm.schools-olympics.store.ar'), $this->payload())
+            ->assertRedirect(route('crm.schools-olympics.thank-you.ar'));
+
+        $this->assertSame('ar', ExhibitionRegistration::firstOrFail()->source_form_locale);
+        $this->get(route('crm.schools-olympics.thank-you.ar'))->assertOk()
+            ->assertSee('تم استلام التسجيل')->assertDontSee('Register another student');
     }
 
     public function test_required_fields_and_faculty_limit_are_enforced(): void

@@ -1,0 +1,37 @@
+<?php
+
+return [
+    'title' => 'MSA Schools Olympics Registration',
+    'description' => 'Register your interest in MSA University for the 2026/2027 academic year. Our Admissions Team will contact you soon to explain the next steps.',
+    'error' => 'Please review the highlighted information.',
+    'email' => 'Email address',
+    'role' => 'Role of the registrant',
+    'parent' => 'Parent / Guardian',
+    'student' => 'Student',
+    'contact_details' => 'Contact details',
+    'full_name' => 'Full name',
+    'mobile' => 'Mobile number',
+    'whatsapp' => 'WhatsApp number',
+    'parent_mobile' => 'Parent / guardian mobile number',
+    'certificate' => 'Certificate type',
+    'certificates' => [
+        'Egyptian Thanaweya Amma' => 'Egyptian Thanaweya Amma',
+        'IGCSE / British Certificate' => 'IGCSE / British Certificate',
+        'American Diploma' => 'American Diploma',
+        'Arab Equivalent Certificate' => 'Arab Equivalent Certificate',
+        'Other' => 'Other international certificate',
+        'Al-Azhar Secondary Certificate' => 'Al-Azhar Secondary Certificate',
+    ],
+    'faculties' => 'Select up to 4 faculties you would like to join',
+    'contact_time' => 'Please select the most suitable time for our Admissions Team to contact you',
+    'times' => [
+        '9:00 AM to 11:00 AM' => '9:00 AM to 11:00 AM',
+        '12:00 PM to 02:00 PM' => '12:00 PM to 02:00 PM',
+        '02:00 PM to 03:00 PM' => '02:00 PM to 03:00 PM',
+    ],
+    'submit_note' => 'Our Admissions Team will contact you at your selected time.',
+    'submit' => 'Submit registration',
+    'received' => 'Registration received',
+    'thanks' => 'Thank you for registering. The MSA Admissions Team will contact you soon at your selected time.',
+    'register_another' => 'Register another student',
+];
