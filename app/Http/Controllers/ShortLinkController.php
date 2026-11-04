@@ -17,7 +17,7 @@ use Illuminate\View\View;
 
 class ShortLinkController extends Controller
 {
-    public const RESERVED = ['login', 'logout', 'dashboard', 'links', 'users', 'roles', 'audit', 'locale', 'up'];
+    public const RESERVED = ['login', 'logout', 'dashboard', 'links', 'users', 'roles', 'audit', 'locale', 'up', 'voting'];
 
     public function index(Request $request): View
     {

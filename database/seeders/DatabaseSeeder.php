@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
 
         $rolePermissions = [
             'dashboard.view', 'links.view', 'links.create', 'links.update', 'links.delete',
-            'analytics.view', 'audit.view', 'users.manage', 'roles.manage',
+            'analytics.view', 'audit.view', 'users.manage', 'roles.manage', 'voting.view', 'voting.manage',
         ];
         $crmViewPermissions = [
             'crm.submissions.view', 'crm.exhibitions.view', 'crm.event_contacts.view',
@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
         $administrator = Role::firstOrCreate(['name' => 'Administrator', 'guard_name' => 'web']);
         $analyst = Role::firstOrCreate(['name' => 'Analyst', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'Partner', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Voter', 'guard_name' => 'web']);
         $crmAdmin = Role::firstOrCreate(['name' => 'CRM Admin', 'guard_name' => 'web']);
         $crmStaff = Role::firstOrCreate(['name' => 'CRM Staff', 'guard_name' => 'web']);
 

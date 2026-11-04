@@ -55,6 +55,12 @@
                 <a href="{{ route('audit.index') }}" class="nav-item {{ request()->routeIs('audit.*') ? 'active' : '' }}" title="{{ __('Activity Log') }}"><span>≡</span><span class="nav-text">{{ __('Activity Log') }}</span></a>
             @endcan
         </nav>
+        @can('voting.view')
+            <nav class="nav-list partner-nav" aria-label="{{ __('voting.section') }}">
+                <div class="nav-label"><span class="nav-text">{{ __('voting.section') }}</span></div>
+                <a href="{{ route('voting.admin.index') }}" class="nav-item {{ request()->routeIs('voting.admin.*') ? 'active' : '' }}"><span>✓</span><span class="nav-text">{{ __('voting.nav') }}</span></a>
+            </nav>
+        @endcan
         @canany(['crm.submissions.view', 'crm.exhibitions.view', 'crm.event_contacts.view', 'crm.partners.view', 'crm.referrals.view'])
             <nav class="nav-list partner-nav" aria-label="{{ __('Partner system') }}">
                 <div class="nav-label"><span class="nav-text">{{ __('Partner system') }}</span></div>

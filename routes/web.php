@@ -30,6 +30,9 @@ use App\Http\Controllers\SmartTargetController;
 use App\Http\Controllers\StudentReferralController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Voting\AdminController as VotingAdminController;
+use App\Http\Controllers\Voting\AuthController as VotingAuthController;
+use App\Http\Controllers\Voting\MemberController as VotingMemberController;
 use App\Support\AuthenticatedHome;
 use Illuminate\Support\Facades\Route;
 
@@ -79,6 +82,8 @@ Route::get('/crm/iraq-exhibition-agency/register/thank-you', [PublicEventContact
     ->name('crm.event-contacts.register.thank-you');
 
 Route::middleware('guest')->group(function () {
+    Route::get('/voting/login', [VotingAuthController::class, 'create'])->name('voting.login');
+    Route::post('/voting/login', [VotingAuthController::class, 'store'])->middleware('throttle:5,1')->name('voting.login.store');
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
     Route::get('/crm/partner/login', [PartnerAuthController::class, 'create'])->name('partner.login');
@@ -99,6 +104,22 @@ Route::middleware(['auth', 'role:Partner', 'cache.headers:no_store;private'])->p
 });
 
 Route::middleware('auth')->group(function () {
+    Route::prefix('voting')->name('voting.')->group(function () {
+        Route::get('/', [VotingMemberController::class, 'index'])->middleware('role:Voter')->name('index');
+        Route::post('/', [VotingMemberController::class, 'store'])->middleware(['role:Voter', 'throttle:10,1'])->name('store');
+    });
+    Route::prefix('admin/voting')->name('voting.admin.')->middleware('permission:voting.view')->group(function () {
+        Route::get('/', [VotingAdminController::class, 'index'])->name('index');
+        Route::put('/settings', [VotingAdminController::class, 'update'])->middleware('permission:voting.manage')->name('settings');
+    });
+    Route::prefix('voting')->name('voting.')->group(function () {
+        Route::get('/', [VotingMemberController::class, 'index'])->middleware('role:Voter')->name('index');
+        Route::post('/', [VotingMemberController::class, 'store'])->middleware(['role:Voter', 'throttle:10,1'])->name('store');
+    });
+    Route::prefix('admin/voting')->name('voting.admin.')->middleware('permission:voting.view')->group(function () {
+        Route::get('/', [VotingAdminController::class, 'index'])->name('index');
+        Route::put('/settings', [VotingAdminController::class, 'update'])->middleware('permission:voting.manage')->name('settings');
+    });
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

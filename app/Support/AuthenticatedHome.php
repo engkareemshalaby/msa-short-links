@@ -8,11 +8,16 @@ class AuthenticatedHome
 {
     public static function routeName(User $user): string
     {
+        if ($user->hasRole('Voter')) {
+            return 'voting.index';
+        }
+
         if ($user->can('dashboard.view')) {
             return 'dashboard';
         }
 
         foreach ([
+            'voting.view' => 'voting.admin.index',
             'crm.submissions.view' => 'crm.submissions.index',
             'crm.referrals.view' => 'crm.student-referrals.index',
             'crm.exhibitions.view' => 'crm.exhibition.index',
