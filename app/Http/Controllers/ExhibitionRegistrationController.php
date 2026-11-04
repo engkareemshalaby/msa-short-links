@@ -13,6 +13,7 @@ use App\Services\AuditLogger;
 use App\Services\ExhibitionAttribution;
 use App\Services\RegistrationClientContext;
 use App\Services\ExhibitionMailContent;
+use App\Support\GeneralRegistrationCertificates;
 use App\Jobs\SendExhibitionCampaignMail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -229,12 +230,15 @@ class ExhibitionRegistrationController extends Controller
             ->select('status', DB::raw('COUNT(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');
+        $recentCount = $this->filteredQuery($filters)->where('created_at', '>=', today()->subDays(6))->count();
+        $parentCount = $this->filteredQuery($filters)->where('registrant_role', 'parent')->count();
         $registrations = $this->filteredQuery($filters)
             ->latest()->paginate(20)->withQueryString();
 
         $connectionCountries = ExhibitionRegistration::query()->whereNotNull('connection_country')->distinct()->orderBy('connection_country')->pluck('connection_country');
+        $certificateTypes = ExhibitionRegistration::query()->distinct()->orderBy('certificate_type')->pluck('certificate_type');
 
-        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'connectionCountries', 'statusCounts'));
+        return view('crm.exhibition.index', compact('registrations', 'exhibitionLocations', 'connectionCountries', 'certificateTypes', 'statusCounts', 'recentCount', 'parentCount'));
     }
 
     public function composeMail(Request $request): View
@@ -545,7 +549,14 @@ class ExhibitionRegistrationController extends Controller
             'search' => ['nullable', 'string', 'max:200'],
             'status' => ['nullable', Rule::in(ExhibitionRegistration::STATUSES)],
             'registrant_role' => ['nullable', Rule::in(['student', 'parent'])],
-            'certificate_type' => ['nullable', Rule::in(array_unique(array_merge(ExhibitionRegistration::CERTIFICATES, ExhibitionRegistration::IRAQ_CERTIFICATES)))],
+            'certificate_type' => ['nullable', Rule::in(array_unique(array_merge(
+                ExhibitionRegistration::CERTIFICATES,
+                ExhibitionRegistration::IRAQ_CERTIFICATES,
+                ExhibitionRegistration::SCHOOLS_OLYMPICS_CERTIFICATES,
+                GeneralRegistrationCertificates::certificatesForCategory(GeneralRegistrationCertificates::ARAB_CATEGORY),
+                GeneralRegistrationCertificates::certificatesForCategory(GeneralRegistrationCertificates::INTERNATIONAL_CATEGORY),
+                GeneralRegistrationCertificates::certificatesForCategory(GeneralRegistrationCertificates::ASIAN_CATEGORY),
+            )))],
             'faculty' => ['nullable', Rule::in(ExhibitionRegistration::FACULTIES)],
             'preferred_contact_method' => ['nullable', Rule::in(['email', 'whatsapp', 'phone'])],
             'exhibition_location' => ['nullable', 'string', 'max:255'],

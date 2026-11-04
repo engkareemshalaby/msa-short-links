@@ -318,7 +318,11 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $admin = User::firstOrFail();
 
         $this->actingAs($admin)->get('/crm/exhibition-registrations?registrant_role=student&certificate_type=Cambridge%20IGCSE&faculty=Faculty%20of%20Dentistry&preferred_contact_method=whatsapp')
-            ->assertOk()->assertSee('Jordan Student');
+            ->assertOk()->assertSee('Jordan Student')
+            ->assertSee('exhibition-overview', false)
+            ->assertSee('summary-qualified', false)
+            ->assertSee('summary-recent', false)
+            ->assertSee(route('crm.schools-olympics.create'), false);
         $this->actingAs($admin)->get('/crm/exhibition-registrations?registrant_role=parent')
             ->assertOk()->assertDontSee('Jordan Student');
         $this->actingAs($admin)->get('/crm/exhibition-registrations-analytics?days=30')
@@ -461,7 +465,9 @@ class ExhibitionRegistrationFlowTest extends TestCase
 
         $this->actingAs(User::firstOrFail())->get(route('crm.exhibition.index', [
             'exhibition_location' => 'General', 'registration_country' => 'Saudi Arabia',
-        ]))->assertOk()->assertSee('Jordan Student')->assertSee('Saudi Arabia');
+        ]))->assertOk()->assertSee('Jordan Student')->assertDontSee('<th>Registration country</th>', false);
+        $this->get(route('crm.exhibition.index', ['certificate_type' => 'British System (IGCSE / GCSE / GCE A-Levels)']))
+            ->assertOk()->assertSee('Jordan Student');
 
         $rows = $this->csvRows($this->get(route('crm.exhibition.export', [
             'exhibition_location' => 'General', 'registration_country' => 'Saudi Arabia',
