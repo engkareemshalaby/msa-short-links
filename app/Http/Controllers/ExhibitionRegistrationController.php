@@ -425,8 +425,6 @@ class ExhibitionRegistrationController extends Controller
                         $registration->client_hints ? json_encode($registration->client_hints, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null,
                         $registration->whatsapp_number,
                         $registration->preferred_contact_time,
-                        $registration->whatsapp_number,
-                        $registration->preferred_contact_time,
                     ];
 
                     fputcsv($output, array_map(self::excelSafeCell(...), $cells), escape: '');

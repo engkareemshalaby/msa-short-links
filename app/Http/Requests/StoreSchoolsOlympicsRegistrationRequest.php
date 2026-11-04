@@ -27,7 +27,6 @@ class StoreSchoolsOlympicsRegistrationRequest extends FormRequest
             'certificate_type' => ['required', Rule::in(ExhibitionRegistration::SCHOOLS_OLYMPICS_CERTIFICATES)],
             'interested_faculties' => ['required', 'array', 'min:1', 'max:4'],
             'interested_faculties.*' => ['required', 'distinct', Rule::in(ExhibitionRegistration::FACULTIES)],
-            'preferred_contact_time' => ['required', Rule::in(ExhibitionRegistration::SCHOOLS_OLYMPICS_CONTACT_TIMES)],
             'company_fax' => ['nullable', 'max:0'],
             'client_timezone' => ['nullable', 'string', 'max:100'],
             'screen_width' => ['nullable', 'integer', 'between:1,65535'],

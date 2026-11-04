@@ -34,10 +34,6 @@ class ExhibitionRegistration extends Model
         'Arab Equivalent Certificate', 'Other', 'Al-Azhar Secondary Certificate',
     ];
 
-    public const SCHOOLS_OLYMPICS_CONTACT_TIMES = [
-        '9:00 AM to 11:00 AM', '12:00 PM to 02:00 PM', '02:00 PM to 03:00 PM',
-    ];
-
     public const FACULTIES = [
         'Faculty of Dentistry', 'Faculty of Pharmacy', 'Faculty of Physical Therapy',
         'Faculty of Biotechnology', 'Faculty of Nutrition and Food Technology',

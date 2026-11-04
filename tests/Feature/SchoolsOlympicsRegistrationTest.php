@@ -15,7 +15,11 @@ class SchoolsOlympicsRegistrationTest extends TestCase
         $this->get(route('crm.schools-olympics.create'))->assertOk()
             ->assertSee('MSA Schools Olympics Registration')
             ->assertSee('Parent / guardian mobile number')
-            ->assertSee('Faculty of Languages');
+            ->assertSee('Faculty of Languages')
+            ->assertSee('images/olympics-header.jpeg', false)
+            ->assertSee('>Other</span>', false)
+            ->assertDontSee('Other international certificate')
+            ->assertDontSee('Please select the most suitable time');
 
         $this->post(route('crm.schools-olympics.store'), $this->payload())
             ->assertRedirect(route('crm.schools-olympics.thank-you'));
@@ -23,7 +27,7 @@ class SchoolsOlympicsRegistrationTest extends TestCase
         $registration = ExhibitionRegistration::firstOrFail();
         $this->assertSame('MSA Schools Olympics', $registration->exhibition_location);
         $this->assertSame('01012345678', $registration->whatsapp_number);
-        $this->assertSame('12:00 PM to 02:00 PM', $registration->preferred_contact_time);
+        $this->assertNull($registration->preferred_contact_time);
         $this->assertSame(['Faculty of Dentistry', 'Faculty of Languages'], $registration->interested_faculties);
         $this->assertMatchesRegularExpression('/^MSO-\d{6}$/', $registration->reference_code);
         $this->get(route('crm.schools-olympics.thank-you'))->assertOk()->assertSee('Registration received');
@@ -35,6 +39,8 @@ class SchoolsOlympicsRegistrationTest extends TestCase
             ->assertOk()->assertSee('<html lang="ar" dir="rtl">', false)
             ->assertSee('التسجيل في أولمبياد مدارس MSA')
             ->assertSee('كلية اللغات')
+            ->assertSee('images/olympics-header.jpeg', false)
+            ->assertDontSee('preferred_contact_time')
             ->assertDontSee('Role of the registrant')
             ->assertSee(route('crm.schools-olympics.create', ['utm_source' => 'school']), false);
 
@@ -50,7 +56,7 @@ class SchoolsOlympicsRegistrationTest extends TestCase
     {
         $this->post(route('crm.schools-olympics.store'), [])->assertSessionHasErrors([
             'student_email', 'registrant_role', 'student_name', 'student_mobile',
-            'parent_mobile', 'certificate_type', 'interested_faculties', 'preferred_contact_time',
+            'parent_mobile', 'certificate_type', 'interested_faculties',
         ]);
 
         $payload = $this->payload();
@@ -71,7 +77,6 @@ class SchoolsOlympicsRegistrationTest extends TestCase
             'parent_mobile' => '01098765432',
             'certificate_type' => 'Egyptian Thanaweya Amma',
             'interested_faculties' => ['Faculty of Dentistry', 'Faculty of Languages'],
-            'preferred_contact_time' => '12:00 PM to 02:00 PM',
         ];
     }
 }
