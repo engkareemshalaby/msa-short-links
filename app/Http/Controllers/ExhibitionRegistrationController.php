@@ -446,23 +446,59 @@ class ExhibitionRegistrationController extends Controller
 
     public function analytics(Request $request): View
     {
-        $days = in_array($request->integer('days', 30), [7, 30, 90, 365], true) ? $request->integer('days', 30) : 30;
-        $start = now()->subDays($days - 1)->startOfDay();
-        $query = ExhibitionRegistration::where('created_at', '>=', $start);
+        $filters = $request->validate([
+            'date_from' => ['nullable', 'date_format:Y-m-d'],
+            'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+            'exhibition_location' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(ExhibitionRegistration::STATUSES)],
+            'faculty' => ['nullable', Rule::in(ExhibitionRegistration::FACULTIES)],
+            'certificate_type' => ['nullable', 'string', 'max:255'],
+            'registrant_role' => ['nullable', Rule::in(['student', 'parent'])],
+            'utm_source' => ['nullable', 'string', 'max:255'],
+        ]);
+        $end = \Illuminate\Support\Carbon::parse($filters['date_to'] ?? today())->endOfDay();
+        $start = \Illuminate\Support\Carbon::parse($filters['date_from'] ?? $end->copy()->subDays(29))->startOfDay();
+        if ($start->gt($end)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['date_from' => __('The start date must be before the end date.')]);
+        }
+        $days = (int) $start->diffInDays($end->copy()->startOfDay()) + 1;
+        $sourceExpression = "CASE WHEN source_utm_source IS NULL OR TRIM(source_utm_source) = '' THEN 'Facebook' ELSE TRIM(source_utm_source) END";
+        $query = ExhibitionRegistration::query()
+            ->whereBetween('created_at', [$start, $end])
+            ->when($filters['exhibition_location'] ?? null, fn ($q, $value) => $q->where('exhibition_location', $value))
+            ->when($filters['status'] ?? null, fn ($q, $value) => $q->where('status', $value))
+            ->when($filters['faculty'] ?? null, fn ($q, $value) => $q->whereJsonContains('interested_faculties', $value))
+            ->when($filters['certificate_type'] ?? null, fn ($q, $value) => $q->where('certificate_type', $value))
+            ->when($filters['registrant_role'] ?? null, fn ($q, $value) => $q->where('registrant_role', $value))
+            ->when($filters['utm_source'] ?? null, fn ($q, $value) => $q->whereRaw("{$sourceExpression} = ?", [$value]));
 
         $dailyRaw = (clone $query)->selectRaw('DATE(created_at) as day, COUNT(*) as total')
             ->groupBy('day')->orderBy('day')->get()->keyBy('day');
         $daily = collect(range(0, $days - 1))->map(function ($offset) use ($start, $dailyRaw) {
             $date = $start->copy()->addDays($offset);
 
-            return ['day' => $date->format('M d'), 'total' => (int) ($dailyRaw[$date->toDateString()]->total ?? 0)];
+            return ['date' => $date->toDateString(), 'day' => $date->format('M d'), 'total' => (int) ($dailyRaw[$date->toDateString()]->total ?? 0)];
         });
         $breakdown = fn (string $column) => (clone $query)->select($column, DB::raw('COUNT(*) as total'))
             ->groupBy($column)->orderByDesc('total')->get();
         $allFaculties = (clone $query)->pluck('interested_faculties')->flatten()->countBy()->sortDesc();
+        $sources = (clone $query)->selectRaw("{$sourceExpression} as source, COUNT(*) as total")
+            ->groupByRaw($sourceExpression)->orderByDesc('total')->get();
+        $sourceDaily = (clone $query)->selectRaw("DATE(created_at) as day, {$sourceExpression} as source, COUNT(*) as total")
+            ->groupByRaw("DATE(created_at), {$sourceExpression}")->get();
+        $sourceTrend = $sources->map(fn ($source) => [
+            'source' => $source->source,
+            'data' => $daily->map(fn ($day) => (int) ($sourceDaily->first(fn ($row) => $row->day === $day['date'] && $row->source === $source->source)?->total ?? 0))->all(),
+        ]);
 
         return view('crm.exhibition.analytics', [
             'days' => $days,
+            'dateFrom' => $start->toDateString(),
+            'dateTo' => $end->toDateString(),
+            'filters' => $filters,
+            'exhibitionLocations' => ExhibitionRegistration::query()->distinct()->orderBy('exhibition_location')->pluck('exhibition_location'),
+            'certificateTypes' => ExhibitionRegistration::query()->distinct()->orderBy('certificate_type')->pluck('certificate_type'),
+            'utmSources' => ExhibitionRegistration::query()->distinct()->pluck('source_utm_source')->map(fn ($value) => trim((string) $value))->filter()->push('Facebook')->unique()->sort()->values(),
             'total' => (clone $query)->count(),
             'newCount' => (clone $query)->where('status', 'new')->count(),
             'contactedCount' => (clone $query)->where('status', 'contacted')->count(),
@@ -470,9 +506,10 @@ class ExhibitionRegistrationController extends Controller
             'daily' => $daily,
             'statuses' => $breakdown('status'),
             'certificates' => $breakdown('certificate_type'),
-            'contacts' => $breakdown('preferred_contact_method'),
             'roles' => $breakdown('registrant_role'),
             'faculties' => $allFaculties,
+            'sources' => $sources,
+            'sourceTrend' => $sourceTrend,
         ]);
     }
 

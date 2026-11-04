@@ -325,6 +325,55 @@ class ExhibitionRegistrationFlowTest extends TestCase
             ->assertOk()->assertSee('Registrations over time')->assertSee('Top interested faculties');
     }
 
+    public function test_registration_list_links_student_name_and_hides_extra_columns(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->post('/crm/jordan-exhibition', $this->payload());
+        $registration = ExhibitionRegistration::firstOrFail();
+
+        $this->actingAs(User::firstOrFail())->get(route('crm.exhibition.index'))
+            ->assertOk()
+            ->assertSee('<a class="student-detail-link" href="'.route('crm.exhibition.show', $registration).'">Jordan Student</a>', false)
+            ->assertDontSee($registration->student_email)
+            ->assertDontSee($registration->reference_code)
+            ->assertDontSee('<th>Registration country</th>', false)
+            ->assertDontSee('<th>Contact</th>', false);
+    }
+
+    public function test_analytics_filters_dates_and_sources_without_changing_legacy_data(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->post('/crm/jordan-exhibition', $this->payload());
+        $legacy = ExhibitionRegistration::firstOrFail();
+        $legacy->update(['created_at' => now()->subDays(3)]);
+
+        $this->get('/crm/jordan-exhibition?utm_source=Google');
+        $payload = $this->payload();
+        $payload['student_email'] = 'google@example.com';
+        $this->post('/crm/jordan-exhibition', $payload);
+
+        $response = $this->actingAs(User::firstOrFail())->get(route('crm.exhibition.analytics', [
+            'date_from' => now()->subDays(4)->toDateString(),
+            'date_to' => now()->toDateString(),
+            'utm_source' => 'Facebook',
+            'faculty' => 'Faculty of Dentistry',
+            'certificate_type' => 'Cambridge IGCSE',
+            'registrant_role' => 'student',
+        ]));
+
+        $response->assertOk()->assertViewHas('total', 1)->assertViewHas('days', 5)
+            ->assertViewHas('sources', fn ($sources) => $sources->count() === 1 && $sources->first()->source === 'Facebook')
+            ->assertViewHas('sourceTrend', fn ($trend) => array_sum($trend->first()['data']) === 1)
+            ->assertDontSee('id="contactChart"', false);
+        $this->assertNull($legacy->fresh()->source_utm_source);
+
+        $this->get(route('crm.exhibition.analytics', ['utm_source' => 'Google']))
+            ->assertOk()->assertViewHas('total', 1)
+            ->assertViewHas('days', 30)
+            ->assertViewHas('dateFrom', now()->subDays(29)->toDateString())
+            ->assertViewHas('dateTo', now()->toDateString());
+    }
+
     public function test_exhibition_location_filter_separates_iraq_and_jordan_and_applies_to_export(): void
     {
         Mail::fake();
