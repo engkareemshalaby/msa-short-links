@@ -56,6 +56,12 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/iraq-exhibition/ar', [ExhibitionRegistrationController::class, 'createIraq'])->name('iraq.create.ar');
     Route::post('/iraq-exhibition', [ExhibitionRegistrationController::class, 'storeIraq'])->middleware('throttle:10,1')->name('iraq.store');
     Route::get('/iraq-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYouIraq'])->name('iraq.thank-you');
+    Route::get('/msa-schools-olympics', [ExhibitionRegistrationController::class, 'createSchoolsOlympics'])->name('schools-olympics.create');
+    Route::post('/msa-schools-olympics', [ExhibitionRegistrationController::class, 'storeSchoolsOlympics'])->middleware('throttle:10,1')->name('schools-olympics.store');
+    Route::get('/msa-schools-olympics/thank-you', [ExhibitionRegistrationController::class, 'thankYouSchoolsOlympics'])->name('schools-olympics.thank-you');
+    Route::get('/msa-schools-olympics', [ExhibitionRegistrationController::class, 'createSchoolsOlympics'])->name('schools-olympics.create');
+    Route::post('/msa-schools-olympics', [ExhibitionRegistrationController::class, 'storeSchoolsOlympics'])->middleware('throttle:10,1')->name('schools-olympics.store');
+    Route::get('/msa-schools-olympics/thank-you', [ExhibitionRegistrationController::class, 'thankYouSchoolsOlympics'])->name('schools-olympics.thank-you');
 });
 
 Route::get('/crm/event-contacts/public', [EventContactController::class, 'publicIndex'])

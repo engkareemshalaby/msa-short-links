@@ -13,6 +13,7 @@
                 <div class="meta-item"><span>{{ __('Student email address') }}</span><a class="text-link" href="mailto:{{ $registration->student_email }}" dir="ltr">{{ $registration->student_email }}</a></div>
                 <div class="meta-item"><span>{{ __('Student mobile (WhatsApp preferred)') }}</span><a class="text-link" href="tel:{{ $registration->student_mobile }}" dir="ltr">{{ $registration->student_mobile }}</a></div>
                 <div class="meta-item"><span>{{ __('Registrant') }}</span><strong>{{ __(ucfirst($registration->registrant_role)) }}</strong></div>
+                @if($registration->whatsapp_number)<div class="meta-item"><span>WhatsApp number</span><a class="text-link" href="tel:{{ $registration->whatsapp_number }}" dir="ltr">{{ $registration->whatsapp_number }}</a></div>@endif
             </div>
         </section>
 
@@ -38,6 +39,7 @@
             <div class="card-header"><div><h2>{{ __('Registration information') }}</h2><p>{{ __('Contact preference, exhibition, and submission time.') }}</p></div></div>
             <div class="card-body meta-grid">
                 <div class="meta-item"><span>{{ __('Preferred contact method') }}</span><strong>{{ __(ucfirst($registration->preferred_contact_method)) }}</strong></div>
+                @if($registration->preferred_contact_time)<div class="meta-item"><span>Preferred contact time</span><strong>{{ $registration->preferred_contact_time }}</strong></div>@endif
                 <div class="meta-item"><span>{{ __('Relatives or acquaintances in Egypt') }}</span><strong>{{ is_null($registration->has_relatives_or_acquaintances_in_egypt) ? __('Not specified') : ($registration->has_relatives_or_acquaintances_in_egypt ? __('Yes') : __('No')) }}</strong></div>
                 @if($registration->has_relatives_or_acquaintances_in_egypt)<div class="meta-item"><span>{{ __('Accommodation or a place to stay in Egypt') }}</span><strong>{{ is_null($registration->has_accommodation_in_egypt) ? __('Not specified') : ($registration->has_accommodation_in_egypt ? __('Yes') : __('No')) }}</strong></div>@endif
                 @if($registration->full_scholarship_eligibility)<div class="meta-item"><span>{{ __('Full tuition scholarship eligibility') }}</span><strong>{{ __(['yes' => 'Yes', 'no' => 'No', 'unsure' => 'I am not sure'][$registration->full_scholarship_eligibility]) }}</strong></div>@endif

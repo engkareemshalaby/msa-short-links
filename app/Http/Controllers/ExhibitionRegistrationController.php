@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExhibitionRegistrationRequest;
+use App\Http\Requests\StoreSchoolsOlympicsRegistrationRequest;
 use App\Mail\GeneralExhibitionParentWelcome;
 use App\Mail\GeneralExhibitionWelcome;
 use App\Mail\IraqExhibitionParentWelcome;
@@ -156,6 +157,39 @@ class ExhibitionRegistrationController extends Controller
         }
 
         return view('crm.exhibition.iraq-thank-you');
+    }
+
+    public function createSchoolsOlympics(Request $request, ExhibitionAttribution $attribution): View
+    {
+        $attribution->rememberLanding($request);
+
+        return view('crm.exhibition.schools-olympics-create');
+    }
+
+    public function storeSchoolsOlympics(StoreSchoolsOlympicsRegistrationRequest $request, ExhibitionAttribution $attribution): RedirectResponse
+    {
+        $data = $request->validated();
+        unset($data['company_fax']);
+
+        do {
+            $reference = 'MSO-'.random_int(100000, 999999);
+        } while (ExhibitionRegistration::where('reference_code', $reference)->exists());
+
+        ExhibitionRegistration::create(array_replace($data, $attribution->forRegistration($request), $this->clientContext->capture($request), [
+            'reference_code' => $reference,
+            'exhibition_location' => 'MSA Schools Olympics',
+            'preferred_contact_method' => 'phone',
+            'status' => 'new',
+        ]));
+
+        $attribution->forgetRegistration($request);
+
+        return redirect()->route('crm.schools-olympics.thank-you')->with('registration_reference', $reference);
+    }
+
+    public function thankYouSchoolsOlympics(): View
+    {
+        return view('crm.exhibition.schools-olympics-thank-you');
     }
 
     public function store(StoreExhibitionRegistrationRequest $request, ExhibitionAttribution $attribution): RedirectResponse
@@ -333,6 +367,7 @@ class ExhibitionRegistrationController extends Controller
                 'Connection country', 'Connection region', 'Connection city', 'IP address', 'Device type',
                 'Platform', 'Browser', 'Browser language', 'Timezone', 'Screen', 'Viewport', 'Pixel ratio',
                 'CPU threads', 'Device memory (GB)', 'Touch points', 'User agent', 'Client hints',
+                'WhatsApp number', 'Preferred contact time',
             ], escape: '');
 
             $this->filteredQuery($filters)->chunkById(500, function ($registrations) use ($output): void {
@@ -384,6 +419,10 @@ class ExhibitionRegistrationController extends Controller
                         $registration->touch_points,
                         $registration->user_agent,
                         $registration->client_hints ? json_encode($registration->client_hints, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null,
+                        $registration->whatsapp_number,
+                        $registration->preferred_contact_time,
+                        $registration->whatsapp_number,
+                        $registration->preferred_contact_time,
                     ];
 
                     fputcsv($output, array_map(self::excelSafeCell(...), $cells), escape: '');
@@ -469,7 +508,7 @@ class ExhibitionRegistrationController extends Controller
             'registrant_role' => ['nullable', Rule::in(['student', 'parent'])],
             'certificate_type' => ['nullable', Rule::in(array_unique(array_merge(ExhibitionRegistration::CERTIFICATES, ExhibitionRegistration::IRAQ_CERTIFICATES)))],
             'faculty' => ['nullable', Rule::in(ExhibitionRegistration::FACULTIES)],
-            'preferred_contact_method' => ['nullable', Rule::in(['email', 'whatsapp'])],
+            'preferred_contact_method' => ['nullable', Rule::in(['email', 'whatsapp', 'phone'])],
             'exhibition_location' => ['nullable', 'string', 'max:255'],
             'registration_country' => ['nullable', 'string', 'max:120'],
             'connection_country' => ['nullable', 'string', 'size:2'],

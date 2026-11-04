@@ -368,7 +368,7 @@ class ExhibitionRegistrationFlowTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
         $rows = $this->csvRows($content);
         $this->assertCount(2, $rows);
-        $this->assertCount(46, $rows[1]);
+        $this->assertCount(50, $rows[1]);
         $this->assertSame('Jordan Student', $rows[1][4]);
     }
 

@@ -16,6 +16,8 @@ class ExhibitionAttribution
         '/crm/iraq-exhibition/ar',
         '/crm/exhibition-registration',
         '/crm/exhibition-registration/ar',
+        '/crm/msa-schools-olympics',
+        '/crm/msa-schools-olympics',
     ];
 
     public function rememberClick(Request $request, ShortLink $link, Visit $visit, string $destination): void

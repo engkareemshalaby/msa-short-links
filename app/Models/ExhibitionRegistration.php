@@ -29,6 +29,15 @@ class ExhibitionRegistration extends Model
         'Other',
     ];
 
+    public const SCHOOLS_OLYMPICS_CERTIFICATES = [
+        'Egyptian Thanaweya Amma', 'IGCSE / British Certificate', 'American Diploma',
+        'Arab Equivalent Certificate', 'Other', 'Al-Azhar Secondary Certificate',
+    ];
+
+    public const SCHOOLS_OLYMPICS_CONTACT_TIMES = [
+        '9:00 AM to 11:00 AM', '12:00 PM to 02:00 PM', '02:00 PM to 03:00 PM',
+    ];
+
     public const FACULTIES = [
         'Faculty of Dentistry', 'Faculty of Pharmacy', 'Faculty of Physical Therapy',
         'Faculty of Biotechnology', 'Faculty of Nutrition and Food Technology',
@@ -41,6 +50,7 @@ class ExhibitionRegistration extends Model
         'reference_code', 'registrant_role', 'student_email', 'parent_email',
         'student_name', 'student_mobile', 'parent_mobile', 'certificate_type',
         'certificate_type_other', 'current_result', 'interested_faculties',
+        'whatsapp_number', 'preferred_contact_time',
         'preferred_contact_method', 'exhibition_location', 'registration_country', 'status', 'ip_hash',
         'has_relatives_or_acquaintances_in_egypt', 'has_accommodation_in_egypt',
         'full_scholarship_eligibility',
