@@ -2,7 +2,7 @@
 
 return [
     'title' => 'MSA Schools Olympics Registration',
-    'description' => 'Register your interest in MSA University for the 2026/2027 academic year. Our Admissions Team will contact you soon to explain the next steps.',
+    'description' => 'Start your journey for the 2027/2028 academic year with MSA University — The Highest British Accreditation & Partnership in Egypt',
     'error' => 'Please review the highlighted information.',
     'email' => 'Email address',
     'role' => 'Role of the registrant',

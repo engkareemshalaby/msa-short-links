@@ -16,8 +16,8 @@ class ExhibitionAttribution
         '/crm/iraq-exhibition/ar',
         '/crm/exhibition-registration',
         '/crm/exhibition-registration/ar',
-        '/crm/msa-schools-olympics',
-        '/crm/msa-schools-olympics/ar',
+        '/crm/msa-international-schools-olympics',
+        '/crm/msa-international-schools-olympics/ar',
     ];
 
     public function rememberClick(Request $request, ShortLink $link, Visit $visit, string $destination): void
@@ -88,7 +88,7 @@ class ExhibitionAttribution
         $path = match (true) {
             $request->is('crm/exhibition-registration/ar') => 'crm/exhibition-registration',
             $request->is('crm/iraq-exhibition/ar') => 'crm/iraq-exhibition',
-            $request->is('crm/msa-schools-olympics/ar') => 'crm/msa-schools-olympics',
+            $request->is('crm/msa-international-schools-olympics/ar') => 'crm/msa-international-schools-olympics',
             default => trim($request->path(), '/'),
         };
 

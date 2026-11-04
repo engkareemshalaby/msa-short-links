@@ -59,12 +59,16 @@ Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/iraq-exhibition/ar', [ExhibitionRegistrationController::class, 'createIraq'])->name('iraq.create.ar');
     Route::post('/iraq-exhibition', [ExhibitionRegistrationController::class, 'storeIraq'])->middleware('throttle:10,1')->name('iraq.store');
     Route::get('/iraq-exhibition/thank-you', [ExhibitionRegistrationController::class, 'thankYouIraq'])->name('iraq.thank-you');
-    Route::get('/msa-schools-olympics', [ExhibitionRegistrationController::class, 'createSchoolsOlympics'])->name('schools-olympics.create');
-    Route::get('/msa-schools-olympics/ar', [ExhibitionRegistrationController::class, 'createSchoolsOlympics'])->name('schools-olympics.create.ar');
-    Route::post('/msa-schools-olympics', [ExhibitionRegistrationController::class, 'storeSchoolsOlympics'])->middleware('throttle:10,1')->name('schools-olympics.store');
-    Route::post('/msa-schools-olympics/ar', [ExhibitionRegistrationController::class, 'storeSchoolsOlympics'])->middleware('throttle:10,1')->name('schools-olympics.store.ar');
-    Route::get('/msa-schools-olympics/thank-you', [ExhibitionRegistrationController::class, 'thankYouSchoolsOlympics'])->name('schools-olympics.thank-you');
-    Route::get('/msa-schools-olympics/ar/thank-you', [ExhibitionRegistrationController::class, 'thankYouSchoolsOlympics'])->name('schools-olympics.thank-you.ar');
+    Route::get('/msa-international-schools-olympics', [ExhibitionRegistrationController::class, 'createSchoolsOlympics'])->name('schools-olympics.create');
+    Route::get('/msa-international-schools-olympics/ar', [ExhibitionRegistrationController::class, 'createSchoolsOlympics'])->name('schools-olympics.create.ar');
+    Route::post('/msa-international-schools-olympics', [ExhibitionRegistrationController::class, 'storeSchoolsOlympics'])->middleware('throttle:10,1')->name('schools-olympics.store');
+    Route::post('/msa-international-schools-olympics/ar', [ExhibitionRegistrationController::class, 'storeSchoolsOlympics'])->middleware('throttle:10,1')->name('schools-olympics.store.ar');
+    Route::get('/msa-international-schools-olympics/thank-you', [ExhibitionRegistrationController::class, 'thankYouSchoolsOlympics'])->name('schools-olympics.thank-you');
+    Route::get('/msa-international-schools-olympics/ar/thank-you', [ExhibitionRegistrationController::class, 'thankYouSchoolsOlympics'])->name('schools-olympics.thank-you.ar');
+    Route::get('/msa-schools-olympics', fn () => redirect()->route('crm.schools-olympics.create', request()->query(), 301));
+    Route::get('/msa-schools-olympics/ar', fn () => redirect()->route('crm.schools-olympics.create.ar', request()->query(), 301));
+    Route::get('/msa-schools-olympics/thank-you', fn () => redirect()->route('crm.schools-olympics.thank-you', status: 301));
+    Route::get('/msa-schools-olympics/ar/thank-you', fn () => redirect()->route('crm.schools-olympics.thank-you.ar', status: 301));
 });
 
 Route::get('/crm/event-contacts/public', [EventContactController::class, 'publicIndex'])

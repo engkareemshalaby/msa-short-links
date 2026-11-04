@@ -12,8 +12,10 @@ class SchoolsOlympicsRegistrationTest extends TestCase
 
     public function test_guest_can_submit_schools_olympics_registration(): void
     {
+        $this->assertSame('/crm/msa-international-schools-olympics', parse_url(route('crm.schools-olympics.create'), PHP_URL_PATH));
         $this->get(route('crm.schools-olympics.create'))->assertOk()
-            ->assertSee('MSA Schools Olympics Registration')
+            ->assertSee('Start your journey for the 2027/2028 academic year with MSA University')
+            ->assertDontSee('<h1>MSA Schools Olympics Registration</h1>', false)
             ->assertSee('Parent / guardian mobile number')
             ->assertSee('Faculty of Languages')
             ->assertSee('images/olympics-header.jpeg', false)
@@ -33,11 +35,19 @@ class SchoolsOlympicsRegistrationTest extends TestCase
         $this->get(route('crm.schools-olympics.thank-you'))->assertOk()->assertSee('Registration received');
     }
 
+    public function test_old_form_urls_redirect_to_the_new_slug(): void
+    {
+        $this->get('/crm/msa-schools-olympics?utm_source=school')
+            ->assertRedirect(route('crm.schools-olympics.create', ['utm_source' => 'school']));
+        $this->get('/crm/msa-schools-olympics/ar?utm_source=school')
+            ->assertRedirect(route('crm.schools-olympics.create.ar', ['utm_source' => 'school']));
+    }
+
     public function test_arabic_form_is_separate_and_keeps_language_through_submission(): void
     {
         $this->get(route('crm.schools-olympics.create.ar', ['utm_source' => 'school']))
             ->assertOk()->assertSee('<html lang="ar" dir="rtl">', false)
-            ->assertSee('التسجيل في أولمبياد مدارس MSA')
+            ->assertSee('ابدأ رحلتك للعام الأكاديمي 2027/2028 مع جامعة MSA')
             ->assertSee('كلية اللغات')
             ->assertSee('images/olympics-header.jpeg', false)
             ->assertDontSee('preferred_contact_time')
