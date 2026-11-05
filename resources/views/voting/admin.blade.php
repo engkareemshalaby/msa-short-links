@@ -29,7 +29,7 @@
         <div class="panel-intro"><div><h2>{{ __('voting.ranking') }}</h2><p>{{ __('voting.ranking_note') }}</p></div></div>
         <div class="vote-admin-list">
             @foreach($members as $member)
-                <details class="vote-row"><summary><span class="rank-number {{ $loop->iteration <= 8 ? 'top-eight' : '' }}">{{ $loop->iteration }}</span><span class="person-avatar">{{ mb_substr($member->user->name, 0, 1) }}</span><span class="person-info"><strong>{{ $member->user->name }}</strong><small>{{ __('voting.staff_id') }}: {{ $member->staff_id }}</small></span><span class="vote-count">{{ __('voting.votes', ['count' => $member->votes_received_count]) }}</span><span class="row-chevron" aria-hidden="true">⌄</span></summary>
+                <details class="vote-row"><summary><span class="rank-number {{ $loop->iteration <= 8 ? 'top-eight' : '' }}">{{ $loop->iteration }}</span><span class="person-avatar">{{ mb_substr($member->user->name, 0, 1) }}</span><span class="person-info"><strong>{{ $member->user->name }}</strong><small>{{ __('voting.staff_id') }}: {{ $member->staff_id }} @if($member->club_name) · {{ $member->club_name }} @endif · {{ $member->user->email }}</small></span><span class="vote-count">{{ __('voting.votes', ['count' => $member->votes_received_count]) }}</span><span class="row-chevron" aria-hidden="true">⌄</span></summary>
                     <div class="vote-row-detail"><span class="detail-label">{{ __('voting.chosen_by') }}</span><div class="name-chips">@forelse($members->whereIn('id', $supportersByCandidate->get($member->id, collect())) as $supporter)<span>{{ $supporter->user->name }}</span>@empty <em>{{ __('voting.none') }}</em> @endforelse</div></div>
                 </details>
             @endforeach
@@ -40,7 +40,7 @@
         <div class="vote-admin-list">
             @foreach($members as $member)
                 @php $ballot = $ballots->get($member->id); $selectedIds = $ballot ? ($choices->get($ballot->id)?->pluck('candidate_id') ?? collect()) : collect(); @endphp
-                <details class="vote-row"><summary><span class="person-avatar">{{ mb_substr($member->user->name, 0, 1) }}</span><span class="person-info"><strong>{{ $member->user->name }}</strong><small>{{ __('voting.staff_id') }}: {{ $member->staff_id }}</small></span><span class="vote-status {{ $ballot ? 'has-voted' : '' }}">{{ $ballot ? __('voting.has_voted') : __('voting.has_not_voted') }}</span><span class="row-chevron" aria-hidden="true">⌄</span></summary>
+                <details class="vote-row"><summary><span class="person-avatar">{{ mb_substr($member->user->name, 0, 1) }}</span><span class="person-info"><strong>{{ $member->user->name }}</strong><small>{{ __('voting.staff_id') }}: {{ $member->staff_id }} @if($member->club_name) · {{ $member->club_name }} @endif · {{ $member->user->email }}</small></span><span class="vote-status {{ $ballot ? 'has-voted' : '' }}">{{ $ballot ? __('voting.has_voted') : __('voting.has_not_voted') }}</span><span class="row-chevron" aria-hidden="true">⌄</span></summary>
                     <div class="vote-row-detail"><span class="detail-label">{{ __('voting.member_choices') }}</span><div class="name-chips">@if($ballot) @foreach($members->whereIn('id', $selectedIds) as $selected)<span>{{ $selected->user->name }}</span>@endforeach @else <em>{{ __('voting.no_choices') }}</em> @endif</div></div>
                 </details>
             @endforeach
