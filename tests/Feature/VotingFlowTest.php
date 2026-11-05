@@ -99,7 +99,7 @@ class VotingFlowTest extends TestCase
             ->post(route('voting.store'), ['choices' => $members->take(8)->pluck('id')->all()])
             ->assertSessionHasErrors('choices');
         $this->get(route('voting.admin.index'))->assertForbidden();
-        $this->get(route('voting.index'))->assertOk()->assertSee('Choose your')->assertDontSee('<h2>Results</h2>', false);
+        $this->get(route('voting.index'))->assertOk()->assertSee('Choose your')->assertDontSee('STAFF ID')->assertDontSee('<h2>Results</h2>', false);
         $this->assertDatabaseCount('voting_ballots', 0);
     }
 }
