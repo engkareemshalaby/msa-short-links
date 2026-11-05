@@ -5,7 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Voting\Member;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
 use Spatie\Permission\Models\Role;
 
 class VotingMembersSeeder extends Seeder
@@ -21,6 +22,20 @@ class VotingMembersSeeder extends Seeder
         );
 
         $usedEmails = [];
+        $usedPasswords = [];
+        $credentials = [];
+
+        $removedMember = Member::where('staff_id', '11111')->where('club_name', 'Lebaladna')->first();
+        if ($removedMember) {
+            $hasVotes = DB::table('voting_ballots')->where('voter_id', $removedMember->id)->exists()
+                || DB::table('voting_choices')->where('candidate_id', $removedMember->id)->exists();
+            if ($hasVotes) {
+                throw new RuntimeException('Cannot remove Engy Mansour: voting records are linked to this member.');
+            }
+
+            $removedMember->user->removeRole($role);
+            $removedMember->delete();
+        }
 
         // Each advisor has one voting record, including advisors assigned to several clubs.
         foreach (collect($advisors)->groupBy('id') as $staffId => $clubs) {
@@ -31,12 +46,17 @@ class VotingMembersSeeder extends Seeder
             }
             $usedEmails[$advisor['email']] = (string) $staffId;
 
-            $user = User::firstOrCreate(
+            do {
+                $password = (string) random_int(100000, 999999);
+            } while (isset($usedPasswords[$password]));
+            $usedPasswords[$password] = true;
+
+            $user = User::updateOrCreate(
                 ['email' => $email],
-                ['name' => $advisor['academic_advisor'], 'password' => Str::random(40)]
+                ['name' => $advisor['academic_advisor'], 'password' => $password]
             );
-            $user->update(['name' => $advisor['academic_advisor']]);
             $user->assignRole($role);
+            $credentials[] = [$advisor['academic_advisor'], (string) $staffId, $email, $password];
 
             Member::updateOrCreate(
                 ['user_id' => $user->id],
@@ -46,5 +66,7 @@ class VotingMembersSeeder extends Seeder
                 ]
             );
         }
+
+        $this->command?->table(['Member', 'Staff ID', 'Email', 'Password'], $credentials);
     }
 }
