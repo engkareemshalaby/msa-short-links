@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Voting;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Voting\Member;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,18 +16,24 @@ class AuthController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate(['identity' => ['required', 'string', 'max:255'], 'password' => ['required', 'string']]);
-        $identity = trim($data['identity']);
-        $email = filter_var($identity, FILTER_VALIDATE_EMAIL)
-            ? $identity
-            : Member::where('staff_id', $identity)->first()?->user?->email;
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'staff_id' => ['required', 'string', 'max:255'],
+        ]);
+        $email = trim($data['email']);
+        $staffId = trim($data['staff_id']);
+        $user = User::where('email', $email)->first();
 
-        if (! $email || ! Auth::attempt(['email' => $email, 'password' => $data['password']]) || ! $request->user()->hasRole('Voter') || ! Member::where('user_id', $request->user()->id)->exists()) {
+        if (! $user || ! $user->hasRole('Voter')
+            || ! Member::where('user_id', $user->id)->where('staff_id', $staffId)->exists()
+            || ! Auth::attempt(['email' => $email, 'password' => $staffId])) {
             Auth::logout();
-            return back()->withErrors(['identity' => 'بيانات الدخول غير صحيحة.'])->onlyInput('identity');
+
+            return back()->withErrors(['email' => 'The email address or Staff ID is incorrect.'])->onlyInput('email');
         }
 
         $request->session()->regenerate();
+
         return redirect()->route('voting.index');
     }
 }

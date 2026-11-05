@@ -22,7 +22,6 @@ class VotingMembersSeeder extends Seeder
         );
 
         $usedEmails = [];
-        $usedPasswords = [];
         $credentials = [];
 
         $removedMember = Member::where('staff_id', '11111')->where('club_name', 'Lebaladna')->first();
@@ -46,17 +45,12 @@ class VotingMembersSeeder extends Seeder
             }
             $usedEmails[$advisor['email']] = (string) $staffId;
 
-            do {
-                $password = (string) random_int(100000, 999999);
-            } while (isset($usedPasswords[$password]));
-            $usedPasswords[$password] = true;
-
             $user = User::updateOrCreate(
                 ['email' => $email],
-                ['name' => $advisor['academic_advisor'], 'password' => $password]
+                ['name' => $advisor['academic_advisor'], 'password' => (string) $staffId]
             );
             $user->assignRole($role);
-            $credentials[] = [$advisor['academic_advisor'], (string) $staffId, $email, $password];
+            $credentials[] = [$advisor['academic_advisor'], (string) $staffId, $email];
 
             Member::updateOrCreate(
                 ['user_id' => $user->id],
@@ -67,6 +61,6 @@ class VotingMembersSeeder extends Seeder
             );
         }
 
-        $this->command?->table(['Member', 'Staff ID', 'Email', 'Password'], $credentials);
+        $this->command?->table(['Member', 'Staff ID', 'Email'], $credentials);
     }
 }

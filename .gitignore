@@ -20,6 +20,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/private/voting-member-credentials.json
 /vendor
 /.codex-doc-work
 _ide_helper.php

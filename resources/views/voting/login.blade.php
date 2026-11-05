@@ -20,13 +20,13 @@
     </section>
     <section class="login-panel-vote">
         <div class="login-panel-top"><img src="{{ asset('images/msa-logo-wide.png') }}" alt="MSA University"><span>SECURE MEMBER ACCESS</span></div>
-        <div class="login-form-wrap"><span class="login-kicker">WELCOME BACK</span><h2>Sign in to vote</h2><p>Use your registered email address or Staff ID.</p>
-            @if($errors->any())<div class="notice error" role="alert">The email or Staff ID and password do not match our records.</div>@endif
+        <div class="login-form-wrap"><span class="login-kicker">WELCOME BACK</span><h2>Sign in to vote</h2><p>Enter your registered email address and Staff ID.</p>
+            @if($errors->any())<div class="notice error" role="alert">The email address or Staff ID is incorrect.</div>@endif
             <form method="POST" action="{{ route('voting.login.store') }}">@csrf
-                <label for="identity">Email address or Staff ID</label>
-                <input id="identity" name="identity" value="{{ old('identity') }}" autocomplete="username" placeholder="name@example.com or 12345" required autofocus>
-                <label for="password">Password</label>
-                <input id="password" type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required>
+                <label for="email">Email address</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" autocomplete="email" placeholder="name@example.com" required autofocus>
+                <label for="staff_id">Staff ID</label>
+                <input id="staff_id" type="text" name="staff_id" inputmode="numeric" autocomplete="off" placeholder="Enter your Staff ID" required>
                 <button type="submit">Sign in <span aria-hidden="true">→</span></button>
             </form>
             <div class="login-help"><span class="help-icon" aria-hidden="true">i</span><span>Your vote is final once submitted. You can review your selections first.</span></div>
