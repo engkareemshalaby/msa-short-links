@@ -33,6 +33,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Voting\AdminController as VotingAdminController;
 use App\Http\Controllers\Voting\AuthController as VotingAuthController;
 use App\Http\Controllers\Voting\MemberController as VotingMemberController;
+use App\Http\Controllers\Voting\PublicResultsController as VotingPublicResultsController;
 use App\Support\AuthenticatedHome;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,8 @@ Route::get('/', fn () => auth()->check()
     : view('welcome'))->name('home');
 
 Route::view('/msauniversity/links', 'public.msa-links')->name('msa.links');
+
+Route::get('/voting/results', VotingPublicResultsController::class)->name('voting.results.public');
 
 Route::prefix('crm')->name('crm.')->group(function () {
     Route::get('/new', [PublicCrmSubmissionController::class, 'create'])->name('new');

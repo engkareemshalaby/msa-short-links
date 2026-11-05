@@ -8,6 +8,7 @@
     <div><span class="stat-icon">✓</span><strong>{{ $ballots->count() }}</strong><span>{{ __('voting.voted') }}</span></div>
     <div><span class="stat-icon">◷</span><strong>{{ max(0, $members->count() - $ballots->count()) }}</strong><span>{{ __('voting.not_voted') }}</span></div>
 </div>
+<div class="vote-public-link"><a class="button" href="{{ route('voting.results.public') }}" target="_blank" rel="noopener">Public results dashboard ↗</a><span>Share this link to follow the results without signing in.</span></div>
 @can('voting.manage')
 <section class="card vote-admin-card vote-settings-card">
     <div class="section-heading"><div><h2>{{ __('voting.settings') }}</h2><p>{{ __('voting.settings_hint') }}</p></div></div>
