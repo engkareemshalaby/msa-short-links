@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Member extends Model
 {
     protected $table = 'voting_members';
-    protected $fillable = ['user_id', 'staff_id'];
+    protected $fillable = ['user_id', 'staff_id', 'club_name'];
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
     public function votesReceived(): HasMany { return $this->hasMany(Choice::class, 'candidate_id'); }

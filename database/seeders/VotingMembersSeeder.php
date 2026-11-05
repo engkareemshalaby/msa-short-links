@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Voting\Member;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class VotingMembersSeeder extends Seeder
@@ -13,31 +13,38 @@ class VotingMembersSeeder extends Seeder
     public function run(): void
     {
         $role = Role::firstOrCreate(['name' => 'Voter', 'guard_name' => 'web']);
+        $advisors = json_decode(
+            file_get_contents(__DIR__.'/data/academic_advisors.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
 
-        // Temporary demo data. Replace before the real vote and rotate all passwords.
-        $names = [
-            'Ahmed Mahmoud', 'Mohamed Samy', 'Ali Hassan', 'Omar Ibrahim', 'Youssef Khaled', 'Karim Mostafa',
-            'Mahmoud Ashraf', 'Khaled Yasser', 'Mostafa Adel', 'Ibrahim Tarek', 'Hassan Mohamed', 'Samy Ahmed',
-            'Tarek Nabil', 'Yasser Fouad', 'Ashraf Walid', 'Adel Sherif', 'Nabil Hossam', 'Fouad Ramy',
-            'Mariam Ahmed', 'Sara Mohamed', 'Nour Mahmoud', 'Yasmine Ali', 'Fatma Hassan', 'Malak Ibrahim',
-            'Hana Khaled', 'Aya Mostafa', 'Dina Ashraf', 'Basma Yasser', 'Shahd Adel', 'Nada Tarek',
-            'Rahma Samy', 'Iman Karim', 'Laila Nabil', 'Menna Fouad', 'Reem Walid', 'Salma Sherif',
-        ];
+        $usedEmails = [];
 
-        $members = array_map(static fn (string $name, int $index): array => [
-            'name' => 'Dr. '.$name,
-            'email' => sprintf('voter%02d@example.test', $index + 1),
-            'staff_id' => sprintf('%05d', 12345 + $index),
-            'password' => sprintf('DemoVote@%03d!', $index + 1),
-        ], $names, array_keys($names));
+        // Each advisor has one voting record, including advisors assigned to several clubs.
+        foreach (collect($advisors)->groupBy('id') as $staffId => $clubs) {
+            $advisor = $clubs->first();
+            $email = $advisor['email'];
+            if (isset($usedEmails[$email]) && $usedEmails[$email] !== (string) $staffId) {
+                $email = 'advisor-'.$staffId.'@example.test';
+            }
+            $usedEmails[$advisor['email']] = (string) $staffId;
 
-        foreach ($members as $member) {
-            $user = User::updateOrCreate(
-                ['email' => $member['email']],
-                ['name' => $member['name'], 'password' => Hash::make($member['password'])]
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                ['name' => $advisor['academic_advisor'], 'password' => Str::random(40)]
             );
+            $user->update(['name' => $advisor['academic_advisor']]);
             $user->assignRole($role);
-            Member::updateOrCreate(['user_id' => $user->id], ['staff_id' => $member['staff_id']]);
+
+            Member::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'staff_id' => (string) $staffId,
+                    'club_name' => $clubs->pluck('club_name')->unique()->implode(', '),
+                ]
+            );
         }
     }
 }
